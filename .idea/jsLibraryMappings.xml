@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="PROJECT" libraries="{cropperjs, dexie, firebase-analytics-compat, firebase-app-compat, firebase-auth-compat, firebase-firestore-compat, firebase-storage-compat, font-awesome}" />
+  </component>
+</project>

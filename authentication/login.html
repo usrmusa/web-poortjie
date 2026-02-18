@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Poortjie Services</title>
+    <meta name="author" content="Musa Mgijima">
+    <meta name="description" content="Login to your Poortjie Services account.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Disable Tailwind production warning
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) {
+                    return;
+                }
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center text-gray-900 dark:text-gray-100">
+    <a href="../index.html"
+       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+       class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
+</header>
+
+<main class="max-w-md mx-auto px-6 pb-24">
+    <div class="card flex flex-col p-8 rounded-2xl border-l-4 border-l-green-500">
+        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+        <div id="error-message"
+             class="hidden mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200"></div>
+        <form id="login-form" novalidate>
+            <div class="form-group mb-4">
+                <label for="email" class="block mb-1 font-bold text-sm uppercase tracking-wider">Email</label>
+                <div class="relative">
+                    <input type="email" id="email" name="email" placeholder="Email"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           required>
+                    <p id="error-email"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Invalid Email</p>
+                </div>
+            </div>
+            <div class="form-group mb-6">
+                <label for="password" class="block mb-1 font-bold text-sm uppercase tracking-wider">Password</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password"
+                           placeholder="Password"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           required>
+                    <p id="error-password"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Invalid Password</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit"
+                        class="w-full px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
+                    Login
+                </button>
+            </div>
+            <a href="#" class="inline-block align-baseline font-bold text-sm text-green-500 hover:text-green-800 mt-4">
+                Forgot Password?
+            </a>
+        </form>
+        <p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
+            Don't have an account? <a href="register.html"
+                                      onclick="window.location.replace('register.html'); return false;"
+                                      class="text-green-500 hover:text-green-700 font-bold">Register</a>.
+        </p>
+    </div>
+</main>
+
+<footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
+    &copy; 2026 Poortjie Services. Empowering poortjie economies.<br><a href="../support.html" class="hover:underline">Data Policy</a>
+</footer>
+
+<!-- Maintenance Banner -->
+<div id="maintenance-banner" class="fixed bottom-0 left-0 w-full bg-amber-600 text-white text-center py-3 z-[100] font-bold shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center px-6">
+    <span class="flex-grow text-center">⚠️ Maintenance Mode: Login is currently restricted to administrators.</span>
+    <button onclick="document.getElementById('maintenance-banner').remove()" class="text-white hover:text-amber-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+</div>
+
+<script src="../scripts/theme.js"></script>
+
+<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+<script>
+    const loginForm = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+
+    const getFriendlyErrorMessage = (errorCode) => {
+        switch (errorCode) {
+            case 'auth/claims-too-large':
+                return 'The claims payload provided exceeds the maximum allowed size of 1000 bytes.';
+            case 'auth/email-already-exists':
+                return 'The provided email is already in use by an existing user.';
+            case 'auth/id-token-expired':
+                return 'The provided Firebase ID token is expired.';
+            case 'auth/id-token-revoked':
+                return 'The Firebase ID token has been revoked.';
+            case 'auth/insufficient-permission':
+                return 'Insufficient permission to access the requested resource.';
+            case 'auth/internal-error':
+                return 'The Authentication server encountered an unexpected error.';
+            case 'auth/invalid-argument':
+                return 'An invalid argument was provided to an Authentication method.';
+            case 'auth/invalid-claims':
+                return 'The custom claim attributes provided are invalid.';
+            case 'auth/invalid-continue-uri':
+                return 'The continue URL must be a valid URL string.';
+            case 'auth/invalid-creation-time':
+                return 'The creation time must be a valid UTC date string.';
+            case 'auth/invalid-credential':
+                return 'The credential used cannot be used to perform the desired action.';
+            case 'auth/invalid-disabled-field':
+                return 'The provided value for the disabled user property is invalid.';
+            case 'auth/invalid-display-name':
+                return 'The provided value for the displayName user property is invalid.';
+            case 'auth/invalid-dynamic-link-domain':
+                return 'The provided dynamic link domain is not configured or authorized.';
+            case 'auth/invalid-email':
+                return 'The provided value for the email user property is invalid.';
+            case 'auth/invalid-email-verified':
+                return 'The provided value for the emailVerified user property is invalid.';
+            case 'auth/invalid-hash-algorithm':
+                return 'The hash algorithm must match one of the supported algorithms.';
+            case 'auth/invalid-hash-block-size':
+                return 'The hash block size must be a valid number.';
+            case 'auth/invalid-hash-derived-key-length':
+                return 'The hash derived key length must be a valid number.';
+            case 'auth/invalid-hash-key':
+                return 'The hash key must a valid byte buffer.';
+            case 'auth/invalid-hash-memory-cost':
+                return 'The hash memory cost must be a valid number.';
+            case 'auth/invalid-hash-parallelization':
+                return 'The hash parallelization must be a valid number.';
+            case 'auth/invalid-hash-rounds':
+                return 'The hash rounds must be a valid number.';
+            case 'auth/invalid-hash-salt-separator':
+                return 'The hashing algorithm salt separator field must be a valid byte buffer.';
+            case 'auth/invalid-id-token':
+                return 'The provided ID token is not a valid Firebase ID token.';
+            case 'auth/invalid-last-sign-in-time':
+                return 'The last sign-in time must be a valid UTC date string.';
+            case 'auth/invalid-page-token':
+                return 'The provided next page token is invalid.';
+            case 'auth/invalid-password':
+                return 'The provided value for the password user property is invalid. It must be a string with at least six characters.';
+            case 'auth/invalid-password-hash':
+                return 'The password hash must be a valid byte buffer.';
+            case 'auth/invalid-password-salt':
+                return 'The password salt must be a valid byte buffer.';
+            case 'auth/invalid-phone-number':
+                return 'The provided value for the phoneNumber is invalid.';
+            case 'auth/invalid-photo-url':
+                return 'The provided value for the photoURL user property is invalid.';
+            case 'auth/invalid-provider-data':
+                return 'The providerData must be a valid array of UserInfo objects.';
+            case 'auth/invalid-provider-id':
+                return 'The providerId must be a valid supported provider identifier string.';
+            case 'auth/invalid-oauth-responsetype':
+                return 'Only exactly one OAuth responseType should be set to true.';
+            case 'auth/invalid-session-cookie-duration':
+                return 'The session cookie duration must be a valid number.';
+            case 'auth/invalid-uid':
+                return 'The provided uid must be a non-empty string.';
+            case 'auth/invalid-user-import':
+                return 'The user record to import is invalid.';
+            case 'auth/maximum-user-count-exceeded':
+                return 'The maximum allowed number of users to import has been exceeded.';
+            case 'auth/missing-android-pkg-name':
+                return 'An Android Package Name must be provided.';
+            case 'auth/missing-continue-uri':
+                return 'A valid continue URL must be provided in the request.';
+            case 'auth/missing-hash-algorithm':
+                return 'Importing users with password hashes requires a hashing algorithm.';
+            case 'auth/missing-ios-bundle-id':
+                return 'The request is missing a Bundle ID.';
+            case 'auth/missing-uid':
+                return 'A uid identifier is required for the current operation.';
+            case 'auth/missing-oauth-client-secret':
+                return 'The OAuth configuration client secret is required.';
+            case 'auth/operation-not-allowed':
+                return 'The provided sign-in provider is disabled for your Firebase project.';
+            case 'auth/phone-number-already-exists':
+                return 'The provided phoneNumber is already in use by an existing user.';
+            case 'auth/project-not-found':
+                return 'No Firebase project was found for the credential used.';
+            case 'auth/reserved-claims':
+                return 'One or more custom user claims provided are reserved.';
+            case 'auth/session-cookie-expired':
+                return 'The provided Firebase session cookie is expired.';
+            case 'auth/session-cookie-revoked':
+                return 'The Firebase session cookie has been revoked.';
+            case 'auth/too-many-requests':
+                return 'The number of requests exceeds the maximum allowed.';
+            case 'auth/uid-already-exists':
+                return 'The provided uid is already in use by an existing user.';
+            case 'auth/unauthorized-continue-uri':
+                return 'The domain of the continue URL is not whitelisted.';
+            case 'auth/user-disabled':
+                return 'The user account has been disabled by an administrator.';
+            case 'auth/user-not-found':
+            case 'auth/invalid-login-credentials':
+            case 'auth/wrong-password':
+                return 'Invalid email or password. Please check your credentials and try again.';
+            case 'auth/network-request-failed':
+                return 'Network error. Please check your internet connection.';
+            default:
+                return 'An unexpected error occurred. Please try again.';
+        }
+    };
+
+    const validateForm = () => {
+        const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim());
+        const isPasswordValid = passwordInput.value.length >= 6;
+
+        document.getElementById('error-email').classList.add('hidden');
+        document.getElementById('error-password').classList.add('hidden');
+
+        loginForm.querySelectorAll('input').forEach(input => {
+            input.classList.remove('border-red-500');
+        });
+
+        return {
+            isValid: isEmailValid && isPasswordValid,
+            errors: {
+                email: isEmailValid ? null : 'Please enter a valid email address.',
+                password: isPasswordValid ? null : 'Password must be at least 6 characters.'
+            }
+        };
+    };
+
+    [emailInput, passwordInput].forEach(input => {
+        input.addEventListener('input', validateForm);
+    });
+
+    loginForm.addEventListener('submit', event => {
+        event.preventDefault();
+        errorMessage.classList.add('hidden');
+
+        const validation = validateForm();
+        if (!validation.isValid) {
+            if (validation.errors.email) {
+                document.getElementById('error-email').classList.remove('hidden');
+                emailInput.classList.add('border-red-500');
+            }
+            if (validation.errors.password) {
+                document.getElementById('error-password').classList.remove('hidden');
+                passwordInput.classList.add('border-red-500');
+            }
+            return;
+        }
+
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = `<span class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Logging in...
+        </span>`;
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then(async (userCredential) => {
+                await logUserTrace(userCredential.user.uid);
+                const redirectUrl = sessionStorage.getItem('redirectUrl');
+                if (redirectUrl && !redirectUrl.includes('login.html') && !redirectUrl.includes('register.html')) {
+                    sessionStorage.removeItem('redirectUrl');
+                    window.top.location.replace(redirectUrl);
+                } else {
+                    sessionStorage.removeItem('redirectUrl');
+                    window.top.location.replace('../index.html');
+                }
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                errorMessage.textContent = getFriendlyErrorMessage(error.code);
+                errorMessage.classList.remove('hidden');
+                validateForm();
+            });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Manager | Poortjie Services</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#22c55e">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div id="admin-content" class="hidden">
+    <header class="max-w-6xl mx-auto pt-24 pb-16 px-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-extrabold tracking-tight">Home Manager</h1>
+            <a href="../index.html"
+               onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+               class="w-full md:w-auto text-center px-6 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition whitespace-nowrap">
+                Back to Home
+            </a>
+        </div>
+        <p class="text-xl opacity-80">Manage categories and fields for the home page.</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-24">
+        <div class="card p-8 rounded-2xl mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Categories</h2>
+                <button onclick="openNewCategoryModal()"
+                        class="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
+                    Add Category
+                </button>
+            </div>
+
+            <div id="categories-list" class="grid md:grid-cols-2 gap-6">
+                <!-- Categories will be injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal"
+         class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modal-title" class="text-2xl font-bold">Edit Category</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="category-form" class="space-y-4">
+                <input type="hidden" id="category-key">
+                <div>
+                    <label class="block text-sm font-bold uppercase mb-1">Category Name (Key)</label>
+                    <label for="cat-name"></label><input type="text" id="cat-name"
+                                                         class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 outline-none transition"
+                                                         disabled>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold uppercase mb-1">Subtitle</label>
+                    <label for="cat-subtitle"></label><input type="text" id="cat-subtitle"
+                                                             class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 outline-none transition"
+                                                             required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold uppercase mb-1">Description</label>
+                    <label for="cat-description"></label><textarea id="cat-description" rows="3"
+                                                                   class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 outline-none transition"
+                                                                   required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold uppercase mb-1">Listings (Comma separated)</label>
+                    <label for="cat-listing"></label><input type="text" id="cat-listing"
+                                                            class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold uppercase mb-1">Status</label>
+                    <label for="cat-status"></label><select id="cat-status"
+                                                            class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 outline-none transition">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                </div>
+                <div class="pt-4 flex gap-4">
+                    <button type="submit"
+                            class="flex-grow px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
+                        Save Changes
+                    </button>
+                    <button type="button" onclick="deleteCategory()" id="delete-btn"
+                            class="px-8 py-3 border-2 border-red-600 text-red-600 font-bold rounded-lg hover:bg-red-600 hover:text-white transition">
+                        Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../scripts/theme.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+
+<script>
+    let homeScreenData = {};
+    const categoriesList = document.getElementById('categories-list');
+    const modal = document.getElementById('edit-modal');
+    const categoryForm = document.getElementById('category-form');
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if (doc.exists && doc.data().roles?.digilayn?.isSuperUser) {
+                    document.getElementById('admin-content').classList.remove('hidden');
+                    loadHomeData();
+                } else {
+                    window.top.location.replace('../index.html');
+                }
+            });
+        } else {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.top.location.replace('../authentication/login.html');
+        }
+    });
+
+    async function loadHomeData() {
+        const doc = await db.collection('poortjie').doc('services').get();
+        if (doc.exists) {
+            homeScreenData = doc.data().homeScreen || {};
+            renderCategories();
+        }
+    }
+
+    function renderCategories() {
+        categoriesList.innerHTML = Object.keys(homeScreenData).sort().map(key => {
+            const cat = homeScreenData[key];
+            const isActive = cat.status !== 'inactive' && cat.status !== 'disabled';
+            return `
+                <div class="p-6 border-2 border-gray-100 dark:border-slate-800 rounded-xl hover:border-green-500/50 transition cursor-pointer" onclick="openEditModal('${key}')">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold">${key}</h3>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase ${isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
+                            ${cat.status || 'active'}
+                        </span>
+                    </div>
+                    <p class="text-sm font-bold text-green-600 mb-1">${cat.subtitle || ''}</p>
+                    <p class="text-sm opacity-70 line-clamp-2">${cat.description || ''}</p>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openEditModal(key) {
+        const cat = homeScreenData[key];
+        document.getElementById('modal-title').textContent = 'Edit Category';
+        document.getElementById('category-key').value = key;
+        document.getElementById('cat-name').value = key;
+        document.getElementById('cat-name').disabled = true;
+        document.getElementById('cat-subtitle').value = cat.subtitle || '';
+        document.getElementById('cat-description').value = cat.description || '';
+        document.getElementById('cat-listing').value = (cat.listing || []).join(', ');
+        document.getElementById('cat-status').value = cat.status || 'active';
+        document.getElementById('delete-btn').classList.remove('hidden');
+        modal.classList.remove('hidden');
+    }
+
+    function openNewCategoryModal() {
+        document.getElementById('modal-title').textContent = 'Add New Category';
+        document.getElementById('category-key').value = '';
+        document.getElementById('cat-name').value = '';
+        document.getElementById('cat-name').disabled = false;
+        document.getElementById('cat-subtitle').value = '';
+        document.getElementById('cat-description').value = '';
+        document.getElementById('cat-listing').value = '';
+        document.getElementById('cat-status').value = 'active';
+        document.getElementById('delete-btn').classList.add('hidden');
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+
+    categoryForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const key = document.getElementById('category-key').value || document.getElementById('cat-name').value.trim();
+        if (!key) return;
+
+        const newCat = {
+            subtitle: document.getElementById('cat-subtitle').value,
+            description: document.getElementById('cat-description').value,
+            listing: document.getElementById('cat-listing').value.split(',').map(s => s.trim()).filter(s => s),
+            status: document.getElementById('cat-status').value
+        };
+
+        try {
+            await db.collection('poortjie').doc('services').set({
+                homeScreen: {
+                    [`${key}`]: newCat
+                }
+            }, {merge: true});
+            await loadHomeData();
+            closeModal();
+        } catch (error) {
+            console.error("Error saving category:", error);
+            alert("Error saving: " + error.message);
+        }
+    };
+
+    async function deleteCategory() {
+        const key = document.getElementById('category-key').value;
+        if (!key) return;
+        if (!confirm(`Are you sure you want to delete "${key}"? This cannot be undone.`)) return;
+
+        try {
+            await db.collection('poortjie').doc('services').set({
+                homeScreen: {
+                    [`${key}`]: firebase.firestore.FieldValue.delete()
+                }
+            }, {merge: true});
+            await loadHomeData();
+            closeModal();
+        } catch (error) {
+            console.error("Error deleting category:", error);
+            alert("Error deleting: " + error.message);
+        }
+    }
+
+    window.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    }
+</script>
+</body>
+</html>

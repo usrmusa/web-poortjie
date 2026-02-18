@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Poortjie Services</title>
+    <meta name="author" content="Musa Mgijima">
+    <meta name="description" content="Create a new Poortjie Services account.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Disable Tailwind production warning
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) {
+                    return;
+                }
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center">
+    <a href="../index.html" onclick="window.location.replace('../index.html'); return false;" class="text-6xl font-extrabold mb-4 tracking-tight text-slate-900 dark:text-white">Poortjie</a>
+</header>
+
+<main class="max-w-md mx-auto px-6 pb-24">
+    <div class="card flex flex-col p-8 rounded-2xl border-l-4 border-l-green-500">
+        <h2 class="text-2xl font-bold mb-6 text-center">Create Your Account</h2>
+        <div id="error-message" class="hidden mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200"></div>
+        <form id="register-form" novalidate>
+            <div class="form-group mb-4">
+                <label for="username" class="block mb-1 font-bold text-sm uppercase tracking-wider">Username</label>
+                <div class="relative">
+                    <input type="text" id="username" name="username" placeholder="Username"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           required pattern="[a-z0-9]+" title="Username must be lowercase and contain no spaces.">
+                    <p id="error-username"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Invalid Format</p>
+                </div>
+                <p class="text-xs opacity-50 mt-1 pl-1">Lowercase letters and numbers only, no spaces.</p>
+            </div>
+            <div class="form-group mb-4">
+                <label for="email" class="block mb-1 font-bold text-sm uppercase tracking-wider">Email</label>
+                <div class="relative">
+                    <input type="email" id="email" name="email" placeholder="Email"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           required>
+                    <p id="error-email"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Invalid Email</p>
+                </div>
+            </div>
+            <div class="form-group mb-4">
+                <label for="display-name" class="block mb-1 font-bold text-sm uppercase tracking-wider">Full Name (max 3 names)</label>
+                <div class="relative">
+                    <input type="text" id="display-name" name="display-name" placeholder="Full Name"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           required pattern="^[A-Za-z]+(\s[A-Za-z]+){0,2}$"
+                           title="Please enter your full name (max 3 names).">
+                    <p id="error-display-name"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Invalid Format</p>
+                </div>
+                <p class="text-xs opacity-50 mt-1 pl-1">Required. Max 3 names.</p>
+            </div>
+            <div class="form-group mb-4">
+                <label for="phone-number" class="block mb-1 font-bold text-sm uppercase tracking-wider">Phone Number (optional)</label>
+                <div class="relative">
+                    <input type="tel" id="phone-number" name="phone-number" placeholder="e.g. 0123456789"
+                           maxlength="10" pattern="\d{10}"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           title="Please enter exactly 10 digits">
+                    <p id="error-phone-number"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Invalid Format</p>
+                </div>
+                <p class="text-xs opacity-50 mt-1 pl-1">Optional. 10 digits.</p>
+            </div>
+            <div class="form-group mb-4">
+                <label for="password" class="block mb-1 font-bold text-sm uppercase tracking-wider">Password</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password" placeholder="Password"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           minlength="6" required>
+                    <p id="error-password"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        Too Short</p>
+                </div>
+                <p class="text-xs opacity-50 mt-1 pl-1">Must be 6 or more characters.</p>
+            </div>
+            <div class="form-group mb-6">
+                <label for="confirm-password" class="block mb-1 font-bold text-sm uppercase tracking-wider">Confirm Password</label>
+                <div class="relative">
+                    <input type="password" id="confirm-password" name="confirm-password"
+                           placeholder="Confirm Password"
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
+                           minlength="6" required>
+                    <p id="error-confirm-password"
+                       class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
+                        No Match</p>
+                </div>
+            </div>
+            <div class="form-group mb-6">
+                <label class="flex items-start gap-3 cursor-pointer group">
+                    <input type="checkbox" id="policy-confirm" name="policy-confirm" required
+                           class="mt-1 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 transition cursor-pointer">
+                    <span class="text-xs opacity-80 leading-tight group-hover:opacity-100 transition">
+                        I confirm that I understand I am responsible for the data I add, and I retain ownership of my content hosted by Google Firebase.
+                    </span>
+                </label>
+                <p id="error-policy-confirm" class="text-[10px] text-red-500 font-bold mt-1 hidden">Please confirm you understand the data policy.</p>
+            </div>
+            <div class="flex items-center justify-between mb-4">
+                <button type="submit" class="w-full px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
+                    Register
+                </button>
+            </div>
+            <p class="text-[10px] text-center opacity-60 leading-tight">
+                By registering, you agree that you are responsible for what you add. You own your data, hosted securely by Google Firebase. <a href="../support.html" class="underline font-bold">Read Policy</a>
+            </p>
+        </form>
+        <p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
+            Already have an account? <a href="login.html" onclick="window.location.replace('login.html'); return false;" class="text-green-500 hover:text-green-700 font-bold">Login</a>.
+        </p>
+    </div>
+</main>
+
+<footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
+    &copy; 2026 Poortjie Services. Empowering poortjie economies.<br><a href="../support.html" class="hover:underline">Data Policy</a>
+</footer>
+
+<script src="../scripts/theme.js"></script>
+
+<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+<script>
+    const registerForm = document.getElementById('register-form');
+    const errorMessage = document.getElementById('error-message');
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+
+    const usernameInput = document.getElementById('username');
+    const displayNameInput = document.getElementById('display-name');
+    const phoneNumberInput = document.getElementById('phone-number');
+    const policyConfirmInput = document.getElementById('policy-confirm');
+
+    usernameInput.addEventListener('input', (e) => {
+        let value = e.target.value.toLowerCase().replace(/\s/g, '');
+        if (e.target.value !== value) {
+            e.target.value = value;
+        }
+    });
+
+    usernameInput.addEventListener('paste', (e) => {
+        setTimeout(() => {
+            let value = usernameInput.value.toLowerCase().replace(/\s/g, '');
+            if (usernameInput.value !== value) {
+                usernameInput.value = value;
+            }
+        }, 0);
+    });
+
+    phoneNumberInput.addEventListener('keypress', (e) => {
+        if (!/\d/.test(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    displayNameInput.addEventListener('blur', (e) => {
+        let value = e.target.value.trim().replace(/\s+/g, ' ');
+        if (value) {
+            const words = value.split(' ');
+            const formattedWords = words.slice(0, 3).map(word => {
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            });
+            e.target.value = formattedWords.join(' ');
+        }
+        validateForm();
+    });
+
+    const getFriendlyErrorMessage = (errorCode) => {
+        switch (errorCode) {
+            case 'auth/claims-too-large':
+                return 'The claims payload provided exceeds the maximum allowed size of 1000 bytes.';
+            case 'auth/email-already-exists':
+            case 'auth/email-already-in-use':
+                return 'The provided email is already in use by an existing user.';
+            case 'auth/id-token-expired':
+                return 'The provided Firebase ID token is expired.';
+            case 'auth/id-token-revoked':
+                return 'The Firebase ID token has been revoked.';
+            case 'auth/insufficient-permission':
+                return 'Insufficient permission to access the requested resource.';
+            case 'auth/internal-error':
+                return 'The Authentication server encountered an unexpected error.';
+            case 'auth/invalid-argument':
+                return 'An invalid argument was provided to an Authentication method.';
+            case 'auth/invalid-claims':
+                return 'The custom claim attributes provided are invalid.';
+            case 'auth/invalid-continue-uri':
+                return 'The continue URL must be a valid URL string.';
+            case 'auth/invalid-creation-time':
+                return 'The creation time must be a valid UTC date string.';
+            case 'auth/invalid-credential':
+                return 'The credential used cannot be used to perform the desired action.';
+            case 'auth/invalid-disabled-field':
+                return 'The provided value for the disabled user property is invalid.';
+            case 'auth/invalid-display-name':
+                return 'The provided value for the displayName user property is invalid.';
+            case 'auth/invalid-dynamic-link-domain':
+                return 'The provided dynamic link domain is not configured or authorized.';
+            case 'auth/invalid-email':
+                return 'The provided value for the email user property is invalid.';
+            case 'auth/invalid-email-verified':
+                return 'The provided value for the emailVerified user property is invalid.';
+            case 'auth/invalid-hash-algorithm':
+                return 'The hash algorithm must match one of the supported algorithms.';
+            case 'auth/invalid-hash-block-size':
+                return 'The hash block size must be a valid number.';
+            case 'auth/invalid-hash-derived-key-length':
+                return 'The hash derived key length must be a valid number.';
+            case 'auth/invalid-hash-key':
+                return 'The hash key must a valid byte buffer.';
+            case 'auth/invalid-hash-memory-cost':
+                return 'The hash memory cost must be a valid number.';
+            case 'auth/invalid-hash-parallelization':
+                return 'The hash parallelization must be a valid number.';
+            case 'auth/invalid-hash-rounds':
+                return 'The hash rounds must be a valid number.';
+            case 'auth/invalid-hash-salt-separator':
+                return 'The hashing algorithm salt separator field must be a valid byte buffer.';
+            case 'auth/invalid-id-token':
+                return 'The provided ID token is not a valid Firebase ID token.';
+            case 'auth/invalid-last-sign-in-time':
+                return 'The last sign-in time must be a valid UTC date string.';
+            case 'auth/invalid-page-token':
+                return 'The provided next page token is invalid.';
+            case 'auth/invalid-password':
+                return 'The provided value for the password user property is invalid. It must be a string with at least six characters.';
+            case 'auth/invalid-password-hash':
+                return 'The password hash must be a valid byte buffer.';
+            case 'auth/invalid-password-salt':
+                return 'The password salt must be a valid byte buffer.';
+            case 'auth/invalid-phone-number':
+                return 'The provided value for the phoneNumber is invalid.';
+            case 'auth/invalid-photo-url':
+                return 'The provided value for the photoURL user property is invalid.';
+            case 'auth/invalid-provider-data':
+                return 'The providerData must be a valid array of UserInfo objects.';
+            case 'auth/invalid-provider-id':
+                return 'The providerId must be a valid supported provider identifier string.';
+            case 'auth/invalid-oauth-responsetype':
+                return 'Only exactly one OAuth responseType should be set to true.';
+            case 'auth/invalid-session-cookie-duration':
+                return 'The session cookie duration must be a valid number.';
+            case 'auth/invalid-uid':
+                return 'The provided uid must be a non-empty string.';
+            case 'auth/invalid-user-import':
+                return 'The user record to import is invalid.';
+            case 'auth/maximum-user-count-exceeded':
+                return 'The maximum allowed number of users to import has been exceeded.';
+            case 'auth/missing-android-pkg-name':
+                return 'An Android Package Name must be provided.';
+            case 'auth/missing-continue-uri':
+                return 'A valid continue URL must be provided in the request.';
+            case 'auth/missing-hash-algorithm':
+                return 'Importing users with password hashes requires a hashing algorithm.';
+            case 'auth/missing-ios-bundle-id':
+                return 'The request is missing a Bundle ID.';
+            case 'auth/missing-uid':
+                return 'A uid identifier is required for the current operation.';
+            case 'auth/missing-oauth-client-secret':
+                return 'The OAuth configuration client secret is required.';
+            case 'auth/operation-not-allowed':
+                return 'The provided sign-in provider is disabled for your Firebase project.';
+            case 'auth/phone-number-already-exists':
+                return 'The provided phoneNumber is already in use by an existing user.';
+            case 'auth/project-not-found':
+                return 'No Firebase project was found for the credential used.';
+            case 'auth/reserved-claims':
+                return 'One or more custom user claims provided are reserved.';
+            case 'auth/session-cookie-expired':
+                return 'The provided Firebase session cookie is expired.';
+            case 'auth/session-cookie-revoked':
+                return 'The Firebase session cookie has been revoked.';
+            case 'auth/too-many-requests':
+                return 'The number of requests exceeds the maximum allowed.';
+            case 'auth/uid-already-exists':
+                return 'The provided uid is already in use by an existing user.';
+            case 'auth/unauthorized-continue-uri':
+                return 'The domain of the continue URL is not whitelisted.';
+            case 'auth/user-disabled':
+                return 'The user account has been disabled by an administrator.';
+            case 'auth/user-not-found':
+            case 'auth/invalid-login-credentials':
+                return 'Invalid credentials provided.';
+            case 'auth/weak-password':
+                return 'The password is too weak. Use at least 6 characters.';
+            case 'auth/network-request-failed':
+                return 'Network error. Please check your internet connection.';
+            default:
+                if (errorCode === 'Username already taken') return 'This username is already taken. Please choose another one.';
+                return 'An unexpected error occurred. Please try again.';
+        }
+    };
+
+    const validateForm = () => {
+        const username = usernameInput.value;
+        const email = registerForm.email.value;
+        const displayName = displayNameInput.value;
+        const phoneNumber = phoneNumberInput.value;
+        const password = registerForm.password.value;
+        const confirmPassword = registerForm['confirm-password'].value;
+
+        const isUsernameValid = /^[a-z0-9]+$/.test(username);
+        const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const isDisplayNameValid = /^[A-Za-z]+(\s[A-Za-z]+){0,2}$/.test(displayName);
+        const isPhoneValid = phoneNumber === '' || /^\d{10}$/.test(phoneNumber);
+        const isPasswordValid = password.length >= 6;
+        const passwordsMatch = password === confirmPassword && password !== '';
+        const isPolicyConfirmed = policyConfirmInput.checked;
+
+        // Clear error messages as user types
+        document.getElementById('error-username').classList.add('hidden');
+        document.getElementById('error-email').classList.add('hidden');
+        document.getElementById('error-display-name').classList.add('hidden');
+        document.getElementById('error-phone-number').classList.add('hidden');
+        document.getElementById('error-password').classList.add('hidden');
+        document.getElementById('error-confirm-password').classList.add('hidden');
+        document.getElementById('error-policy-confirm').classList.add('hidden');
+
+        registerForm.querySelectorAll('input').forEach(input => {
+            input.classList.remove('border-red-500');
+        });
+
+        return {
+            isValid: isUsernameValid && isEmailValid && isDisplayNameValid && isPhoneValid && isPasswordValid && passwordsMatch && isPolicyConfirmed,
+            errors: {
+                username: isUsernameValid ? null : 'Username must be lowercase and contain no spaces.',
+                email: isEmailValid ? null : 'Please enter a valid email address.',
+                displayName: isDisplayNameValid ? null : 'Full name (max 3 names).',
+                phoneNumber: isPhoneValid ? null : 'Phone number must be 10 digits.',
+                password: isPasswordValid ? null : 'Password must be at least 6 characters.',
+                confirmPassword: passwordsMatch ? null : 'Passwords do not match.',
+                policyConfirm: isPolicyConfirmed ? null : 'Please confirm you understand the data policy.'
+            }
+        };
+    };
+
+    registerForm.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', validateForm);
+        if (input.type === 'checkbox') {
+            input.addEventListener('change', validateForm);
+        }
+    });
+
+    registerForm.addEventListener('submit', event => {
+        event.preventDefault();
+        errorMessage.classList.add('hidden');
+
+        const validation = validateForm();
+        if (!validation.isValid) {
+            if (validation.errors.username) {
+                document.getElementById('error-username').classList.remove('hidden');
+                usernameInput.classList.add('border-red-500');
+            }
+            if (validation.errors.email) {
+                document.getElementById('error-email').classList.remove('hidden');
+                registerForm.email.classList.add('border-red-500');
+            }
+            if (validation.errors.displayName) {
+                document.getElementById('error-display-name').classList.remove('hidden');
+                displayNameInput.classList.add('border-red-500');
+            }
+            if (validation.errors.phoneNumber) {
+                document.getElementById('error-phone-number').classList.remove('hidden');
+                phoneNumberInput.classList.add('border-red-500');
+            }
+            if (validation.errors.password) {
+                document.getElementById('error-password').classList.remove('hidden');
+                registerForm.password.classList.add('border-red-500');
+            }
+            if (validation.errors.confirmPassword) {
+                document.getElementById('error-confirm-password').classList.remove('hidden');
+                registerForm['confirm-password'].classList.add('border-red-500');
+            }
+            if (validation.errors.policyConfirm) {
+                document.getElementById('error-policy-confirm').classList.remove('hidden');
+            }
+            return;
+        }
+
+        const username = usernameInput.value;
+        const email = registerForm.email.value;
+        const displayName = displayNameInput.value;
+        const phone = phoneNumberInput.value;
+        const password = registerForm.password.value;
+
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = `<span class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Creating Account...
+        </span>`;
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(async (userCredential) => {
+                const user = userCredential.user;
+                const usernameRef = db.collection('usernames').doc(username);
+                const userRef = db.collection('users').doc(user.uid);
+
+                try {
+                    await db.runTransaction(async (transaction) => {
+                        const usernameDoc = await transaction.get(usernameRef);
+                        if (usernameDoc.exists) {
+                            throw new Error('Username already taken');
+                        }
+
+                        transaction.set(usernameRef, {
+                            uid: user.uid,
+                            claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        transaction.set(userRef, {
+                            username: username,
+                            displayName: displayName,
+                            email: email,
+                            phone: phone,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+
+                    await logUserTrace(user.uid);
+
+                    const redirectUrl = sessionStorage.getItem('redirectUrl');
+                    if (redirectUrl && !redirectUrl.includes('login.html') && !redirectUrl.includes('register.html')) {
+                        sessionStorage.removeItem('redirectUrl');
+                        window.top.location.replace(redirectUrl);
+                    } else {
+                        sessionStorage.removeItem('redirectUrl');
+                        window.top.location.replace('../index.html');
+                    }
+                } catch (transactionError) {
+                    await user.delete().catch(deleteError => {
+                    });
+                    throw transactionError;
+                }
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                errorMessage.textContent = getFriendlyErrorMessage(error.code || error.message);
+                errorMessage.classList.remove('hidden');
+                validateForm();
+            });
+    });
+</script>
+
+</body>
+</html>

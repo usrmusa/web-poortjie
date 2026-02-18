@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard | Poortjie Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon/site.webmanifest">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="../../scripts/firebase.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <script src="../../scripts/theme.js" defer></script>
+</head>
+<body class="font-sans antialiased bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen">
+
+<header class="max-w-4xl mx-auto pt-10 pb-6 px-6 flex justify-between items-center relative">
+    <div class="flex items-center gap-4">
+        <button onclick="window.location.href='../laynrider/dashboard.html'" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Back to Rider View">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-xl font-black uppercase tracking-tight">Driver <span class="text-green-600">Dashboard</span></h1>
+    </div>
+    <div class="flex items-center gap-4">
+        <div id="driver-status-badge" class="hidden sm:block px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2">
+            Offline
+        </div>
+        
+        <!-- Hamburger Menu consistent with home.html -->
+        <div id="hamburger-menu" class="relative z-50">
+            <button id="hamburger-btn" class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div id="menu-items" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl py-2 ring-1 ring-black ring-opacity-5 border border-slate-100 dark:border-slate-700">
+                <button id="menu-theme-toggle" class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <span id="menu-theme-icon">🌓</span> Mode
+                </button>
+                <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                <a href="../laynrider/dashboard.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-bicycle w-4 text-center"></i> Rider View
+                </a>
+                <a href="../../index.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-home w-4 text-center"></i> Home
+                </a>
+                <button id="logout-btn" class="hidden w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-6 pb-24 space-y-6">
+    <!-- Beta Notice Banner -->
+    <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/50 rounded-3xl flex items-start gap-4 shadow-sm">
+        <div class="p-3 bg-amber-500 text-white rounded-2xl shadow-lg shadow-amber-500/30">
+            <i class="fas fa-flask"></i>
+        </div>
+        <div>
+            <h3 class="text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">Feature in Development</h3>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
+                Actual app waiting for Google approval on Play Store, but you're welcome to try it out on beta.
+            </p>
+        </div>
+    </div>
+
+    <div id="loader-overlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+        <p class="text-sm font-bold uppercase tracking-widest animate-pulse">Loading Your Fleet Profile...</p>
+    </div>
+
+    <!-- Status Toggle Card -->
+    <div class="card p-6 rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-xl flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-black uppercase tracking-tight">Go Online</h2>
+            <p class="text-xs opacity-50 font-bold uppercase tracking-wider">Turn this on to appear on the rider map</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="status-toggle" class="sr-only peer" onchange="toggleStatus(this.checked)">
+            <div class="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+        </label>
+    </div>
+
+    <!-- Driver Info Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Profile Card -->
+        <div class="card p-8 rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-xl flex flex-col items-center text-center space-y-4">
+            <img id="driver-photo" src="https://placehold.co/150?text=Driver" class="w-24 h-24 rounded-full object-cover border-4 border-green-500 shadow-md" alt="">
+            <div>
+                <h3 id="driver-name" class="font-black text-lg uppercase tracking-tight">--</h3>
+                <p id="driver-email" class="text-xs opacity-50 font-bold">--</p>
+            </div>
+            <div class="flex gap-2">
+                <span id="driver-rating" class="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <i class="fas fa-star mr-1"></i> 5.0
+                </span>
+                <span id="driver-trips" class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    -- Trips
+                </span>
+            </div>
+        </div>
+
+        <!-- Car Details Card -->
+        <div class="md:col-span-2 card p-8 rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-xl space-y-6 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Registered Vehicle</h2>
+                </div>
+                <button id="edit-car-btn" onclick="window.location.href='register-driver.html'" class="hidden text-[8px] font-black uppercase tracking-[0.2em] px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition shadow-lg shadow-green-500/20">
+                    <i class="fas fa-edit mr-1"></i> Update Pricing
+                </button>
+                <button id="add-car-btn" onclick="window.location.href='register-driver.html'" class="hidden text-[8px] font-black uppercase tracking-[0.2em] px-3 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-plus mr-1"></i> Add Vehicle
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                <div class="col-span-2 sm:col-span-1">
+                    <img id="car-photo-display" src="https://placehold.co/200x120?text=Vehicle" class="w-full h-24 object-cover rounded-2xl border border-slate-100 dark:border-slate-700 mb-4 sm:mb-0" alt="">
+                </div>
+                <div class="grid grid-cols-2 col-span-2 gap-6">
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-40 mb-1">Make & Model</p>
+                        <p id="car-title" class="text-sm font-black uppercase">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-40 mb-1">Registration</p>
+                        <p id="car-reg" class="text-sm font-black text-green-600 uppercase">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-40 mb-1">Year</p>
+                        <p id="car-year" class="text-sm font-black">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-40 mb-1">Color</p>
+                        <p id="car-color" class="text-sm font-black">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-40 mb-1">Body Type</p>
+                        <p id="car-body" class="text-sm font-black">--</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase opacity-40 mb-1">Seats</p>
+                        <p id="car-seats" class="text-sm font-black">-- Seats</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-100 dark:border-slate-700/50 space-y-4">
+                <p class="text-[9px] font-black uppercase opacity-40">Pricing Structure</p>
+                
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl flex-grow text-center border border-slate-100 dark:border-slate-800">
+                        <p class="text-[8px] font-black uppercase opacity-40">Base Fee</p>
+                        <p id="price-base" class="text-xs font-black">--</p>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl flex-grow text-center border border-slate-100 dark:border-slate-800">
+                        <p class="text-[8px] font-black uppercase opacity-40">Rate / KM</p>
+                        <p id="price-km" class="text-xs font-black">--</p>
+                    </div>
+                </div>
+
+                <!-- Fixed Pricing Display -->
+                <div id="fixed-pricing-display" class="hidden space-y-2">
+                    <p class="text-[8px] font-black uppercase opacity-40 ml-1">Fixed Rates (from Poortjie)</p>
+                    <div id="fixed-pricing-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- Items injected by renderCarUI -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lock overlay effect -->
+            <div class="absolute top-0 right-0 p-8 opacity-5">
+                <i class="fas fa-lock text-6xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active & Recent Trips -->
+    <div class="card p-8 rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-xl space-y-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40" id="trips-list-title">Trip Requests</h2>
+            </div>
+            <div class="flex gap-2" id="trip-filters">
+                <button onclick="setTripFilter('ACTIVE')" class="trip-filter-btn active text-[8px] font-black uppercase tracking-widest px-3 py-1.5 bg-green-600 text-white rounded-full transition shadow-lg shadow-green-500/20">Active</button>
+                <button onclick="setTripFilter('HISTORY')" class="trip-filter-btn text-[8px] font-black uppercase tracking-widest px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full transition">History</button>
+            </div>
+        </div>
+        <div id="active-trips-list" class="space-y-4">
+            <div class="text-center py-12 opacity-30 italic text-sm">
+                No active requests at the moment. Go online to start receiving trips.
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    let currentUser = null;
+    let driverData = null;
+    let carData = null;
+    let currentTripFilter = 'ACTIVE';
+    let tripsUnsubscribe = null;
+
+    let driverUnsubscribe = null;
+
+    firebase.auth().onAuthStateChanged(user => {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (!user) {
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            if (driverUnsubscribe) driverUnsubscribe();
+            if (tripsUnsubscribe) tripsUnsubscribe();
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../../authentication/login.html';
+            return;
+        }
+        currentUser = user;
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
+        observeDriverProfile();
+    });
+
+    // Initialize Hamburger Menu and Logout
+    document.addEventListener('DOMContentLoaded', () => {
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const menuItems = document.getElementById('menu-items');
+
+        if (hamburgerBtn && menuItems) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuItems.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                menuItems.classList.add('hidden');
+            });
+
+            menuItems.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../../authentication/login.html';
+                });
+            });
+        }
+    });
+
+    function observeDriverProfile() {
+        if (driverUnsubscribe) driverUnsubscribe();
+
+        driverUnsubscribe = db.collection('kasilayn').doc('fleet').collection('drivers').doc(currentUser.uid)
+            .onSnapshot(doc => {
+                if (!doc.exists) {
+                    // Not a driver, send to registration
+                    window.location.href = 'register-driver.html';
+                    return;
+                }
+                driverData = doc.data();
+                
+                // Render Driver Info
+                document.getElementById('driver-name').textContent = driverData.displayName || 'Unknown';
+                document.getElementById('driver-email').textContent = driverData.email || '--';
+                if (driverData.photoUrl) document.getElementById('driver-photo').src = driverData.photoUrl;
+
+                // Render Stats
+                const stats = driverData.stats || {};
+                const rating = stats.rating || 5.0;
+                const totalRatings = stats.totalRatings || 0;
+                
+                // Fallback: If stats.totalTrips is 0 or missing, let's also count completed trips in history
+                // to be sure we are showing the "actual" number of trips
+                let totalTrips = stats.totalTrips || 0;
+
+                document.getElementById('driver-rating').innerHTML = `<i class="fas fa-star mr-1"></i> ${rating.toFixed(1)} (${totalRatings})`;
+                document.getElementById('driver-trips').textContent = `${totalTrips} ${totalTrips === 1 ? 'Trip' : 'Trips'}`;
+
+                // If it shows 0, double check with the collection count for this driver
+                if (totalTrips === 0) {
+                    db.collection('kasilayn').doc('fleet').collection('bookings')
+                        .where('driverUid', '==', currentUser.uid)
+                        .where('status', '==', 'COMPLETED')
+                        .get()
+                        .then(snap => {
+                            if (!snap.empty && snap.size > 0) {
+                                totalTrips = snap.size;
+                                document.getElementById('driver-trips').textContent = `${totalTrips} ${totalTrips === 1 ? 'Trip' : 'Trips'}`;
+                                
+                                // Sync back to driver doc if it was out of sync (optional but good for performance next time)
+                                db.collection('kasilayn').doc('fleet').collection('drivers').doc(currentUser.uid).update({
+                                    'stats.totalTrips': totalTrips
+                                }).catch(e => console.error("Sync error:", e));
+                            }
+                        });
+                }
+                
+                // Update Status Toggle
+                const status = (driverData.status || 'OFFLINE').toUpperCase();
+                document.getElementById('status-toggle').checked = (status === 'ONLINE' || status === 'AVAILABLE');
+                updateStatusBadge(status);
+
+                // Start listening for bookings (only once or if filter changes)
+                if (!tripsUnsubscribe) {
+                    observeBookings();
+                }
+
+                // Load Car Data (one-time or also on change? Let's do one-time for car unless reg changes)
+                let carReg = driverData.carRegistration;
+                if (!carReg && driverData.carRef) {
+                    carReg = driverData.carRef.id;
+                }
+
+                if (carReg && (!carData || carData.registration !== carReg)) {
+                    loadCarData(carReg);
+                } else if (!carReg) {
+                    document.getElementById('add-car-btn').classList.remove('hidden');
+                }
+
+                document.getElementById('loader-overlay').classList.add('hidden');
+            }, error => {
+                console.error("Driver profile listener error:", error);
+            });
+    }
+
+    async function loadCarData(carReg) {
+        try {
+            const carSnap = await db.collection('kasilayn').doc('fleet').collection('cars').doc(carReg).get();
+            if (carSnap.exists) {
+                carData = carSnap.data();
+                renderCarUI();
+                document.getElementById('edit-car-btn').classList.remove('hidden');
+                document.getElementById('add-car-btn').classList.add('hidden');
+
+                // Render Car Photo
+                const carPhotoImg = document.getElementById('car-photo-display');
+                if (carPhotoImg && carData.photoUrls && carData.photoUrls.length > 0) {
+                    carPhotoImg.src = carData.photoUrls[0];
+                }
+            } else {
+                document.getElementById('add-car-btn').classList.remove('hidden');
+                document.getElementById('edit-car-btn').classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Error loading car data:", e);
+        }
+    }
+
+    function renderCarUI() {
+        if (!carData) return;
+        document.getElementById('car-title').textContent = `${carData.make} ${carData.model}`;
+        document.getElementById('car-reg').textContent = carData.registration;
+        document.getElementById('car-year').textContent = carData.year || '--';
+        document.getElementById('car-color').textContent = carData.color || '--';
+        document.getElementById('car-body').textContent = carData.bodyType || '--';
+        document.getElementById('car-seats').textContent = `${carData.seats || '--'} Seats`;
+        
+        if (carData.pricing) {
+            document.getElementById('price-base').textContent = `R ${carData.pricing.baseFee}`;
+            document.getElementById('price-km').textContent = `R ${carData.pricing.ratePerKm}`;
+            
+            // Render Fixed Pricing
+            const fixedDisplay = document.getElementById('fixed-pricing-display');
+            const fixedList = document.getElementById('fixed-pricing-list');
+            if (fixedDisplay && fixedList) {
+                if (carData.pricing.fixed && carData.pricing.fixed.length > 0) {
+                    fixedDisplay.classList.remove('hidden');
+                    fixedList.innerHTML = carData.pricing.fixed.map(item => `
+                        <div class="flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <span class="text-[10px] font-bold uppercase opacity-60">${item.destination}</span>
+                            <span class="text-xs font-black text-green-600">R ${item.amount}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    fixedDisplay.classList.add('hidden');
+                }
+            }
+        }
+
+        if (carData.photoUrls && carData.photoUrls.length > 0) {
+            const carPhotoImg = document.getElementById('car-photo-display');
+            if (carPhotoImg) carPhotoImg.src = carData.photoUrls[0];
+        }
+    }
+
+    function updateStatusBadge(status) {
+        const badge = document.getElementById('driver-status-badge');
+        badge.textContent = status;
+        
+        if (status === 'ONLINE' || status === 'AVAILABLE') {
+            badge.className = 'px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 border-green-500 bg-green-500 text-white animate-pulse';
+        } else if (status === 'BUSY' || status === 'ON_TRIP') {
+            badge.className = 'px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 border-amber-500 bg-amber-500 text-white';
+        } else {
+            badge.className = 'px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2 border-slate-200 dark:border-slate-700 opacity-50';
+        }
+    }
+
+    async function toggleStatus(isOnline) {
+        if (!currentUser) return;
+        
+        const newStatus = isOnline ? 'ONLINE' : 'OFFLINE';
+        updateStatusBadge(newStatus);
+        
+        try {
+            await db.collection('kasilayn').doc('fleet').collection('drivers').doc(currentUser.uid).update({
+                status: newStatus,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("Status updated to:", newStatus);
+        } catch (e) {
+            console.error("Failed to update status:", e);
+            alert("Error updating status. Please try again.");
+            // Revert toggle
+            document.getElementById('status-toggle').checked = !isOnline;
+            updateStatusBadge(isOnline ? 'OFFLINE' : 'ONLINE');
+        }
+    }
+
+    function setTripFilter(filter) {
+        currentTripFilter = filter;
+        
+        // Update UI
+        document.querySelectorAll('.trip-filter-btn').forEach(btn => {
+            if (btn.textContent.toUpperCase() === filter) {
+                btn.classList.add('active', 'bg-green-600', 'text-white', 'shadow-lg', 'shadow-green-500/20');
+                btn.classList.remove('bg-slate-100', 'dark:bg-slate-700', 'text-slate-500', 'dark:text-slate-400');
+            } else {
+                btn.classList.remove('active', 'bg-green-600', 'text-white', 'shadow-lg', 'shadow-green-500/20');
+                btn.classList.add('bg-slate-100', 'dark:bg-slate-700', 'text-slate-500', 'dark:text-slate-400');
+            }
+        });
+
+        document.getElementById('trips-list-title').textContent = filter === 'ACTIVE' ? 'Trip Requests' : 'Trip History';
+
+        // Re-observe with new filter
+        observeBookings();
+    }
+
+    /**
+     * TRIP MANAGEMENT
+     */
+    function observeBookings() {
+        if (!currentUser) return;
+        if (tripsUnsubscribe) tripsUnsubscribe();
+
+        let query = db.collection('kasilayn').doc('fleet').collection('bookings')
+            .where('driverUid', '==', currentUser.uid);
+
+        if (currentTripFilter === 'ACTIVE') {
+            query = query.where('status', 'in', ['PENDING', 'ACCEPTED', 'ON_TRIP']);
+        } else {
+            query = query.where('status', 'in', ['COMPLETED', 'CANCELLED']);
+        }
+
+        tripsUnsubscribe = query.orderBy('createdAt', 'desc').limit(20)
+            .onSnapshot(snapshot => {
+                const tripsList = document.getElementById('active-trips-list');
+                if (!tripsList) return;
+
+                if (snapshot.empty) {
+                    tripsList.innerHTML = `
+                        <div class="text-center py-12 opacity-30 italic text-sm">
+                            ${currentTripFilter === 'ACTIVE' ? 'No active requests at the moment. Go online to start receiving trips.' : 'No trip history found.'}
+                        </div>
+                    `;
+                    return;
+                }
+
+                tripsList.innerHTML = snapshot.docs.map(doc => {
+                    const trip = doc.data();
+                    const tripId = doc.id;
+                    const status = trip.status || 'PENDING';
+                    
+                    let statusColor = 'bg-yellow-500';
+                    if (status === 'ACCEPTED') statusColor = 'bg-blue-500';
+                    if (status === 'ON_TRIP') statusColor = 'bg-emerald-500';
+                    if (status === 'COMPLETED') statusColor = 'bg-gray-500';
+                    if (status === 'CANCELLED') statusColor = 'bg-red-500';
+
+                    const rating = trip.rating || 0;
+
+                    return `
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-4">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-black uppercase tracking-tight">${trip.requesterDisplayName || 'Rider'}</h3>
+                                        <p class="text-[10px] font-bold opacity-50">${trip.whenText || 'ASAP'}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white ${statusColor}">
+                                        ${status}
+                                    </span>
+                                    ${rating > 0 ? `
+                                        <div class="flex gap-0.5 text-amber-400 text-[8px]">
+                                            ${Array(5).fill(0).map((_, i) => `<i class="${i < rating ? 'fas' : 'far'} fa-star"></i>`).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-3 pl-2 border-l-2 border-dashed border-slate-200 dark:border-slate-700 ml-5">
+                                <div class="relative">
+                                    <p class="text-[9px] font-black uppercase opacity-40 tracking-widest">Pickup</p>
+                                    <p class="text-xs font-bold truncate">${trip.pickupShort || trip.pickup}</p>
+                                </div>
+                                <div class="relative">
+                                    <p class="text-[9px] font-black uppercase opacity-40 tracking-widest">Destination</p>
+                                    <p class="text-xs font-bold truncate">${trip.destinationShort || trip.destination}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2">
+                                <div>
+                                    <p class="text-[9px] font-black uppercase opacity-40 tracking-widest">Est. Fare</p>
+                                    <p class="text-lg font-black text-green-600">R ${trip.estimatedFare}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    ${status === 'PENDING' ? `
+                                        <button onclick="updateTripStatus('${tripId}', 'ACCEPTED')" class="px-4 py-2 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-green-700 transition shadow-lg shadow-green-500/20">Accept</button>
+                                        <button onclick="updateTripStatus('${tripId}', 'CANCELLED')" class="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-100 transition">Decline</button>
+                                    ` : ''}
+                                    ${status === 'ACCEPTED' ? `
+                                        <button onclick="updateTripStatus('${tripId}', 'ON_TRIP')" class="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20">Start Trip</button>
+                                    ` : ''}
+                                    ${status === 'ON_TRIP' ? `
+                                        <button onclick="updateTripStatus('${tripId}', 'COMPLETED')" class="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-500/20">Complete</button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            ${trip.ratingComment ? `
+                                <div class="mt-2 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 italic text-[10px] opacity-70">
+                                    "${trip.ratingComment}"
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }, error => {
+                console.error("Bookings listener error:", error);
+                const tripsList = document.getElementById('active-trips-list');
+                if (tripsList) {
+                    tripsList.innerHTML = `<p class="text-center py-6 text-red-500 text-xs font-bold">Failed to load trips: ${error.message}</p>`;
+                }
+            });
+    }
+
+    async function updateTripStatus(tripId, newStatus) {
+        try {
+            const now = firebase.firestore.FieldValue.serverTimestamp();
+            const updatePayload = {
+                status: newStatus,
+                updatedAt: now
+            };
+
+            // If completing a trip, update driver stats atomically
+            if (newStatus === 'COMPLETED') {
+                await db.runTransaction(async (transaction) => {
+                    const tripRef = db.collection('kasilayn').doc('fleet').collection('bookings').doc(tripId);
+                    const driverRef = db.collection('kasilayn').doc('fleet').collection('drivers').doc(currentUser.uid);
+
+                    const driverSnap = await transaction.get(driverRef);
+                    const driverData = driverSnap.data() || {};
+                    const stats = driverData.stats || {};
+                    const currentTotal = stats.totalTrips || 0;
+
+                    transaction.update(tripRef, updatePayload);
+                    transaction.update(driverRef, {
+                        'stats.totalTrips': currentTotal + 1,
+                        status: 'ONLINE', // Automatically back to online after completion
+                        updatedAt: now
+                    });
+                });
+            } else {
+                await db.collection('kasilayn').doc('fleet').collection('bookings').doc(tripId).update(updatePayload);
+                
+                // Also update driver status if accepting or starting
+                if (newStatus === 'ACCEPTED' || newStatus === 'ON_TRIP') {
+                    await db.collection('kasilayn').doc('fleet').collection('drivers').doc(currentUser.uid).update({
+                        status: newStatus === 'ON_TRIP' ? 'ON_TRIP' : 'BUSY',
+                        updatedAt: now
+                    });
+                }
+            }
+            
+            console.log(`Trip ${tripId} updated to ${newStatus}`);
+        } catch (e) {
+            console.error("Failed to update trip:", e);
+            alert("Error: " + e.message);
+        }
+    }
+
+</script>
+</body>
+</html>

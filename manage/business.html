@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Poortjie Services</title>
+    <meta name="robots" content="noindex, nofollow"> <!-- Prevents search engines from indexing this page -->
+    <meta name="theme-color" content="#22c55e">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div id="admin-content" class="hidden">
+    <header class="max-w-6xl mx-auto pt-24 pb-16 px-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
+            <a href="../index.html"
+               onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+               class="w-full md:w-auto text-center px-6 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition whitespace-nowrap">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </a>
+        </div>
+        <p id="welcome-message" class="text-xl opacity-80">Welcome, Super User!</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-24">
+        <div class="card p-8 rounded-2xl">
+            <h2 class="text-2xl font-bold mb-6">Business Applications</h2>
+
+            <!-- Filters, Search and Sort -->
+            <div class="mb-8 space-y-4">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <!-- Filter Chips -->
+                    <div id="filter-chips" class="flex flex-wrap gap-2">
+                        <button onclick="setFilter('all')" class="filter-chip px-4 py-1 rounded-full text-sm font-semibold border transition bg-green-600 text-white border-green-600" data-filter="all">All <span id="count-all" class="ml-1 opacity-70"></span></button>
+                        <button onclick="setFilter('pending')" class="filter-chip px-4 py-1 rounded-full text-sm font-semibold border transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-gray-300 dark:border-slate-600" data-filter="pending">Pending <span id="count-pending" class="ml-1 opacity-70"></span></button>
+                        <button onclick="setFilter('approved')" class="filter-chip px-4 py-1 rounded-full text-sm font-semibold border transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-gray-300 dark:border-slate-600" data-filter="approved">Approved <span id="count-approved" class="ml-1 opacity-70"></span></button>
+                        <button onclick="setFilter('rejected')" class="filter-chip px-4 py-1 rounded-full text-sm font-semibold border transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-gray-300 dark:border-slate-600" data-filter="rejected">Rejected <span id="count-rejected" class="ml-1 opacity-70"></span></button>
+                        <button id="disabled-filter" onclick="setFilter('disabled')" class="filter-chip hidden px-4 py-1 rounded-full text-sm font-semibold border transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-gray-300 dark:border-slate-600" data-filter="disabled">Disabled <span id="count-disabled" class="ml-1 opacity-70"></span></button>
+                    </div>
+
+                    <!-- Sort -->
+                    <div class="flex items-center gap-2">
+                        <label for="sort-apps" class="text-sm opacity-70">Sort by:</label>
+                        <select id="sort-apps" onchange="filterAndSort()" class="px-3 py-2 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                            <option value="newest">Newest First</option>
+                            <option value="owner">Owner Name (A-Z)</option>
+                            <option value="business">Business Name (A-Z)</option>
+                            <option value="ratings">Most Ratings</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <label for="search-apps"></label><input type="text" id="search-apps" oninput="filterAndSort()" placeholder="Search by business, owner, or email..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+
+            <div id="applications-list" class="space-y-4">
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="../scripts/theme.js"></script>
+<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+
+<script>
+    let currentCategories = [];
+    let allApplications = [];
+    let currentFilter = 'all';
+    let isSuperUser = false;
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            const userRef = db.collection('users').doc(user.uid);
+            userRef.get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    const isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
+
+                    if (isSuperUser || isPoortjieAdmin) {
+                        const welcomeMsg = document.getElementById('welcome-message');
+                        const name = userData.name || (isSuperUser ? 'Super User' : 'Admin');
+                        welcomeMsg.textContent = `Welcome, ${name}!`;
+
+                        if (isSuperUser) {
+                            document.getElementById('disabled-filter').classList.remove('hidden');
+                        }
+
+                        document.getElementById('admin-content').classList.remove('hidden');
+                        fetchCategories().then(() => {
+                            loadApplications();
+                        });
+                    } else {
+                        window.top.location.replace('../index.html');
+                    }
+                } else {
+                    window.top.location.replace('../index.html');
+                }
+            }).catch((error) => {
+                console.error("Error getting user data:", error);
+                alert('An error occurred while verifying your permissions.');
+                window.top.location.replace('../index.html');
+            });
+        } else {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.top.location.replace('../authentication/login.html');
+        }
+    });
+
+    async function fetchCategories() {
+        try {
+            const doc = await db.collection('poortjie').doc('services').get();
+            if (doc.exists && doc.data().homeScreen) {
+                currentCategories = Object.keys(doc.data().homeScreen).sort();
+            }
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    }
+
+    function toggleDetails(appId) {
+        const details = document.getElementById(`details-${appId}`);
+        const btn = event.currentTarget;
+        if (details.classList.contains('hidden')) {
+            details.classList.remove('hidden');
+            btn.textContent = 'Hide Details';
+        } else {
+            details.classList.add('hidden');
+            btn.textContent = 'Show Details';
+        }
+    }
+
+    function getStatusBadge(status) {
+        switch (status) {
+            case 'approved':
+                return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-600 bg-green-200">Approved</span>`;
+            case 'rejected':
+                return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-600 bg-red-200">Rejected</span>`;
+            case 'disabled':
+                return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-gray-600 bg-gray-200">Disabled</span>`;
+            case 'update':
+                return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">Update Requested</span>`;
+            default:
+                return `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-yellow-600 bg-yellow-200">Pending</span>`;
+        }
+    }
+
+    function loadApplications() {
+        const applicationsList = document.getElementById('applications-list');
+        const applicationsRef = db.collection('poortjie').doc('applications').collection('listings');
+
+        // Use onSnapshot for real-time updates, but store in allApplications
+        applicationsRef.onSnapshot(snapshot => {
+            allApplications = [];
+            snapshot.forEach(doc => {
+                allApplications.push({ id: doc.id, ...doc.data() });
+            });
+            filterAndSort();
+        }, error => {
+            console.error("Error loading applications:", error);
+            applicationsList.innerHTML = '<p>Error loading applications. Check console for details.</p>';
+        });
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+
+        // Update UI
+        document.querySelectorAll('.filter-chip').forEach(btn => {
+            if (btn.getAttribute('data-filter') === filter) {
+                btn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'border-gray-300', 'dark:border-slate-600');
+                btn.classList.add('bg-green-600', 'text-white', 'border-green-600');
+            } else {
+                btn.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'border-gray-300', 'dark:border-slate-600');
+                btn.classList.remove('bg-green-600', 'text-white', 'border-green-600');
+            }
+        });
+
+        filterAndSort();
+    }
+
+    async function filterAndSort() {
+        const searchTerm = document.getElementById('search-apps').value.toLowerCase();
+        const sortValue = document.getElementById('sort-apps').value;
+
+        // Update Counts
+        document.getElementById('count-all').textContent = `(${allApplications.length})`;
+        document.getElementById('count-pending').textContent = `(${allApplications.filter(a => (a.status || 'pending') === 'pending' || a.status === 'update').length})`;
+        document.getElementById('count-approved').textContent = `(${allApplications.filter(a => a.status === 'approved').length})`;
+        document.getElementById('count-rejected').textContent = `(${allApplications.filter(a => a.status === 'rejected').length})`;
+        document.getElementById('count-disabled').textContent = `(${allApplications.filter(a => a.status === 'disabled').length})`;
+
+        // Enrich for search and sort
+        let appsToProcess = await Promise.all(allApplications.map(async app => {
+            if (app.businessRef && !app.businessName) {
+                try {
+                    const doc = await db.doc(app.businessRef).get();
+                    if (doc.exists) {
+                        return { ...doc.data(), ...app };
+                    }
+                } catch (e) {
+                    console.error("Error fetching businessRef data for enrich:", e);
+                }
+            }
+            return app;
+        }));
+
+        let filtered = appsToProcess;
+
+        // Apply Status Filter
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(app => {
+                const status = app.status || 'pending';
+                if (currentFilter === 'pending') {
+                    return status === 'pending' || status === 'update';
+                }
+                return status === currentFilter;
+            });
+        }
+
+        // Apply Search
+        if (searchTerm) {
+            filtered = filtered.filter(app =>
+                app.businessName?.toLowerCase().includes(searchTerm) ||
+                app.subHeading?.toLowerCase().includes(searchTerm) ||
+                app.description?.toLowerCase().includes(searchTerm) ||
+                app.ownerName?.toLowerCase().includes(searchTerm) ||
+                app.userEmail?.toLowerCase().includes(searchTerm) ||
+                app.id?.toLowerCase().includes(searchTerm) ||
+                app.businessType?.toLowerCase().includes(searchTerm) ||
+                app.status?.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Apply Sort
+        if (sortValue === 'owner') {
+            filtered.sort((a, b) => (a.ownerName || '').localeCompare(b.ownerName || ''));
+        } else if (sortValue === 'business') {
+            filtered.sort((a, b) => (a.businessName || '').localeCompare(b.businessName || ''));
+        } else if (sortValue === 'newest') {
+            filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        } else if (sortValue === 'ratings') {
+            filtered.sort((a, b) => {
+                const countA = a.ratings ? Object.keys(a.ratings).length : 0;
+                const countB = b.ratings ? Object.keys(b.ratings).length : 0;
+                return countB - countA;
+            });
+        }
+
+        renderApplications(filtered).then(() => {
+            resolveUserNames();
+        });
+    }
+
+    function resolveUserNames() {
+        const nameElements = document.querySelectorAll('.user-name');
+        const uids = [...new Set([...nameElements].map(el => el.dataset.uid))];
+
+        uids.forEach(uid => {
+            if (!uid) return;
+            db.collection('users').doc(uid).get().then(doc => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    const name = userData.displayName || 'Unknown User';
+                    document.querySelectorAll(`.user-name[data-uid="${uid}"]`).forEach(el => {
+                        el.textContent = name;
+                    });
+                }
+            });
+        });
+    }
+
+    async function renderApplications(applications) {
+        const applicationsList = document.getElementById('applications-list');
+
+        // We use applications directly as they are already enriched in filterAndSort
+        const enrichedApplications = applications;
+
+        const renderDiff = (oldData, newData) => {
+            if (!oldData) return '';
+            const fields = [
+                { label: 'Business Name', key: 'businessName' },
+                { label: 'Sub Heading', key: 'subHeading' },
+                { label: 'Owner Name', key: 'ownerName' },
+                { label: 'Phone', key: 'phone' },
+                { label: 'Type', key: 'businessType' },
+                { label: 'Address', key: 'address' },
+                { label: 'WhatsApp', key: 'whatsapp' },
+                { label: 'Facebook', key: 'facebook' },
+                { label: 'Website', key: 'website' },
+                { label: 'Operating Hours', key: 'hours' },
+                { label: 'Description', key: 'description' },
+                { label: 'Photos', key: 'photos' }
+            ];
+
+            let diffHtml = '<div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 text-xs">';
+            diffHtml += '<p class="font-bold uppercase text-blue-700 dark:text-blue-400 mb-2">Data Differences (Live vs Application)</p>';
+            diffHtml += '<div class="space-y-1">';
+
+            let hasChanges = false;
+
+            const normalize = (val) => {
+                if (val === null || val === undefined || val === '') return 'N/A';
+                return val.toString().trim().replace(/\s+/g, ' ');
+            };
+
+            fields.forEach(field => {
+                if (field.key === 'photos') return; // Handled separately
+                const oldVal = normalize(oldData[field.key]);
+                const newVal = normalize(newData[field.key]);
+
+                if (oldVal !== newVal) {
+                    hasChanges = true;
+                    diffHtml += `
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1 border-b border-blue-100/50 dark:border-blue-900/30 last:border-0">
+                            <span class="font-bold">${field.label}:</span>
+                            <span class="text-red-600 dark:text-red-400 line-through truncate" title="${oldVal}">${oldVal}</span>
+                            <span class="text-green-600 dark:text-green-400 font-semibold truncate" title="${newVal}">${newVal}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            // Compare Coordinates
+            const oldLat = oldData.latitude ? parseFloat(oldData.latitude).toFixed(6) : 'N/A';
+            const oldLng = oldData.longitude ? parseFloat(oldData.longitude).toFixed(6) : 'N/A';
+            const newLat = newData.latitude ? parseFloat(newData.latitude).toFixed(6) : 'N/A';
+            const newLng = newData.longitude ? parseFloat(newData.longitude).toFixed(6) : 'N/A';
+
+            if (oldLat !== newLat || oldLng !== newLng) {
+                hasChanges = true;
+                diffHtml += `
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1 border-b border-blue-100/50 dark:border-blue-900/30 last:border-0">
+                        <span class="font-bold">Map Location:</span>
+                        <span class="text-red-600 dark:text-red-400 line-through truncate">${oldLat}, ${oldLng}</span>
+                        <span class="text-green-600 dark:text-green-400 font-semibold truncate">${newLat}, ${newLng}</span>
+                    </div>
+                `;
+            }
+
+            // Compare Services
+            const oldServices = oldData.services || [];
+            const newServices = newData.services || [];
+            const formatServices = (services) => {
+                if (services.length === 0) return 'None';
+                return services.map(s => `${s.name} (${s.price || 'No price'})`).join(', ');
+            };
+
+            const oldServicesStr = formatServices(oldServices);
+            const newServicesStr = formatServices(newServices);
+
+            if (oldServicesStr !== newServicesStr) {
+                hasChanges = true;
+                diffHtml += `
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1 border-b border-blue-100/50 dark:border-blue-900/30 last:border-0">
+                        <span class="font-bold">Services:</span>
+                        <span class="text-red-600 dark:text-red-400 line-through truncate" title="${oldServicesStr}">${oldServicesStr}</span>
+                        <span class="text-green-600 dark:text-green-400 font-semibold truncate" title="${newServicesStr}">${newServicesStr}</span>
+                    </div>
+                `;
+            }
+
+            // Compare Photos
+            const oldPhotos = oldData.photos || [];
+            const newPhotos = newData.photos || [];
+            const photosChanged = oldPhotos.length !== newPhotos.length || oldPhotos.some((p, i) => p !== newPhotos[i]);
+
+            if (photosChanged) {
+                hasChanges = true;
+                const renderPhotosList = (photos) => {
+                    if (photos.length === 0) return 'None';
+                    return photos.map(p => `<img src="${p}" class="w-8 h-8 object-cover rounded border border-gray-200 inline-block mr-1" alt="">`).join('');
+                };
+                diffHtml += `
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1 border-b border-blue-100/50 dark:border-blue-900/30 last:border-0">
+                        <span class="font-bold">Photos:</span>
+                        <div class="opacity-50 grayscale">${renderPhotosList(oldPhotos)}</div>
+                        <div>${renderPhotosList(newPhotos)}</div>
+                    </div>
+                `;
+            }
+
+            if (!hasChanges) {
+                diffHtml += '<p class="opacity-60 italic">No significant field changes detected.</p>';
+            }
+
+            diffHtml += '</div></div>';
+            return diffHtml;
+        };
+
+        if (applications.length === 0) {
+            applicationsList.innerHTML = '<p class="text-center py-8 opacity-60">No matching applications found.</p>';
+            return;
+        }
+
+        // Pre-check for existence of pending applications to show "Approve Update"
+        const existenceChecks = await Promise.all(enrichedApplications.map(async app => {
+            const isPending = !app.status || app.status === 'pending' || app.status === 'update';
+            if (isPending && app.businessType && app.businessType !== 'Other') {
+                try {
+                    const doc = await db.collection('poortjie').doc('services').collection(app.businessType).doc(app.id).get();
+                    return { id: app.id, exists: doc.exists, existingData: doc.exists ? doc.data() : null };
+                } catch (e) {
+                    console.error("Error checking existence for", app.id, e);
+                    return { id: app.id, exists: false, existingData: null };
+                }
+            }
+            return { id: app.id, exists: false, existingData: null };
+        }));
+
+        const existsMap = existenceChecks.reduce((acc, curr) => {
+            acc[curr.id] = { exists: curr.exists, data: curr.existingData };
+            return acc;
+        }, {});
+
+        let html = '';
+        enrichedApplications.forEach(app => {
+            const isPending = !app.status || app.status === 'pending' || app.status === 'update';
+            const isOther = app.businessType === 'Other';
+            const isOldData = !app.businessRef && (app.status === 'approved' || app.status === 'update' || app.status === 'rejected');
+            const check = existsMap[app.id];
+            const alreadyExists = check?.exists;
+            const existingData = check?.data;
+
+            html += `
+                <div class="p-6 card rounded-xl border border-gray-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h4 class="text-lg font-bold">${app.businessName}</h4>
+                            ${getStatusBadge(app.status)}
+                            ${app.rating ? `
+                                <div class="flex items-center gap-1 bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded text-[10px] font-bold">
+                                    <i class="fas fa-star text-[8px]"></i> ${app.rating.toFixed(1)}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm opacity-80">
+                            <p><span class="font-semibold">Owner:</span> ${app.ownerName}</p>
+                            <p><span class="font-semibold">Email:</span> ${app.userEmail || 'N/A'}</p>
+                            <p><span class="font-semibold">Phone:</span> ${app.phone}</p>
+                            <p><span class="font-semibold">Type:</span> ${app.businessType}</p>
+                        </div>
+
+                        <div id="details-${app.id}" class="hidden mt-4 pt-4 border-t border-gray-100 dark:border-slate-800 text-sm space-y-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 opacity-80">
+                                <p><span class="font-semibold">Address:</span> ${app.address || 'N/A'}</p>
+                                <p><span class="font-semibold">WhatsApp:</span> ${app.whatsapp || 'N/A'}</p>
+                                <p><span class="font-semibold">Facebook:</span> ${app.facebook || 'N/A'}</p>
+                                <p><span class="font-semibold">Website:</span> ${app.website || 'N/A'}</p>
+                            </div>
+                            <p class="opacity-80"><span class="font-semibold">Description:</span> ${app.description || 'No description'}</p>
+                            
+                            ${app.photos && app.photos.length > 0 ? `
+                                <div class="pt-2">
+                                    <p class="font-semibold mb-2">Photos:</p>
+                                    <div class="flex gap-2 overflow-x-auto pb-2">
+                                        ${app.photos.map(url => `
+                                            <a href="${url}" target="_blank" class="shrink-0">
+                                                <img src="${url}" class="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-slate-700 hover:scale-105 transition" alt="">
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${isPending && alreadyExists ? renderDiff(existingData, app) : ''}
+                            ${app.approvedBy ? `
+                            <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-900/30">
+                                <p class="text-xs font-bold uppercase text-green-700 dark:text-green-400 mb-1">Approval Info</p>
+                                <div class="flex flex-col sm:flex-row gap-x-8 gap-y-1 text-xs">
+                                    <p><span class="font-semibold">Approved By:</span> <span class="user-name" data-uid="${app.approvedBy}">${app.approvedBy}</span></p>
+                                    <p><span class="font-semibold">Date:</span> ${app.approvedAt?.toDate ? app.approvedAt.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${app.rejectedBy ? `
+                            <div class="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30">
+                                <p class="text-xs font-bold uppercase text-red-700 dark:text-red-400 mb-1">Rejection Info</p>
+                                <div class="flex flex-col sm:flex-row gap-x-8 gap-y-1 text-xs">
+                                    <p><span class="font-semibold">Rejected By:</span> <span class="user-name" data-uid="${app.rejectedBy}">${app.rejectedBy}</span></p>
+                                    <p><span class="font-semibold">Date:</span> ${app.rejectedAt?.toDate ? app.rejectedAt.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${app.disabledBy ? `
+                            <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-900/20 rounded-lg border border-slate-100 dark:border-slate-800">
+                                <p class="text-xs font-bold uppercase text-slate-700 dark:text-slate-400 mb-1">Disabling Info</p>
+                                <div class="flex flex-col sm:flex-row gap-x-8 gap-y-1 text-xs">
+                                    <p><span class="font-semibold">Disabled By:</span> <span class="user-name" data-uid="${app.disabledBy}">${app.disabledBy}</span></p>
+                                    <p><span class="font-semibold">Date:</span> ${app.disabledAt?.toDate ? app.disabledAt.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${isPending && isOther ? `
+                        <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-200 dark:border-slate-700">
+                            <p class="text-xs font-bold uppercase mb-2">Reassign Category</p>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <select id="category-select-${app.id}" class="flex-grow text-sm p-2 rounded bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600">
+                                    <option value="">-- Choose Existing --</option>
+                                    ${currentCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                                </select>
+                                <input type="text" id="category-input-${app.id}" placeholder="Or type new category" class="flex-grow text-sm p-2 rounded bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600">
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="flex flex-wrap gap-2 shrink-0">
+                        <button onclick="toggleDetails('${app.id}')" class="text-xs font-bold uppercase tracking-wider opacity-60 hover:opacity-100 transition px-3 py-1 border border-gray-300 dark:border-slate-600 rounded-lg">Show Details</button>
+                        ${isPending ? `
+                        <button onclick="approveApplication('${app.id}')" class="bg-green-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-green-700 transition shadow-sm">${alreadyExists ? 'Approve Update' : 'Approve'}</button>
+                        <button onclick="requestUpdate('${app.id}')" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">Update</button>
+                        ${!alreadyExists ? `<button onclick="rejectApplication('${app.id}')" class="bg-red-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-700 transition shadow-sm">Reject</button>` : ''}
+                        ` : ''}
+                        ${isSuperUser && app.status === 'approved' ? `
+                        <button onclick="disableListing('${app.id}')" class="bg-slate-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-slate-700 transition shadow-sm">Disable</button>
+                        ` : ''}
+                        ${isSuperUser ? `
+                        <button onclick="brutalDelete('${app.id}', '${app.businessType}')" class="bg-red-700 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-800 transition shadow-sm">
+                            <i class="fas fa-trash-alt mr-1"></i> Delete
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        applicationsList.innerHTML = html;
+    }
+
+    async function disableListing(appId) {
+        if (!confirm('Are you sure you want to disable this listing? It will be removed from public view.')) return;
+
+        try {
+            const currentUserId = firebase.auth().currentUser?.uid;
+            const appRef = db.collection('poortjie').doc('applications').collection('listings').doc(appId);
+            const appDoc = await appRef.get();
+            if (!appDoc.exists) throw "Application does not exist!";
+            const appData = appDoc.data();
+
+            const servicesRef = db.collection('poortjie').doc('services');
+            const liveServiceRef = db.collection('poortjie').doc('services').collection(appData.businessType).doc(appId);
+
+            await db.runTransaction(async (transaction) => {
+                const servicesDoc = await transaction.get(servicesRef);
+                const servicesData = servicesDoc.data() || {};
+                const homeScreen = servicesData.homeScreen || {};
+                const category = appData.businessType;
+
+                // 1. Update status in homeScreen instead of removing
+                if (homeScreen[category]) {
+                    // We no longer store data in homeScreen, but if it exists, we could clean it up or just ignore
+                    // For now, let's just make sure we don't try to access .data[appId] if we are removing it
+                }
+
+                // 2. Update status in live services collection
+                transaction.set(liveServiceRef, {
+                    status: 'disabled',
+                    disabledBy: currentUserId,
+                    disabledAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // 3. Update status in applications collection
+                transaction.update(appRef, {
+                    status: 'disabled',
+                    disabledBy: currentUserId,
+                    disabledAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+
+            alert('Listing disabled and removed from public view.');
+        } catch (error) {
+            console.error("Error disabling listing:", error);
+            alert('Failed to disable listing: ' + error);
+        }
+    }
+
+    async function brutalDelete(appId, businessType) {
+        if (!isSuperUser) {
+            alert("Unauthorized: Only super users can perform this action.");
+            return;
+        }
+
+        const confirmMsg = `DANGER: You are about to BRUTALLY DELETE this business.\n\n` +
+                          `Business ID: ${appId}\n` +
+                          `Category: ${businessType}\n\n` +
+                          `This will delete the LIVE listing AND the application record. This action cannot be undone.\n\n` +
+                          `Are you absolutely sure?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            const appRef = db.collection('poortjie').doc('applications').collection('listings').doc(appId);
+            const liveServiceRef = db.collection('poortjie').doc('services').collection(businessType).doc(appId);
+
+            await db.runTransaction(async (transaction) => {
+                transaction.delete(appRef);
+                transaction.delete(liveServiceRef);
+            });
+
+            alert(`Business ${appId} has been brutally deleted.`);
+        } catch (error) {
+            console.error("Error performing brutal delete:", error);
+            alert('Failed to delete: ' + (error.message || error));
+        }
+    }
+
+    async function fixData(appId) {
+        const app = allApplications.find(a => a.id === appId);
+        if (!app) return;
+
+        if (!app.businessType) {
+            alert("Error: Business category (businessType) is missing. Cannot fix data.");
+            return;
+        }
+
+        const businessRef = `poortjie/services/${app.businessType}/${appId}`;
+        
+        try {
+            await db.collection('poortjie').doc('applications').collection('listings').doc(appId).update({
+                businessRef: businessRef,
+                // Strip redundant data to match new structure
+                ownerName: firebase.firestore.FieldValue.delete(),
+                email: firebase.firestore.FieldValue.delete(),
+                phone: firebase.firestore.FieldValue.delete(),
+                businessName: firebase.firestore.FieldValue.delete(),
+                subHeading: firebase.firestore.FieldValue.delete(),
+                address: firebase.firestore.FieldValue.delete(),
+                latitude: firebase.firestore.FieldValue.delete(),
+                longitude: firebase.firestore.FieldValue.delete(),
+                website: firebase.firestore.FieldValue.delete(),
+                whatsapp: firebase.firestore.FieldValue.delete(),
+                facebook: firebase.firestore.FieldValue.delete(),
+                hours: firebase.firestore.FieldValue.delete(),
+                description: firebase.firestore.FieldValue.delete(),
+                photos: firebase.firestore.FieldValue.delete(),
+                services: firebase.firestore.FieldValue.delete()
+            });
+            console.log("Data fixed for application:", appId);
+            alert("Data fixed! businessRef added and redundant fields removed.");
+        } catch (error) {
+            console.error("Error fixing data:", error);
+            alert("Failed to fix data: " + error);
+        }
+    }
+
+    async function approveApplication(appId) {
+        const currentUserId = firebase.auth().currentUser?.uid;
+        const appRef = db.collection('poortjie').doc('applications').collection('listings').doc(appId);
+        const servicesRef = db.collection('poortjie').doc('services');
+
+        try {
+            const appDoc = await appRef.get();
+            if (!appDoc.exists) throw "Application does not exist!";
+            const appData = appDoc.data();
+
+            let finalCategory = appData.businessType;
+
+            if (finalCategory === 'Other') {
+                const selectVal = document.getElementById(`category-select-${appId}`).value;
+                const inputVal = document.getElementById(`category-input-${appId}`).value.trim();
+
+                finalCategory = inputVal || selectVal;
+
+                if (!finalCategory || finalCategory === 'Other') {
+                    alert("Please select or type a valid category for 'Other' business type.");
+                    return;
+                }
+            }
+
+            if (!confirm(`Approve this business under category "${finalCategory}"?`)) return;
+
+            await db.runTransaction(async (transaction) => {
+                const servicesDoc = await transaction.get(servicesRef);
+                const servicesData = servicesDoc.data() || {};
+                const homeScreen = servicesData.homeScreen || {};
+                firebase.firestore.FieldValue.serverTimestamp();
+                const updateData = {};
+
+                // If category doesn't exist, we need to initialize it
+                if (!homeScreen[finalCategory]) {
+                    updateData[`homeScreen.${finalCategory}`] = {
+                        description: `Local ${finalCategory.toLowerCase()} services in Poortjie.`,
+                        subtitle: `${finalCategory} Experts`,
+                        listing: [],
+                        status: 'active'
+                    };
+                }
+
+                if (servicesDoc.exists) {
+                    if (Object.keys(updateData).length > 0) {
+                        transaction.update(servicesRef, updateData);
+                    }
+                } else {
+                    transaction.set(servicesRef, updateData, { merge: true });
+                }
+
+                // Initialize/Update status in live services collection
+                const liveServiceRef = db.doc(`poortjie/services/${finalCategory}/${appId}`);
+                transaction.set(liveServiceRef, {
+                    ...appData,
+                    businessType: finalCategory,
+                    status: 'active',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    approvedBy: currentUserId
+                }, { merge: true });
+
+                transaction.update(appRef, {
+                    status: 'approved',
+                    businessType: finalCategory, // Update the app record too
+                    approvedBy: currentUserId,
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    businessRef: `poortjie/services/${finalCategory}/${appId}`,
+                    // Strip data
+                    ownerName: firebase.firestore.FieldValue.delete(),
+                    email: firebase.firestore.FieldValue.delete(),
+                    phone: firebase.firestore.FieldValue.delete(),
+                    businessName: firebase.firestore.FieldValue.delete(),
+                    subHeading: firebase.firestore.FieldValue.delete(),
+                    address: firebase.firestore.FieldValue.delete(),
+                    latitude: firebase.firestore.FieldValue.delete(),
+                    longitude: firebase.firestore.FieldValue.delete(),
+                    website: firebase.firestore.FieldValue.delete(),
+                    whatsapp: firebase.firestore.FieldValue.delete(),
+                    facebook: firebase.firestore.FieldValue.delete(),
+                    hours: firebase.firestore.FieldValue.delete(),
+                    description: firebase.firestore.FieldValue.delete(),
+                    photos: firebase.firestore.FieldValue.delete(),
+                    services: firebase.firestore.FieldValue.delete()
+                });
+            });
+
+            console.log("Application approved!");
+            // Refresh categories in case a new one was added
+            await fetchCategories();
+        } catch (error) {
+            console.error("Error approving application: ", error);
+            alert("Error: " + error);
+        }
+    }
+
+    function rejectApplication(appId) {
+        if (confirm('Are you sure you want to reject this application?')) {
+            const currentUserId = firebase.auth().currentUser?.uid;
+            db.doc(`poortjie/applications/listings/${appId}`).update({
+                status: 'rejected',
+                rejectedBy: currentUserId,
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log("Application rejected!");
+            }).catch(error => {
+                console.error("Error rejecting application: ", error);
+            });
+        }
+    }
+
+    function requestUpdate(appId) {
+        if (confirm('Request user to update this application?')) {
+            const currentUserId = firebase.auth().currentUser?.uid;
+            db.doc(`poortjie/applications/listings/${appId}`).update({
+                status: 'update',
+                updateRequestedBy: currentUserId
+            }).then(() => {
+                console.log("Update requested!");
+            }).catch(error => {
+                console.error("Error requesting update: ", error);
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

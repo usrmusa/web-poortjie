@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poortjie Services</title>
+    <meta name="author" content="Musa Mgijima">
+    <meta name="description"
+          content="Poortjie Services connects you with local Kasi services: From school transport and tow trucks to professional designers and web developers.">
+    <meta name="keywords"
+          content="Poortjie, Kasi services, transport, school transport, graphic design, web development, South Africa">
+    <meta name="copyright" content="© 2026 Poortjie Services. All rights reserved.">
+    <meta name="robots" content="index,follow">
+    <meta name="theme-color" content="#22c55e">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
+    <link rel="shortcut icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) {
+                    return;
+                }
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body oncopy="return false" oncut="return false" oncontextmenu="return false">
+<iframe src="home.html" id="main-frame" title="Poortjie Services Main Content"></iframe>
+<script>
+    const iframe = document.getElementById('main-frame');
+    iframe.onload = function () {
+        try {
+            // Check if we can access the iframe document (same-origin check)
+            if (iframe.contentWindow.location.origin === 'null' || iframe.contentWindow.location.origin === window.location.origin) {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                iframeDoc.body.oncopy = () => false;
+                iframeDoc.body.oncut = () => false;
+                iframeDoc.body.oncontextmenu = () => false;
+
+                const iframeTitle = iframeDoc.title;
+                if (iframeTitle) {
+                    document.title = iframeTitle;
+                }
+            }
+        } catch (e) {
+            // If it's a security error (cross-origin), we just skip the protection
+            // instead of spamming the console with a warning if possible, 
+            // but the browser might still log the SecurityError itself.
+            console.log("Iframe protection skipped (cross-origin or file protocol)");
+        }
+    };
+</script>
+</body>
+</html>

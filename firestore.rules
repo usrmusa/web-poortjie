@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 🔓 TOTAL ACCESS: No auth required, no role checks.
+    // This allows any read, write, create, update, or delete on any document.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+  }
+}

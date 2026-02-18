@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post News & Alerts | Poortjie Services</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#22c55e">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div id="admin-content" class="hidden">
+    <header class="max-w-4xl mx-auto pt-16 pb-8 px-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-3xl font-extrabold tracking-tight">Post News & Alerts</h1>
+            <a href="../index.html"
+               onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+               class="w-full md:w-auto text-center px-6 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition whitespace-nowrap">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </a>
+        </div>
+        <p class="opacity-70 text-sm">Create updates that will appear on the home page slider.</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 pb-24">
+        <div class="card p-8 rounded-2xl border border-gray-100 dark:border-slate-800">
+            <form id="news-form" class="space-y-6">
+                <div>
+                    <label for="news-title" class="block text-sm font-bold mb-2">Title / Headline</label>
+                    <input type="text" id="news-title" required placeholder="e.g., Road Closure Alert"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <div>
+                    <label for="news-content" class="block text-sm font-bold mb-2">Message Content</label>
+                    <textarea id="news-content" required rows="4" placeholder="Describe the news or alert in detail..."
+                              class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                </div>
+
+                <div>
+                    <label for="news-type" class="block text-sm font-bold mb-2">Type</label>
+                    <select id="news-type"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="news">General News</option>
+                        <option value="alert">Emergency Alert</option>
+                        <option value="event">Upcoming Event</option>
+                        <option value="promo">Business Promo</option>
+                    </select>
+                </div>
+
+                <div id="business-select-container" class="hidden">
+                    <label class="block text-sm font-bold mb-2">Target Business for Promotion</label>
+                    <div class="flex gap-2">
+                        <div id="selected-business-display" class="flex-grow px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-white min-h-[50px] flex items-center italic opacity-60">
+                            No business selected
+                        </div>
+                        <button type="button" onclick="openBusinessPicker()" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">
+                            Select
+                        </button>
+                    </div>
+                    <input type="hidden" id="business-id" value="">
+                </div>
+
+                <div id="external-link-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="link-name" class="block text-sm font-bold mb-2">Link Button Name (Optional)</label>
+                        <input type="text" id="link-name" placeholder="e.g., View More, Register Now"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label for="external-url" class="block text-sm font-bold mb-2">External URL (Optional)</label>
+                        <input type="url" id="external-url" placeholder="https://example.com"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="news-show-from" class="block text-sm font-bold mb-2">Show From (Optional)</label>
+                        <input type="datetime-local" id="news-show-from"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <p class="text-[10px] opacity-50 mt-1">Leave blank to show immediately.</p>
+                    </div>
+                    <div>
+                        <label for="news-expiry" class="block text-sm font-bold mb-2">Expires (Required, Max 7 days)</label>
+                        <input type="datetime-local" id="news-expiry" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <p class="text-[10px] opacity-50 mt-1">Default is tonight at midnight. Max 7 days from now.</p>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-btn"
+                        class="w-full py-4 bg-green-600 text-white font-extrabold rounded-xl hover:bg-green-700 transition shadow-lg flex items-center justify-center gap-2">
+                    <span>Post News Update</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold mb-6">Recent Posts</h2>
+            <div id="recent-news" class="space-y-4">
+                <p class="text-center opacity-50 py-8">Loading recent posts...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- News Content Modal -->
+<div id="content-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="modal-title" class="text-2xl font-bold">News Content</h3>
+            <button onclick="closeContentModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="modal-body-content" class="prose dark:prose-invert max-w-none">
+            <!-- Content will be injected here -->
+        </div>
+        <div class="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700 flex justify-end">
+            <button onclick="closeContentModal()" class="px-6 py-2 bg-gray-200 dark:bg-slate-700 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Business Picker Modal -->
+<div id="business-picker-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">Select Business</h3>
+            <button onclick="closeBusinessPicker()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <div class="space-y-4 mb-4">
+            <div class="relative">
+                <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <label for="biz-search"></label><input type="text" id="biz-search" placeholder="Search by name or category..." oninput="filterBusinesses()"
+                                                       class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-between items-center text-xs opacity-60">
+                <span id="biz-count">Loading businesses...</span>
+                <button onclick="loadBusinessesForPromo(true)" class="text-blue-500 hover:underline">Refresh List</button>
+            </div>
+        </div>
+
+        <div id="biz-list" class="flex-grow overflow-y-auto space-y-2 pr-2 custom-scrollbar min-h-[300px]">
+            <!-- Businesses will be injected here -->
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 flex justify-end">
+            <button onclick="closeBusinessPicker()" class="px-6 py-2 bg-gray-200 dark:bg-slate-700 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-slate-600 transition">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="../scripts/theme.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+
+<script>
+    let currentUserName = '';
+    let isSuperUser = false;
+    let isPoortjieAdmin = false;
+    let recentPostsData = {}; // Store posts data for modal
+    let allBusinessesForPromo = [];
+
+    function openBusinessPicker() {
+        document.getElementById('business-picker-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        loadBusinessesForPromo();
+    }
+
+    function closeBusinessPicker() {
+        document.getElementById('business-picker-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function selectBusiness(id, collection, name) {
+        document.getElementById('business-id').value = JSON.stringify({id, collection});
+        document.getElementById('selected-business-display').textContent = `${name} (${collection})`;
+        document.getElementById('selected-business-display').classList.remove('italic', 'opacity-60');
+        
+        // Auto-fill title and content
+        const biz = allBusinessesForPromo.find(b => b.id === id && b.collection === collection);
+        if (biz) {
+            document.getElementById('news-title').value = biz.name;
+            document.getElementById('news-content').value = biz.description;
+        }
+        
+        closeBusinessPicker();
+    }
+
+    function filterBusinesses() {
+        const term = document.getElementById('biz-search').value.toLowerCase();
+        const filtered = allBusinessesForPromo.filter(b => 
+            b.name.toLowerCase().includes(term) || 
+            b.collection.toLowerCase().includes(term)
+        );
+        renderBusinessList(filtered);
+    }
+
+    function renderBusinessList(list) {
+        const container = document.getElementById('biz-list');
+        const countDisplay = document.getElementById('biz-count');
+        
+        countDisplay.textContent = `${list.length} businesses found`;
+        
+        if (list.length === 0) {
+            container.innerHTML = '<p class="text-center opacity-50 py-12">No businesses found matching your search.</p>';
+            return;
+        }
+
+        container.innerHTML = list.map(biz => `
+            <div onclick="selectBusiness('${biz.id}', '${biz.collection}', '${biz.name.replace(/'/g, "\\'")}')" 
+                 class="p-4 rounded-xl border border-gray-100 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-all group">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${biz.name}</h4>
+                        <p class="text-xs opacity-60 uppercase tracking-widest">${biz.collection}</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function loadBusinessesForPromo(force = false) {
+        if (!force && allBusinessesForPromo.length > 0) return;
+
+        const container = document.getElementById('biz-list');
+        const countDisplay = document.getElementById('biz-count');
+        
+        container.innerHTML = `
+            <div class="flex flex-col items-center py-12">
+                <div class="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                <p class="opacity-50">Fetching businesses...</p>
+            </div>
+        `;
+        countDisplay.textContent = 'Loading...';
+
+        try {
+            const collections = [
+                'Beauty & Freshness', 'Creative', 'Drip & Clothing', 
+                'Food & Catering', 'Groove & Events', 'Home & Interior', 
+                'Information Technology', 'Repairs & Technical', 
+                'Transport', 'Vehicle Services', 'Cash & Mashonisa'
+            ];
+
+            const fetchedBusinesses = [];
+            for (const coll of collections) {
+                const snapshot = await db.collection('poortjie').doc('services').collection(coll).get();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    fetchedBusinesses.push({
+                        id: doc.id,
+                        collection: coll,
+                        name: data.businessName || data.name || 'Unnamed Business',
+                        description: data.description || ''
+                    });
+                });
+            }
+
+            allBusinessesForPromo = fetchedBusinesses.sort((a, b) => a.name.localeCompare(b.name));
+            filterBusinesses(); // Initial render with empty search
+        } catch (error) {
+            console.error("Error loading businesses:", error);
+            container.innerHTML = `<p class="text-center text-red-500 py-12">Error loading: ${error.message}</p>`;
+        }
+    }
+
+    function showContent(id) {
+        const post = recentPostsData[id];
+        if (!post) return;
+        
+        document.getElementById('modal-title').textContent = post.title;
+        document.getElementById('modal-body-content').innerHTML = `<p class="whitespace-pre-wrap">${post.content}</p>`;
+        document.getElementById('content-modal').classList.remove('hidden');
+    }
+
+    function closeContentModal() {
+        document.getElementById('content-modal').classList.add('hidden');
+    }
+
+    // Close modal on click outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('content-modal');
+        if (e.target === modal) {
+            closeContentModal();
+        }
+    });
+
+    function setExpiryDefault() {
+        const now = new Date();
+        const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        // Format to YYYY-MM-DDTHH:MM for datetime-local
+        const pad = (n) => n.toString().padStart(2, '0');
+        document.getElementById('news-expiry').value = midnight.getFullYear() + '-' +
+            pad(midnight.getMonth() + 1) + '-' +
+            pad(midnight.getDate()) + 'T' +
+            pad(midnight.getHours()) + ':' +
+            pad(midnight.getMinutes());
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            db.collection('users').doc(user.uid).get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    currentUserName = userData.displayName || 'Admin';
+                    isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
+
+                    if (isSuperUser || isPoortjieAdmin) {
+                        document.getElementById('admin-content').classList.remove('hidden');
+                        setExpiryDefault();
+                        loadRecentNews();
+                    } else {
+                        window.top.location.replace('../index.html');
+                    }
+                } else {
+                    window.top.location.replace('../index.html');
+                }
+            });
+        } else {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.top.location.replace('../authentication/login.html');
+        }
+    });
+
+    const newsForm = document.getElementById('news-form');
+    const newsType = document.getElementById('news-type');
+    const businessSelectContainer = document.getElementById('business-select-container');
+    const businessSelect = document.getElementById('business-id');
+
+    newsType.addEventListener('change', () => {
+        const linkContainer = document.getElementById('external-link-container');
+        if (newsType.value === 'promo') {
+            businessSelectContainer.classList.remove('hidden');
+            linkContainer.classList.add('hidden');
+        } else {
+            businessSelectContainer.classList.add('hidden');
+            linkContainer.classList.remove('hidden');
+        }
+    });
+
+    newsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Posting...</span>';
+
+        const title = document.getElementById('news-title').value;
+        const content = document.getElementById('news-content').value;
+        const type = document.getElementById('news-type').value;
+        const businessInfo = document.getElementById('business-id').value;
+        const externalLinkName = document.getElementById('link-name').value;
+        const externalUrl = document.getElementById('external-url').value;
+        const showFrom = document.getElementById('news-show-from').value;
+        const expiry = document.getElementById('news-expiry').value;
+
+        try {
+            let promoBusiness = null;
+            if (type === 'promo' && businessInfo) {
+                promoBusiness = JSON.parse(businessInfo);
+            }
+
+            let externalLink = null;
+            if (type !== 'promo' && externalUrl) {
+                externalLink = {
+                    name: externalLinkName || 'View More',
+                    url: externalUrl
+                };
+            }
+
+            let showFromDate = null;
+            if (showFrom) {
+                showFromDate = new Date(showFrom);
+            }
+
+            let expiryDate = null;
+            if (expiry) {
+                expiryDate = new Date(expiry);
+            }
+
+            // Validation: Expiry is required and max 7 days
+            if (!expiryDate) {
+                throw new Error("Expiry date is required.");
+            }
+            const now = new Date();
+            const maxExpiry = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000));
+            if (expiryDate > maxExpiry) {
+                throw new Error("Expiry date cannot be more than 7 days from now.");
+            }
+
+            await db.collection('poortjie').doc('news').collection('updates').add({
+                title,
+                content,
+                type,
+                promoBusiness,
+                externalLink,
+                showFrom: showFromDate,
+                expiry: expiryDate,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                authorId: firebase.auth().currentUser.uid,
+                authorName: currentUserName,
+                status: 'active'
+            });
+
+            newsForm.reset();
+            businessSelectContainer.classList.add('hidden');
+            document.getElementById('external-link-container').classList.remove('hidden');
+            document.getElementById('selected-business-display').textContent = 'No business selected';
+            document.getElementById('selected-business-display').classList.add('italic', 'opacity-60');
+            setExpiryDefault();
+            alert('News posted successfully!');
+        } catch (error) {
+            console.error("Error posting news:", error);
+            alert('Failed to post news: ' + error.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Post News Update</span>';
+        }
+    });
+
+    function loadRecentNews() {
+        db.collection('poortjie').doc('news').collection('updates')
+            .orderBy('createdAt', 'desc')
+            .limit(10)
+            .onSnapshot(snapshot => {
+                const container = document.getElementById('recent-news');
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="text-center opacity-50 py-8">No posts yet.</p>';
+                    return;
+                }
+
+                recentPostsData = {}; // Clear old data
+                container.innerHTML = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    recentPostsData[doc.id] = data; // Store for modal
+
+                    let dateStr = 'Just now';
+                    if (data.createdAt) {
+                        dateStr = data.createdAt.toDate().toLocaleString();
+                    }
+
+                    const isExpired = data.expiry && data.expiry.toDate() < new Date();
+                    const isFuture = data.showFrom && data.showFrom.toDate() > new Date();
+                    const statusBadge = isExpired ? '<span class="text-[10px] bg-gray-500 text-white px-1 rounded ml-2">EXPIRED</span>' : (isFuture ? '<span class="text-[10px] bg-blue-500 text-white px-1 rounded ml-2">SCHEDULED</span>' : '');
+
+                    let scheduleInfo = '';
+                    if (data.showFrom || data.expiry) {
+                        const fromStr = data.showFrom ? data.showFrom.toDate().toLocaleString() : 'Now';
+                        const toStr = data.expiry ? data.expiry.toDate().toLocaleString() : 'Forever';
+                        scheduleInfo = `<p class="text-[10px] opacity-50 mt-1">Visible: ${fromStr} - ${toStr}</p>`;
+                    }
+
+                    const canDelete = isSuperUser || (data.authorId === firebase.auth().currentUser.uid);
+                    const deleteBtn = canDelete ? `
+                        <button onclick="deleteNews('${doc.id}'); event.stopPropagation();" class="text-red-500 hover:text-red-700 p-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    ` : '';
+
+                    return `
+                        <div onclick="showContent('${doc.id}')" class="p-4 card rounded-xl border border-gray-100 dark:border-slate-800 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors ${isExpired ? 'opacity-50' : ''} ${isFuture ? 'border-blue-200 dark:border-blue-900' : ''}">
+                            <div>
+                                <h3 class="font-bold">${data.title}${statusBadge}</h3>
+                                <p class="text-xs opacity-60">${dateStr} • ${data.type}</p>
+                                ${scheduleInfo}
+                                <p class="text-[10px] opacity-40 mt-1">Added by: ${data.authorName || 'Unknown'}</p>
+                            </div>
+                            ${deleteBtn}
+                        </div>
+                    `;
+                }).join('');
+            });
+    }
+
+    async function deleteNews(id) {
+        if (confirm('Delete this post?')) {
+            try {
+                // Fetch doc to verify ownership if not superuser
+                if (!isSuperUser) {
+                    const doc = await db.collection('poortjie').doc('news').collection('updates').doc(id).get();
+                    if (doc.exists && doc.data().authorId !== firebase.auth().currentUser.uid) {
+                        alert('You do not have permission to delete this post.');
+                        return;
+                    }
+                }
+                await db.collection('poortjie').doc('news').collection('updates').doc(id).delete();
+            } catch (error) {
+                alert('Error deleting: ' + error.message);
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

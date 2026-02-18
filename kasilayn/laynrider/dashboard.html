@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Dashboard | Poortjie Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon/site.webmanifest">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="../../scripts/firebase.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <script src="../../scripts/theme.js" defer></script>
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div id="loader-overlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+    <p class="text-sm font-bold uppercase tracking-widest animate-pulse">Initializing Dashboard...</p>
+</div>
+
+<header class="max-w-6xl mx-auto pt-10 pb-6 px-6 flex justify-between items-center relative">
+    <div class="flex flex-col">
+        <!-- Main Logo/Title -->
+        <a href="../../index.html" class="text-2xl font-black tracking-tight">Poortjie <span class="text-green-600">Dashboard</span></a>
+        <p class="text-xs opacity-50 font-bold uppercase tracking-widest">Real-time Fleet View</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+        <!-- User Location Display (Updated by Geolocation API) -->
+        <div id="user-location-status" class="hidden sm:flex text-[10px] font-black uppercase tracking-tighter px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-slate-400" id="location-dot"></span>
+            <span id="location-text">Location Unknown</span>
+        </div>
+
+        <button id="become-driver-btn" onclick="joinFleet()" class="hidden px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-full transition-all shadow-lg shadow-green-500/30 flex items-center gap-2 group">
+            <i class="fas fa-car-side group-hover:animate-bounce"></i>
+            Join Fleet
+        </button>
+        <button id="driver-dashboard-btn" onclick="window.location.href='../layndriver/dashboard.html'" class="hidden px-4 py-2 border-2 border-green-600 text-green-600 dark:text-green-400 text-[10px] font-black uppercase tracking-widest rounded-full transition hover:bg-green-600 hover:text-white">
+            Driver Dash
+        </button>
+
+        <!-- Hamburger Menu consistent with home.html -->
+        <div id="hamburger-menu" class="relative z-50">
+            <button id="hamburger-btn" class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div id="menu-items" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl py-2 ring-1 ring-black ring-opacity-5 border border-slate-100 dark:border-slate-700">
+                <button id="menu-theme-toggle" class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <span id="menu-theme-icon">🌓</span> Mode
+                </button>
+                <a href="history.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-history w-4 text-center"></i> My Bookings
+                </a>
+                <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                <a href="../../index.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-home w-4 text-center"></i> Home
+                </a>
+                <button id="logout-btn" class="hidden w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 pb-24">
+    <!-- Beta Notice Banner -->
+    <div class="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800/50 rounded-3xl flex items-start gap-4 shadow-sm">
+        <div class="p-3 bg-amber-500 text-white rounded-2xl shadow-lg shadow-amber-500/30">
+            <i class="fas fa-flask"></i>
+        </div>
+        <div>
+            <h3 class="text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">Feature in Development</h3>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
+                Actual app waiting for Google approval on Play Store, but you're welcome to try it out on beta.
+            </p>
+        </div>
+    </div>
+
+    <!-- Filters & Sorting: Allows riders to narrow down the fleet by car type or proximity -->
+    <div class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <!-- Body Type Filters (Sedan, SUV, etc.) -->
+        <div class="flex flex-wrap gap-2 justify-center" id="filter-container">
+            <button onclick="setFilter('ALL')" class="filter-btn active px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition border-2 border-green-500 bg-green-500 text-white">All</button>
+            <button onclick="setFilter('SEDAN')" class="filter-btn px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition border-2 border-gray-200 dark:border-slate-700 hover:border-green-500">Sedan</button>
+            <button onclick="setFilter('SUV')" class="filter-btn px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition border-2 border-gray-200 dark:border-slate-700 hover:border-green-500">SUV</button>
+            <button onclick="setFilter('HATCHBACK')" class="filter-btn px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition border-2 border-gray-200 dark:border-slate-700 hover:border-green-500">Hatchback</button>
+            <button onclick="setFilter('BAKKIE')" class="filter-btn px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition border-2 border-gray-200 dark:border-slate-700 hover:border-green-500">Bakkie</button>
+        </div>
+
+        <!-- Sorting: Toggle between Alphabetical and Distance-based sorting -->
+        <div class="flex items-center gap-2">
+            <label for="sort-select" class="text-[10px] font-black uppercase opacity-50">Sort By:</label>
+            <select id="sort-select" onchange="setSort(this.value)" class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-2 focus:ring-green-500 outline-none">
+                <option value="name">Name (A-Z)</option>
+                <option value="proximity">Closest to me</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Status Sections: Drivers are automatically grouped into these based on their Firestore 'status' field -->
+    <div class="space-y-12">
+        <!-- Available Drivers: Ready for a trip (Redirects to booking.html on click) -->
+        <section>
+            <div class="flex items-center gap-4 mb-6">
+                <div class="h-[1px] flex-grow bg-green-500/20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-green-600 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Available Drivers (<span id="count-available">0</span>)
+                </h2>
+                <div class="h-[1px] flex-grow bg-green-500/20"></div>
+            </div>
+            <div id="grid-available" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards injected by renderDrivers() -->
+            </div>
+            <div id="empty-available" class="hidden text-center py-10 opacity-30 italic text-sm">No drivers online right now.</div>
+        </section>
+
+        <!-- Busy Drivers: Currently on a trip or booked -->
+        <section>
+            <div class="flex items-center gap-4 mb-6">
+                <div class="h-[1px] flex-grow bg-amber-500/20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-amber-600 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Currently Busy (<span id="count-busy">0</span>)
+                </h2>
+                <div class="h-[1px] flex-grow bg-amber-500/20"></div>
+            </div>
+            <div id="grid-busy" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75">
+                <!-- Cards injected by renderDrivers() -->
+            </div>
+            <div id="empty-busy" class="hidden text-center py-10 opacity-30 italic text-sm">All active drivers are currently free.</div>
+        </section>
+
+        <!-- Offline Drivers: Not active in the system -->
+        <section>
+            <div class="flex items-center gap-4 mb-6">
+                <div class="h-[1px] flex-grow bg-slate-400/20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Offline (<span id="count-offline">0</span>)
+                </h2>
+                <div class="h-[1px] flex-grow bg-slate-400/20"></div>
+            </div>
+            <div id="grid-offline" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-50 grayscale">
+                <!-- Cards injected by renderDrivers() -->
+            </div>
+            <div id="empty-offline" class="hidden text-center py-10 opacity-30 italic text-sm">Everyone is online!</div>
+        </section>
+    </div>
+
+    <!-- Image Modal for expanded view -->
+    <div id="image-modal" class="fixed inset-0 z-[110] hidden bg-black/90 flex items-center justify-center p-4" onclick="closeImageModal()">
+        <button class="absolute top-6 right-6 text-white text-3xl hover:scale-110 transition">&times;</button>
+        <img id="modal-img" src="" class="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain" alt="Expanded view">
+    </div>
+</main>
+
+<script>
+    /**
+     * GLOBAL STATE
+     * drivers: List of all driver objects from Firestore
+     * cars: List of all car objects from Firestore
+     * userLocation: Current GPS coordinates of the rider
+     */
+    let drivers = [];
+    let cars = [];
+    let currentFilter = 'ALL';
+    let currentSort = 'name';
+    let userLocation = null;
+
+    /**
+     * UTILITY: Haversine distance formula
+     * Calculates distance between two coordinates in Kilometers.
+     */
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = deg2rad(lat2 - lat1);
+        const dLon = deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
+    function deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    /**
+     * IMAGE MODAL
+     */
+    function openImageModal(url) {
+        const modal = document.getElementById('image-modal');
+        const img = document.getElementById('modal-img');
+        if (modal && img) {
+            img.src = url;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('image-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+    }
+
+    /**
+     * FILTERING LOGIC
+     * Updates the UI buttons and triggers a re-render.
+     */
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-green-500', 'text-white', 'border-green-500');
+            btn.classList.add('border-gray-200', 'dark:border-slate-700');
+            if (btn.textContent.toUpperCase() === filter || (filter === 'ALL' && btn.textContent === 'All')) {
+                btn.classList.add('active', 'bg-green-500', 'text-white', 'border-green-500');
+                btn.classList.remove('border-gray-200', 'dark:border-slate-700');
+            }
+        });
+        renderDashboard();
+    }
+
+    /**
+     * SORTING LOGIC
+     */
+    function setSort(sort) {
+        currentSort = sort;
+        if (sort === 'proximity' && !userLocation) {
+            requestLocation();
+        }
+        renderDashboard();
+    }
+
+    /**
+     * GEOLOCATION
+     * Requests permission to access the user's location.
+     */
+    function requestLocation() {
+        // Mark as handled whenever requested
+        localStorage.setItem('locationPromptHandled', 'true');
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    document.getElementById('location-dot').classList.replace('bg-slate-400', 'bg-green-500');
+                    document.getElementById('location-text').textContent = 'Location Active';
+                    renderDashboard();
+                },
+                (error) => {
+                    console.error("Location error:", error);
+                    document.getElementById('location-dot').classList.replace('bg-slate-400', 'bg-red-500');
+                    document.getElementById('location-text').textContent = 'Location Denied';
+                    if (currentSort === 'proximity') {
+                        currentSort = 'name';
+                        document.getElementById('sort-select').value = 'name';
+                    }
+                }
+            );
+        }
+    }
+
+    /**
+     * DATA INITIALIZATION
+     * Sets up real-time listeners for the fleet data.
+     */
+    function observeFleet() {
+        // Paths for fleet data
+        const driversRef = db.collection('kasilayn').doc('fleet').collection('drivers');
+        const carsRef = db.collection('kasilayn').doc('fleet').collection('cars');
+
+        // Listen for cars first to have them ready for matching with drivers
+        carsRef.onSnapshot(snapshot => {
+            cars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderDashboard();
+        });
+
+        // Listen for drivers and update the UI in real-time
+        driversRef.onSnapshot(snapshot => {
+            drivers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            document.getElementById('loader-overlay').classList.add('hidden');
+            renderDashboard();
+        });
+    }
+
+    /**
+     * MAIN RENDER ENGINE
+     * Processes the raw data from Firestore, applies filters/sorts, and builds the HTML.
+     */
+    function renderDashboard() {
+        const gridAvailable = document.getElementById('grid-available');
+        const gridBusy = document.getElementById('grid-busy');
+        const gridOffline = document.getElementById('grid-offline');
+
+        gridAvailable.innerHTML = '';
+        gridBusy.innerHTML = '';
+        gridOffline.innerHTML = '';
+
+        let countAvailable = 0;
+        let countBusy = 0;
+        let countOffline = 0;
+
+        // 1. Data Mapping: Match drivers with their assigned cars
+        let processedList = drivers.map(driver => {
+            const car = cars.find(c => c.registration === (driver.carRef?.id || driver.carRegistration));
+            let distance = null;
+            if (userLocation && driver.lastLocation) {
+                distance = calculateDistance(
+                    userLocation.lat, userLocation.lng,
+                    driver.lastLocation.latitude, driver.lastLocation.longitude
+                );
+            }
+            return { ...driver, car, distance };
+        });
+
+        // 2. Apply Body Type Filter (e.g., Sedan, SUV)
+        if (currentFilter !== 'ALL') {
+            processedList = processedList.filter(d => d.car && (d.car.bodyType || '').toUpperCase() === currentFilter);
+        }
+
+        // 3. Apply Sorting (Proximity or Name)
+        processedList.sort((a, b) => {
+            if (currentSort === 'proximity') {
+                if (a.distance === null) return 1;
+                if (b.distance === null) return -1;
+                return a.distance - b.distance;
+            } else {
+                return (a.displayName || 'Unknown').localeCompare(b.displayName || 'Unknown');
+            }
+        });
+
+        // 4. Categorize by status and Render
+        processedList.forEach(driver => {
+            let status = (driver.status || 'OFFLINE').toUpperCase();
+            
+            // Force OFFLINE if no car is assigned
+            if (!driver.car) {
+                status = 'OFFLINE';
+            }
+
+            const card = createDriverCard({ ...driver, status });
+
+            if (status === 'ONLINE' || status === 'AVAILABLE') {
+                gridAvailable.appendChild(card);
+                countAvailable++;
+            } else if (status === 'BUSY' || status === 'ON_TRIP') {
+                gridBusy.appendChild(card);
+                countBusy++;
+            } else {
+                gridOffline.appendChild(card);
+                countOffline++;
+            }
+        });
+
+        // Update UI counts
+        document.getElementById('count-available').textContent = countAvailable;
+        document.getElementById('count-busy').textContent = countBusy;
+        document.getElementById('count-offline').textContent = countOffline;
+
+        // Toggle empty states
+        document.getElementById('empty-available').classList.toggle('hidden', countAvailable > 0);
+        document.getElementById('empty-busy').classList.toggle('hidden', countBusy > 0);
+        document.getElementById('empty-offline').classList.toggle('hidden', countOffline > 0);
+    }
+
+    /**
+     * COMPONENT: Driver Card
+     * Generates the HTML for a single driver card.
+     */
+    function createDriverCard(driver) {
+        const div = document.createElement('div');
+        div.className = 'card p-5 rounded-2xl flex flex-col gap-4 relative overflow-hidden animate-fadeIn';
+        
+        const car = driver.car;
+        const status = (driver.status || 'OFFLINE').toUpperCase();
+        
+        // Status Colors: Green (Online/Available), Orange (Busy/On Trip), Grey (Offline)
+        let statusColor = 'bg-slate-400';
+        if (status === 'ONLINE' || status === 'AVAILABLE') {
+            statusColor = 'bg-green-500';
+        } else if (status === 'BUSY' || status === 'ON_TRIP') {
+            statusColor = 'bg-amber-500';
+        }
+        
+        const photoUrl = driver.photoUrl || 'https://placehold.co/100x100?text=Driver';
+        const carPhotoUrl = (car?.photoUrls && car.photoUrls.length > 0) ? car.photoUrls[0] : null;
+
+        div.innerHTML = `
+            <div class="flex items-center gap-4">
+                <div class="relative cursor-pointer group" onclick="openImageModal('${photoUrl}')">
+                    <img src="${photoUrl}" class="w-14 h-14 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800 transition group-hover:scale-105" alt="">
+                    <span class="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${statusColor}"></span>
+                    <div class="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                        <i class="fas fa-expand text-white text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="font-extrabold text-sm uppercase tracking-tight">${driver.displayName || 'Unknown Driver'}</h3>
+                    <p class="text-[10px] opacity-50 font-bold uppercase tracking-wider">${status}</p>
+                    ${driver.distance !== null ? `
+                        <p class="text-[10px] text-green-600 font-black uppercase mt-1">
+                            <i class="fas fa-location-arrow mr-1"></i> ${driver.distance.toFixed(1)} km away
+                        </p>
+                    ` : ''}
+                </div>
+                ${carPhotoUrl ? `
+                    <div class="w-16 h-10 rounded-lg overflow-hidden border border-slate-100 dark:border-slate-800 cursor-pointer hover:opacity-80 transition" onclick="openImageModal('${carPhotoUrl}')">
+                        <img src="${carPhotoUrl}" class="w-full h-full object-cover" alt="">
+                    </div>
+                ` : ''}
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-end">
+                <div>
+                    <p class="text-[9px] opacity-40 font-black uppercase mb-1">Assigned Vehicle</p>
+                    <p class="text-xs font-bold">${car ? `${car.make} ${car.model}` : 'No Car Assigned'}</p>
+                    <p class="text-[10px] opacity-60 font-medium uppercase">${car ? `${car.color} • ${car.registration}` : '--'}</p>
+                </div>
+                <div class="text-right">
+                    ${car?.bodyType ? `<span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-black uppercase tracking-widest">${car.bodyType}</span>` : ''}
+                </div>
+            </div>
+            
+            ${status === 'ONLINE' || status === 'AVAILABLE' ? `
+                <button onclick="bookDriver('${driver.id}')" class="mt-2 w-full py-2 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition">
+                    Book Trip
+                </button>
+            ` : ''}
+        `;
+        
+        return div;
+    }
+
+    /**
+     * NAVIGATION
+     * Redirects to the booking confirmation screen.
+     */
+    function bookDriver(id) {
+        window.location.href = `booking.html?driverUid=${id}`;
+    }
+
+    /**
+     * PROMOTION LOGIC (Android Parity)
+     * Promotes the current user to a driver immediately.
+     */
+    async function joinFleet() {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../../authentication/login.html';
+            return;
+        }
+
+        const loader = document.getElementById('loader-overlay');
+        const loaderText = loader.querySelector('p');
+        loaderText.textContent = "Joining Fleet...";
+        loader.classList.remove('hidden');
+
+        try {
+            const uid = user.uid;
+            const userRef = db.collection('users').doc(uid);
+            const driverRef = db.collection('kasilayn').doc('fleet').collection('drivers').doc(uid);
+
+            await db.runTransaction(async (transaction) => {
+                // 1. Fetch User Data
+                const userDoc = await transaction.get(userRef);
+                if (!userDoc.exists) throw new Error("User profile not found.");
+                const userData = userDoc.data();
+
+                // 2. Pre-condition Check
+                const driverDoc = await transaction.get(driverRef);
+                if (driverDoc.exists) {
+                    throw new Error("ALREADY_DRIVER");
+                }
+
+                // 3. Prepare Driver Data
+                const now = firebase.firestore.FieldValue.serverTimestamp();
+                const driverData = {
+                    // Copied Data (Denormalization)
+                    username: userData.username || "",
+                    email: userData.email || "",
+                    displayName: userData.displayName || user.displayName || "",
+                    phone: userData.phone || userData.phoneNumber || "",
+                    photoUrl: userData.photoUrl || user.photoURL || "",
+                    bio: userData.bio || "",
+                    
+                    // New, Default Data
+                    status: "OFFLINE",
+                    suspended: false,
+                    
+                    // References & Metadata
+                    userRef: userRef,
+                    userUid: uid,
+                    selfCreate: true,
+                    createdAt: now,
+                    updatedAt: now
+                };
+
+                // 4. WRITE 1: Create New Driver Document
+                transaction.set(driverRef, driverData);
+
+                // 5. WRITE 2: Update Original User's Role
+                transaction.set(userRef, {
+                    roles: {
+                        kasilayn: {
+                            isDriver: true,
+                            driverRef: `kasilayn/fleet/drivers/${uid}`
+                        }
+                    }
+                }, { merge: true });
+            });
+
+            // Success: Redirect to Driver Dashboard or Registration for car details
+            // The instructions say "immediately do what android does which makes the user driver immediately"
+            // Android seems to just do the writes. I'll redirect to the register page so they can add car details,
+            // or just to the dashboard. Usually, a driver needs a car.
+            // But if they are now a driver, let's take them to the driver dashboard.
+            window.location.href = '../layndriver/dashboard.html';
+
+        } catch (error) {
+            console.error("Error joining fleet:", error);
+            loader.classList.add('hidden');
+            if (error.message === "ALREADY_DRIVER") {
+                window.location.href = '../layndriver/dashboard.html';
+            } else {
+                alert("Failed to join fleet: " + error.message);
+            }
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        observeFleet();
+        
+        // Check if we should request location automatically
+        // We only do this once per session or if the user hasn't seen the prompt yet
+        const locationHandled = localStorage.getItem('locationPromptHandled');
+        if (!locationHandled) {
+            requestLocation();
+            localStorage.setItem('locationPromptHandled', 'true');
+        }
+
+        // Hamburger Menu Logic
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const menuItems = document.getElementById('menu-items');
+
+        if (hamburgerBtn && menuItems) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuItems.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                menuItems.classList.add('hidden');
+            });
+
+            menuItems.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Logout Logic
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../../authentication/login.html';
+                });
+            });
+        }
+
+        // Check if user is already a driver to show/hide "Become a Driver" button
+        firebase.auth().onAuthStateChanged(user => {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (user) {
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                db.collection('kasilayn').doc('fleet').collection('drivers').doc(user.uid).get().then(doc => {
+                    if (doc.exists) {
+                        document.getElementById('driver-dashboard-btn').classList.remove('hidden');
+                        document.getElementById('become-driver-btn').classList.add('hidden');
+                    } else {
+                        document.getElementById('become-driver-btn').classList.remove('hidden');
+                        document.getElementById('driver-dashboard-btn').classList.add('hidden');
+                    }
+                });
+            } else {
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+                document.getElementById('become-driver-btn').classList.remove('hidden');
+                document.getElementById('driver-dashboard-btn').classList.add('hidden');
+            }
+        });
+        
+    });
+</script>
+
+</body>
+</html>

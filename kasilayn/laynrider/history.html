@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings | Poortjie Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="manifest" href="../../favicon/site.webmanifest">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="../../scripts/firebase.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <script src="../../scripts/theme.js" defer></script>
+</head>
+<body class="font-sans antialiased bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen">
+
+<!-- Top Bar -->
+<header class="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+    <div class="max-w-4xl mx-auto h-16 flex justify-between items-center px-4 relative">
+        <div class="flex items-center gap-4">
+            <button onclick=" window.location.href='dashboard.html';" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1 class="text-lg font-black tracking-tight uppercase">My Bookings</h1>
+        </div>
+
+        <!-- Hamburger Menu consistent with home.html -->
+        <div id="hamburger-menu" class="relative z-50">
+            <button id="hamburger-btn" class="p-2 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div id="menu-items" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl py-2 ring-1 ring-black ring-opacity-5 border border-slate-100 dark:border-slate-700">
+                <button id="menu-theme-toggle" class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <span id="menu-theme-icon">🌓</span> Mode
+                </button>
+                <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                <a href="dashboard.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-th-large w-4 text-center"></i> Dashboard
+                </a>
+                <a href="../../index.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-home w-4 text-center"></i> Home
+                </a>
+                <button id="logout-btn" class="hidden w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto p-4 pb-24">
+    <div id="bookings-list" class="space-y-4">
+        <!-- Loader -->
+        <div id="loader" class="flex flex-col items-center justify-center py-20 opacity-50">
+            <div class="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+            <p class="text-xs font-bold uppercase tracking-widest">Loading History...</p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden flex flex-col items-center justify-center py-24 text-center space-y-4 opacity-40">
+        <div class="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl">
+            <i class="fas fa-calendar-times"></i>
+        </div>
+        <div>
+            <h3 class="font-black uppercase tracking-tight">No Bookings Yet</h3>
+            <p class="text-xs font-bold">You haven't made any bookings yet.</p>
+        </div>
+        <button onclick="window.location.href='dashboard.html'" class="mt-4 px-6 py-2 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full">
+            Book a Ride
+        </button>
+    </div>
+
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-fadeIn">
+            <div class="p-8 space-y-6">
+                <div class="text-center space-y-2">
+                    <h3 class="text-xl font-black uppercase tracking-tight">Rate Your Trip</h3>
+                    <p class="text-xs font-bold opacity-40 uppercase tracking-widest">How was your experience?</p>
+                </div>
+
+                <!-- Star Rating -->
+                <div id="rating-stars" class="flex justify-center gap-3 py-4">
+                    <i class="far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors" onclick="setRating(1)"></i>
+                    <i class="far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors" onclick="setRating(2)"></i>
+                    <i class="far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors" onclick="setRating(3)"></i>
+                    <i class="far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors" onclick="setRating(4)"></i>
+                    <i class="far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors" onclick="setRating(5)"></i>
+                </div>
+
+                <!-- Comment area -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase opacity-40 tracking-widest px-1">Optional Comment</label>
+                    <label for="rating-comment"></label><textarea id="rating-comment" rows="4" placeholder="Tell us about your experience (optional)"
+                                                                  class="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-green-500 outline-none rounded-2xl text-sm font-medium transition resize-none"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeRatingModal()"
+                        class="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                        Cancel
+                    </button>
+                    <button id="submit-rating-btn" onclick="submitRating()" disabled
+                        class="flex-[2] py-4 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-green-700 transition shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Submit Rating
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+
+    let unsubscribe = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Hamburger Menu Logic
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const menuItems = document.getElementById('menu-items');
+
+        if (hamburgerBtn && menuItems) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuItems.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                menuItems.classList.add('hidden');
+            });
+
+            menuItems.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../../authentication/login.html';
+                });
+            });
+        }
+    });
+
+    firebase.auth().onAuthStateChanged(user => {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (user) {
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            observeBookings(user.uid);
+        } else {
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../../authentication/login.html';
+        }
+    });
+
+    function observeBookings(uid) {
+        const bookingsRef = db.collection('kasilayn').doc('fleet').collection('bookings');
+
+        // Query: Filter by requesterUid and sort by createdAt descending
+        const query = bookingsRef
+            .where('requesterUid', '==', uid)
+            .orderBy('createdAt', 'desc');
+
+        unsubscribe = query.onSnapshot(snapshot => {
+            document.getElementById('loader').classList.add('hidden');
+            const listContainer = document.getElementById('bookings-list');
+            const emptyState = document.getElementById('empty-state');
+
+            listContainer.innerHTML = '';
+
+            if (snapshot.empty) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                snapshot.forEach(doc => {
+                    const booking = doc.data();
+                    listContainer.appendChild(createBookingCard(doc.id, booking));
+                });
+            }
+        }, error => {
+            console.error("History Listener Error:", error);
+            // Handle index error usually
+            if (error.code === 'failed-precondition') {
+                alert("This view requires a Firestore index. Please wait for the developer to enable it.");
+            }
+        });
+    }
+
+    function createBookingCard(id, booking) {
+        const div = document.createElement('div');
+        div.className = 'card p-5 rounded-[2rem] bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 space-y-4 animate-fadeIn cursor-pointer hover:scale-[1.01] transition-transform relative overflow-hidden';
+
+        const status = (booking.status || 'PENDING').toUpperCase();
+        let statusColorClass = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+
+        if (status === 'PENDING') statusColorClass = 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400';
+        if (status === 'ACCEPTED' || status === 'ON_TRIP' || status === 'COMPLETED') statusColorClass = 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-amber-400';
+        if (status === 'CANCELLED') statusColorClass = 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
+
+        // Add COMPLETED green border if completed
+        if (status === 'COMPLETED') {
+            div.classList.add('border-l-4', 'border-l-green-500');
+        }
+
+        let ratingHtml = '';
+        if (status === 'COMPLETED') {
+            if (booking.rating) {
+                ratingHtml = `
+                    <div class="flex gap-0.5 text-amber-400 text-[10px]" id="rating-display-${id}">
+                        ${Array(5).fill(0).map((_, i) => `<i class="${i < booking.rating ? 'fas' : 'far'} fa-star"></i>`).join('')}
+                    </div>
+                `;
+            } else {
+                ratingHtml = `
+                    <div id="rating-container-${id}">
+                        <button onclick="event.stopPropagation(); openRatingModal('${id}', '${booking.driverUid}')" 
+                            class="px-4 py-1.5 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-green-700 transition shadow-lg shadow-green-500/20">
+                            Rate Driver
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        div.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black uppercase opacity-40 tracking-widest">${booking.whenText || 'Date Unknown'}</p>
+                    <h3 class="font-black text-sm uppercase">${booking.driverDisplayName || 'Unknown Driver'}</h3>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${statusColorClass}">
+                        ${status}
+                    </span>
+                    ${ratingHtml}
+                </div>
+            </div>
+
+            <div class="flex gap-4 items-center">
+                <div class="flex flex-col items-center py-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <div class="w-[1px] h-4 bg-slate-100 dark:bg-slate-700 my-1"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                </div>
+                <div class="flex-grow space-y-1 overflow-hidden">
+                    <p class="text-[10px] font-bold truncate opacity-60">${booking.pickup}</p>
+                    <p class="text-[10px] font-bold truncate opacity-60">${booking.destination}</p>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-50 dark:border-slate-700/50 flex justify-between items-center">
+                <div>
+                    <p class="text-[8px] font-black uppercase opacity-40">Fare</p>
+                    <p class="text-xs font-black text-green-600">R ${booking.estimatedFare?.toFixed(2) || '0.00'}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[8px] font-black uppercase opacity-40">Distance</p>
+                    <p class="text-[10px] font-bold">${booking.distanceKm?.toFixed(1) || '0.0'} km</p>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    let activeBookingId = null;
+    let activeDriverUid = null;
+    let selectedRating = 0;
+
+    function openRatingModal(bookingId, driverUid) {
+        activeBookingId = bookingId;
+        activeDriverUid = driverUid;
+        selectedRating = 0;
+
+        // Reset Modal UI
+        document.querySelectorAll('#rating-stars i').forEach(star => {
+            star.className = 'far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors';
+        });
+        document.getElementById('rating-comment').value = '';
+        document.getElementById('submit-rating-btn').disabled = true;
+        document.getElementById('submit-rating-btn').innerHTML = 'Submit Rating';
+
+        document.getElementById('rating-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRatingModal() {
+        document.getElementById('rating-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function setRating(rating) {
+        selectedRating = rating;
+        const stars = document.querySelectorAll('#rating-stars i');
+        stars.forEach((star, i) => {
+            if (i < rating) {
+                star.className = 'fas fa-star text-2xl cursor-pointer text-amber-400 transition-colors';
+            } else {
+                star.className = 'far fa-star text-2xl cursor-pointer text-slate-300 dark:text-slate-600 transition-colors';
+            }
+        });
+        document.getElementById('submit-rating-btn').disabled = rating === 0;
+    }
+
+    async function submitRating() {
+        if (!selectedRating || !activeBookingId || !activeDriverUid) return;
+
+        const btn = document.getElementById('submit-rating-btn');
+        const comment = document.getElementById('rating-comment').value.trim();
+
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner animate-spin mr-2"></i> Submitting...`;
+
+        try {
+            await db.runTransaction(async (transaction) => {
+                // 1. Read Booking
+                const bookingRef = db.collection('kasilayn').doc('fleet').collection('bookings').doc(activeBookingId);
+                const bookingDoc = await transaction.get(bookingRef);
+                if (!bookingDoc.exists) throw new Error("Booking not found");
+
+                // 2. Read Driver
+                const driverRef = db.collection('kasilayn').doc('fleet').collection('drivers').doc(activeDriverUid);
+                const driverDoc = await transaction.get(driverRef);
+                if (!driverDoc.exists) throw new Error("Driver not found");
+
+                const driverData = driverDoc.data();
+                const stats = driverData.stats || {};
+                const currentAvg = stats.rating || 0;
+                const totalRatings = stats.totalRatings || 0;
+
+                // 3. Calculate New Average
+                const newTotal = totalRatings + 1;
+                const newAverage = ((currentAvg * totalRatings) + selectedRating) / newTotal;
+
+                // 4. Update Booking
+                transaction.update(bookingRef, {
+                    rating: selectedRating,
+                    ratingComment: comment,
+                    ratedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 5. Update Driver
+                transaction.update(driverRef, {
+                    'stats.rating': newAverage,
+                    'stats.totalRatings': newTotal
+                });
+            });
+
+            // Success
+            closeRatingModal();
+            showToast("Thank you for your feedback!", "success");
+
+            // UI Update: Replace button with stars immediately
+            const container = document.getElementById(`rating-container-${activeBookingId}`);
+            if (container) {
+                container.innerHTML = `
+                    <div class="flex gap-0.5 text-amber-400 text-[10px]">
+                        ${Array(5).fill(0).map((_, i) => `<i class="${i < selectedRating ? 'fas' : 'far'} fa-star"></i>`).join('')}
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error("Rating submission error:", error);
+            btn.disabled = false;
+            btn.innerHTML = 'Submit Rating';
+            showToast("Could not submit rating. Please try again.", "error");
+        }
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-white text-xs font-black uppercase tracking-widest shadow-2xl z-[100] transition-all transform translate-y-20 opacity-0`;
+        toast.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+        toast.textContent = message;
+
+        document.body.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-y-20', 'opacity-0');
+        }, 100);
+
+        // Remove after 3s
+        setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>

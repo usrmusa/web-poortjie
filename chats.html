@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services</title>
+    <meta name="author" content="Musa Mgijima">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        /* Ensure the action menu is always visible and doesn't wrap */
+        .emoji-menu {
+            white-space: nowrap;
+            min-width: 180px;
+            display: flex;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-screen flex flex-col">
+
+<header class="w-full max-w-4xl mx-auto pt-6 pb-4 px-6 flex flex-col items-center shrink-0">
+    <div class="w-full flex justify-between items-center">
+        <a href="index.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" aria-label="Go back">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h2 class="text-xl font-bold">Anonymous</h2>
+        <div class="w-10"></div>
+    </div>
+    <p class="text-sm opacity-60">say your peace</p>
+</header>
+
+<main class="flex-grow w-full max-w-4xl mx-auto px-4 pb-4 flex flex-col overflow-hidden">
+    <div id="chat-messages" class="flex-grow overflow-y-auto space-y-8 p-4 custom-scrollbar">
+        <div id="loading-spinner" class="flex justify-center items-center h-full">
+            <svg class="animate-spin h-8 w-8 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <div id="reply-preview" class="hidden bg-gray-100 dark:bg-slate-800 p-2 px-4 rounded-t-xl border-l-4 border-green-500 flex justify-between items-center mx-4">
+        <div class="overflow-hidden">
+            <p class="text-xs font-bold text-green-600 dark:text-green-400">Replying to <span id="reply-to-name"></span></p>
+            <p id="reply-to-text" class="text-sm opacity-70 truncate"></p>
+        </div>
+        <button id="cancel-reply" class="text-gray-500 hover:text-red-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="p-4 bg-white dark:bg-slate-900 border-t dark:border-slate-800 shrink-0">
+        <form id="chat-form" class="flex gap-2 items-end">
+            <div class="flex-grow">
+                <label for="message-input"></label><textarea id="message-input" rows="1" placeholder="Type a message..."
+                                                             class="w-full p-3 rounded-2xl bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition resize-none max-h-32"></textarea>
+            </div>
+            <button type="submit" id="send-btn"
+                    class="p-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition shadow-md disabled:opacity-50">
+                <svg class="w-6 h-6 transform rotate-90" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                </svg>
+            </button>
+        </form>
+    </div>
+</main>
+
+<script src="scripts/theme.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="scripts/firebase.js"></script>
+
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const replyPreview = document.getElementById('reply-preview');
+    const replyToName = document.getElementById('reply-to-name');
+    const replyToText = document.getElementById('reply-to-text');
+    const cancelReplyBtn = document.getElementById('cancel-reply');
+    const loadingSpinner = document.getElementById('loading-spinner');
+
+    let currentUser = null;
+    let userMaskName = null;
+    let replyingTo = null;
+
+    function generateMaskName(uid) {
+        let hash = 0;
+        for (let i = 0; i < uid.length; i++) {
+            hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const chars = 'agwbcdefsghdijfklmdnwopqsdsrsftuvfwxyz';
+        let result = '';
+        for (let i = 0; i < 8; i++) {
+            const charIndex = Math.abs(hash + i * 13) % chars.length;
+            result += chars[charIndex];
+        }
+        return result;
+    }
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.replace('authentication/login.html');
+            return;
+        }
+        currentUser = user;
+        userMaskName = generateMaskName(user.uid);
+        initChat();
+    });
+
+    function initChat() {
+        db.collection('group_chats').doc('main').collection('messages')
+            .orderBy('timestamp', 'asc')
+            .limitToLast(100)
+            .onSnapshot(snapshot => {
+                loadingSpinner.classList.add('hidden');
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        renderMessage(change.doc);
+                    } else if (change.type === 'modified') {
+                        updateMessageUI(change.doc);
+                    }
+                });
+                scrollToBottom();
+            });
+    }
+
+    function scrollToMessage(msgId) {
+        const target = document.getElementById(`msg-${msgId}`);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.classList.add('ring-4', 'ring-green-500/50', 'bg-green-50/50');
+            setTimeout(() => target.classList.remove('ring-4', 'ring-green-500/50', 'bg-green-50/50'), 2000);
+        }
+    }
+
+    function getReactionHtml(msg) {
+        const reactionKeys = [
+            { key: 'thumbsUp', emoji: '👍' },
+            { key: 'thumbsDown', emoji: '👎' },
+            { key: 'middleFinger', emoji: '🖕' },
+            { key: 'laughing', emoji: '😂' },
+            { key: 'sad', emoji: '😢' }
+        ];
+
+        return reactionKeys.map(r => {
+            const count = msg[r.key] ? Object.keys(msg[r.key]).length : 0;
+            if (count === 0) return '';
+            return `
+                <div class="bg-white dark:bg-slate-700 rounded-full px-2 py-0.5 shadow-sm border border-gray-100 dark:border-slate-600 flex items-center gap-1 text-[11px]">
+                    <span>${r.emoji}</span>
+                    <span class="font-bold">${count}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderMessage(doc) {
+        const msg = doc.data();
+        const msgId = doc.id;
+        const isMine = msg.userId === currentUser.uid;
+        const senderMaskName = generateMaskName(msg.userId);
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = `msg-${msgId}`;
+        messageDiv.className = `flex flex-col ${isMine ? 'items-end' : 'items-start'} group mb-6 transition-all duration-300`;
+
+        const timestamp = msg.timestamp ? msg.timestamp.toDate() : new Date();
+        const timeDisplay = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        let replyHtml = '';
+        if (msg.replyTo) {
+            replyHtml = `
+                <div onclick="scrollToMessage('${msg.replyTo.msgId}')" class="bg-black/5 dark:bg-white/5 p-2 rounded-lg mb-1 text-xs border-l-2 border-green-500 max-w-full cursor-pointer hover:bg-black/10 transition">
+                    <p class="font-bold opacity-70">${msg.replyTo.userName}</p>
+                    <p class="truncate opacity-60">${msg.replyTo.text}</p>
+                </div>
+            `;
+        }
+
+        messageDiv.innerHTML = `
+            ${!isMine ? `<span class="text-[10px] font-bold opacity-40 mb-1 ml-2 uppercase tracking-tighter">${senderMaskName}</span>` : ''}
+            <div class="relative max-w-[85%] sm:max-w-[70%]">
+                <div class="absolute -top-10 ${isMine ? 'right-0' : 'left-0'} hidden group-hover:flex flex-row bg-white dark:bg-slate-800 rounded-full shadow-xl p-1.5 gap-2 z-20 border border-gray-200 dark:border-slate-700 emoji-menu">
+                    <button onclick="setReply('${msgId}', '${msg.userId}', '${msg.text.replace(/'/g, "\\'").replace(/\n/g, " ")}')" class="p-1 px-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full border-r dark:border-slate-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button onclick="toggleReaction('${msgId}', 'thumbsUp')" class="hover:scale-150 transition px-1">👍</button>
+                    <button onclick="toggleReaction('${msgId}', 'thumbsDown')" class="hover:scale-150 transition px-1">👎</button>
+                    <button onclick="toggleReaction('${msgId}', 'middleFinger')" class="hover:scale-150 transition px-1">🖕</button>
+                    <button onclick="toggleReaction('${msgId}', 'laughing')" class="hover:scale-150 transition px-1">😂</button>
+                    <button onclick="toggleReaction('${msgId}', 'sad')" class="hover:scale-150 transition px-1">😢</button>
+                </div>
+
+                <div class="${isMine ? 'bg-green-600 text-white rounded-2xl rounded-tr-none' : 'bg-gray-100 dark:bg-slate-800 rounded-2xl rounded-tl-none'} p-3 shadow-sm">
+                    ${replyHtml}
+                    <p class="text-sm whitespace-pre-wrap break-words">${msg.text}</p>
+                    <div class="flex items-center justify-end gap-2 mt-1 opacity-40 text-[9px]">
+                        <span>${timeDisplay}</span>
+                    </div>
+                </div>
+
+                <div class="absolute -bottom-3 ${isMine ? 'right-0' : 'left-0'} flex gap-1 reaction-container z-10">
+                    ${getReactionHtml(msg)}
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(messageDiv);
+    }
+
+    function updateMessageUI(doc) {
+        const msg = doc.data();
+        const messageDiv = document.getElementById(`msg-${doc.id}`);
+        if (messageDiv) {
+            const container = messageDiv.querySelector('.reaction-container');
+            if (container) container.innerHTML = getReactionHtml(msg);
+        }
+    }
+
+    function toggleReaction(msgId, type) {
+        const msgRef = db.collection('group_chats').doc('main').collection('messages').doc(msgId);
+        db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(msgRef);
+            if (!doc.exists) return;
+            const data = doc.data();
+            const reactions = data[type] || {};
+            if (reactions[currentUser.uid]) {
+                delete reactions[currentUser.uid];
+            } else {
+                reactions[currentUser.uid] = true;
+            }
+            transaction.update(msgRef, { [type]: reactions });
+        });
+    }
+
+    function setReply(msgId, userId, text) {
+        const maskName = generateMaskName(userId);
+        replyingTo = { msgId, userId, maskName, text };
+        replyToName.textContent = maskName;
+        replyToText.textContent = text;
+        replyPreview.classList.remove('hidden');
+        messageInput.focus();
+    }
+
+    cancelReplyBtn.onclick = () => {
+        replyingTo = null;
+        replyPreview.classList.add('hidden');
+    };
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = messageInput.value.trim();
+        if (!text) return;
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+
+        const msgData = {
+            userId: currentUser.uid,
+            userName: userMaskName,
+            text: text,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (replyingTo) {
+            msgData.replyTo = {
+                msgId: replyingTo.msgId,
+                userId: replyingTo.userId,
+                userName: replyingTo.maskName,
+                text: replyingTo.text
+            };
+            replyingTo = null;
+            replyPreview.classList.add('hidden');
+        }
+
+        try {
+            await db.collection('group_chats').doc('main').collection('messages').add(msgData);
+        } catch (e) { console.error(e); }
+    });
+
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    function scrollToBottom() {
+        chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+</body>
+</html>

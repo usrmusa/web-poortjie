@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /favicon/
+
+User-agent: Googlebot-Image
+Allow: /favicon/

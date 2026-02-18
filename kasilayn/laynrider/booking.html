@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation | Poortjie Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="stylesheet" href="../../styles/main.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="../../scripts/firebase.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+        .chip { transition: all 0.2s; cursor: pointer; }
+        .chip.active { background-color: #16a34a; color: white; border-color: #16a34a; }
+        .linear-progress { height: 2px; width: 100%; background-color: #f1f5f9; position: relative; overflow: hidden; }
+        .linear-progress .bar { height: 100%; background-color: #22c55e; position: absolute; left: -100%; width: 100%; animation: linear-progress 1.5s infinite linear; }
+        @keyframes linear-progress { 0% { left: -100%; } 100% { left: 100%; } }
+        .hidden { display: none !important; }
+        #modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); }
+    </style>
+    <script src="../../scripts/theme.js" defer></script>
+</head>
+<body class="font-sans antialiased bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen">
+
+<!-- Top Bar -->
+<header class="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+    <div class="max-w-4xl mx-auto h-16 flex justify-between items-center px-4 relative">
+        <div class="flex items-center gap-4">
+            <button onclick="if(history.length > 1) { history.back(); } else { window.location.href='dashboard.html'; }" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1 class="text-lg font-black tracking-tight uppercase">New Booking</h1>
+        </div>
+
+        <!-- Hamburger Menu consistent with home.html -->
+        <div id="hamburger-menu" class="relative z-50">
+            <button id="hamburger-btn" class="p-2 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div id="menu-items" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl py-2 ring-1 ring-black ring-opacity-5 border border-slate-100 dark:border-slate-700">
+                <button id="menu-theme-toggle" class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <span id="menu-theme-icon">🌓</span> Mode
+                </button>
+                <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                <a href="dashboard.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-th-large w-4 text-center"></i> Dashboard
+                </a>
+                <a href="../../index.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-home w-4 text-center"></i> Home
+                </a>
+                <button id="logout-btn" class="hidden w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Linear Loading Indicator -->
+    <div id="loading-bar" class="linear-progress hidden">
+        <div class="bar"></div>
+    </div>
+</header>
+
+<!-- Offline Banner -->
+<div id="offline-banner" class="hidden bg-red-600 text-white text-[10px] font-black uppercase py-2 text-center tracking-widest sticky top-16 z-40">
+    You are offline
+</div>
+
+<main id="scroll-container" class="max-w-4xl mx-auto pb-24">
+    <div class="p-4 space-y-4">
+        
+        <!-- Driver Summary Card -->
+        <div id="driver-summary" class="hidden card p-4 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+            <div id="driver-avatar-container">
+                <img id="driver-photo" src="https://placehold.co/100x100" class="w-12 h-12 rounded-full object-cover" alt="">
+            </div>
+            <div>
+                <h3 id="driver-name" class="font-black text-sm uppercase">--</h3>
+                <p id="driver-car" class="text-[10px] font-bold opacity-50 uppercase tracking-tight">--</p>
+            </div>
+        </div>
+
+        <!-- Main Booking Form Card -->
+        <div class="card p-6 rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-sm space-y-8">
+            
+            <!-- Route Section -->
+            <section class="space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Route Details</h2>
+                </div>
+                <div class="space-y-3">
+                    <div class="relative">
+                        <label for="pickup-input"></label><input type="text" id="pickup-input" placeholder="Pickup Location" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-4 text-sm font-bold outline-none transition">
+                    </div>
+                    <div class="relative">
+                        <label for="destination-input"></label><input type="text" id="destination-input" placeholder="Destination Location" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-4 text-sm font-bold outline-none transition">
+                    </div>
+                    <button onclick="toggleMap()" class="w-full py-3 text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center justify-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/10 rounded-xl transition">
+                        <i class="fas fa-map-marked-alt"></i> View on Map
+                    </button>
+                    <!-- Fare and Distance Display -->
+                    <div id="route-stats" class="hidden flex justify-between px-4 py-2 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                        <div class="text-center">
+                            <p class="text-[8px] font-black uppercase opacity-40">Distance</p>
+                            <p id="stat-distance" class="text-xs font-black">-- km</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[8px] font-black uppercase opacity-40">Est. Price</p>
+                            <p id="stat-price" class="text-xs font-black text-green-600">--</p>
+                        </div>
+                    </div>
+                    <div id="map-container" class="hidden h-64 w-full rounded-2xl overflow-hidden mt-2">
+                        <div id="map" class="h-full w-full"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trip Type Section -->
+            <section class="space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Trip Type</h2>
+                </div>
+                <div class="flex gap-2">
+                    <div onclick="setTripType('single')" id="chip-single" class="chip active px-6 py-2 rounded-full border-2 border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest">Single</div>
+                    <div onclick="setTripType('return')" id="chip-return" class="chip px-6 py-2 rounded-full border-2 border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest">Return</div>
+                </div>
+            </section>
+
+            <!-- Scheduling Section -->
+            <section class="space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Scheduling</h2>
+                </div>
+                <div class="flex gap-2">
+                    <div onclick="setScheduling('asap')" id="chip-asap" class="chip active px-6 py-2 rounded-full border-2 border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest">ASAP</div>
+                    <div onclick="setScheduling('scheduled')" id="chip-scheduled" class="chip px-6 py-2 rounded-full border-2 border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-widest">Scheduled</div>
+                </div>
+                
+                <div id="schedule-options" class="hidden grid grid-cols-2 gap-3 pt-2">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase opacity-40 ml-2">Pickup Date</label>
+                        <label for="pickup-date"></label><input type="date" id="pickup-date" class="w-full bg-slate-50 dark:bg-slate-900/50 rounded-xl px-4 py-3 text-xs font-bold outline-none border border-transparent focus:border-green-500 transition">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase opacity-40 ml-2">Pickup Time</label>
+                        <label for="pickup-time"></label><input type="time" id="pickup-time" class="w-full bg-slate-50 dark:bg-slate-900/50 rounded-xl px-4 py-3 text-xs font-bold outline-none border border-transparent focus:border-green-500 transition">
+                    </div>
+                    
+                    <div id="return-schedule-options" class="hidden col-span-2 grid grid-cols-2 gap-3 pt-2">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase opacity-40 ml-2">Return Date</label>
+                            <label for="return-date"></label><input type="date" id="return-date" class="w-full bg-slate-50 dark:bg-slate-900/50 rounded-xl px-4 py-3 text-xs font-bold outline-none border border-transparent focus:border-green-500 transition">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase opacity-40 ml-2">Return Time</label>
+                            <label for="return-time"></label><input type="time" id="return-time" class="w-full bg-slate-50 dark:bg-slate-900/50 rounded-xl px-4 py-3 text-xs font-bold outline-none border border-transparent focus:border-green-500 transition">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Options Section -->
+            <section id="options-section" class="hidden space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Options</h2>
+                </div>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <div class="relative">
+                        <input type="checkbox" id="book-entire-duration" class="peer sr-only">
+                        <div class="w-5 h-5 border-2 border-slate-200 dark:border-slate-700 rounded peer-checked:bg-green-500 peer-checked:border-green-500 transition-all flex items-center justify-center">
+                            <i class="fas fa-check text-white text-[10px] scale-0 peer-checked:scale-100 transition-transform"></i>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold opacity-70 group-hover:opacity-100 transition">Book driver for entire duration</span>
+                </label>
+            </section>
+
+            <!-- Purpose Section -->
+            <section class="space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Purpose</h2>
+                </div>
+                <label for="purpose-input"></label><textarea id="purpose-input" placeholder="Purpose of booking (Optional)" rows="2" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-4 text-sm font-bold outline-none transition resize-none"></textarea>
+            </section>
+        </div>
+
+        <!-- Submit Button -->
+        <button id="submit-request-btn" class="w-full py-5 bg-green-600 text-white text-xs font-black uppercase tracking-[0.3em] rounded-[1.5rem] shadow-xl shadow-green-500/20 transition-all active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none dark:disabled:bg-slate-800 dark:disabled:text-slate-700">
+            Submit Request
+        </button>
+    </div>
+</main>
+
+<!-- Confirmation Dialog -->
+<div id="modal-overlay" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-fadeIn">
+        <div class="p-8 space-y-6">
+            <h2 class="text-xl font-black uppercase tracking-tight text-center">Confirm Request</h2>
+            
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center py-1">
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        <div class="w-[1px] flex-grow bg-slate-100 dark:bg-slate-700 my-1"></div>
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                    </div>
+                    <div class="space-y-3 flex-grow">
+                        <div>
+                            <p class="text-[8px] font-black uppercase opacity-40">Pickup</p>
+                            <p id="confirm-pickup" class="text-xs font-bold leading-tight">--</p>
+                        </div>
+                        <div>
+                            <p class="text-[8px] font-black uppercase opacity-40">Destination</p>
+                            <p id="confirm-dest" class="text-xs font-bold leading-tight">--</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50 dark:border-slate-700/50">
+                    <div>
+                        <p class="text-[8px] font-black uppercase opacity-40">Type</p>
+                        <p id="confirm-type" class="text-xs font-bold">Single</p>
+                    </div>
+                    <div>
+                        <p class="text-[8px] font-black uppercase opacity-40">When</p>
+                        <p id="confirm-when" class="text-xs font-bold">ASAP</p>
+                    </div>
+                    <div>
+                        <p class="text-[8px] font-black uppercase opacity-40">Distance</p>
+                        <p id="confirm-dist" class="text-xs font-bold">-- km</p>
+                    </div>
+                    <div>
+                        <p class="text-[8px] font-black uppercase opacity-40">Estimated Fare</p>
+                        <p id="confirm-fare" class="text-xs font-black text-green-600">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeModal()" class="flex-grow py-4 border-2 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">Edit</button>
+                <button onclick="finalizeBooking()" class="flex-grow py-4 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-green-500/20 active:scale-95 transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCXnSxBam3mjlfEx3F4XL_7ZIwLEbov0n8&libraries=places&callback=initMap" defer></script>
+
+<script>
+    // GLOBAL STATE
+    let tripType = 'single';
+    let scheduling = 'asap';
+    let isOffline = !navigator.onLine;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const driverUid = urlParams.get('driverUid');
+
+    let map, directionsService, directionsRenderer;
+    let driverData = null, carData = null, currentUser = null, routeInfo = null;
+
+    // 1. MAIN INIT
+    async function initMap() {
+        showLoading(true);
+        console.log("Map script loaded.");
+
+        // Initialize offline detection
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        if (!driverUid) {
+            console.warn("No driver selected.");
+        } else {
+            fetchDriver();
+        }
+
+        const { Map } = await google.maps.importLibrary("maps");
+        const { DirectionsService, DirectionsRenderer } = await google.maps.importLibrary("routes");
+        const { Autocomplete } = await google.maps.importLibrary("places");
+        const { Geocoder } = await google.maps.importLibrary("geocoding");
+
+        map = new Map(document.getElementById("map"), {
+            zoom: 14,
+            center: { lat: -26.4715, lng: 27.8444 },
+            disableDefaultUI: true,
+            mapId: 'DEMO_MAP_ID'
+        });
+
+        directionsService = new DirectionsService();
+        directionsRenderer = new DirectionsRenderer({
+            map: map,
+            polylineOptions: { strokeColor: "#22c55e", strokeWeight: 6 }
+        });
+
+        setupAutocomplete(Autocomplete);
+        
+        // Check if we should request location automatically
+        // We only do this once per session or if the user hasn't seen the prompt yet
+        const locationHandled = localStorage.getItem('locationPromptHandled');
+        if (!locationHandled) {
+            requestUserLocation(Geocoder);
+            localStorage.setItem('locationPromptHandled', 'true');
+        }
+
+        // Initialize Hamburger Menu and Logout
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const menuItems = document.getElementById('menu-items');
+
+        if (hamburgerBtn && menuItems) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuItems.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                menuItems.classList.add('hidden');
+            });
+
+            menuItems.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../../authentication/login.html';
+                });
+            });
+        }
+
+        firebase.auth().onAuthStateChanged(user => { 
+            currentUser = user; 
+            const logoutBtn = document.getElementById('logout-btn');
+            if (user) {
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+            } else {
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+            }
+        });
+        showLoading(false);
+    }
+
+    function updateOnlineStatus() {
+        isOffline = !navigator.onLine;
+        const banner = document.getElementById('offline-banner');
+        const submitBtn = document.getElementById('submit-request-btn');
+
+        if (isOffline) {
+            banner.classList.remove('hidden');
+            submitBtn.textContent = 'Waiting for connection';
+            submitBtn.disabled = true;
+        } else {
+            banner.classList.add('hidden');
+            submitBtn.textContent = 'Submit Request';
+            validateForm();
+        }
+    }
+
+    function showLoading(show) {
+        document.getElementById('loading-bar').classList.toggle('hidden', !show);
+    }
+
+    // UI CONTROL FUNCTIONS
+    function setTripType(type) {
+        tripType = type;
+        document.getElementById('chip-single').classList.toggle('active', type === 'single');
+        document.getElementById('chip-return').classList.toggle('active', type === 'return');
+        
+        updateVisibility();
+    }
+
+    function setScheduling(type) {
+        scheduling = type;
+        document.getElementById('chip-asap').classList.toggle('active', type === 'asap');
+        document.getElementById('chip-scheduled').classList.toggle('active', type === 'scheduled');
+        
+        updateVisibility();
+    }
+
+    function updateVisibility() {
+        const scheduleOptions = document.getElementById('schedule-options');
+        const returnSchedule = document.getElementById('return-schedule-options');
+        const optionsSection = document.getElementById('options-section');
+
+        scheduleOptions.classList.toggle('hidden', scheduling === 'asap');
+        returnSchedule.classList.toggle('hidden', tripType === 'single');
+        optionsSection.classList.toggle('hidden', !(tripType === 'return' && scheduling === 'scheduled'));
+    }
+
+    function toggleMap() {
+        const container = document.getElementById('map-container');
+        const stats = document.getElementById('route-stats');
+        container.classList.toggle('hidden');
+        if (stats) stats.classList.toggle('hidden', container.classList.contains('hidden'));
+        if (!container.classList.contains('hidden')) {
+            google.maps.event.trigger(map, 'resize');
+        }
+    }
+
+    function showModal() {
+        if (!validateForm()) return;
+        
+        document.getElementById('confirm-pickup').textContent = document.getElementById('pickup-input').value;
+        document.getElementById('confirm-dest').textContent = document.getElementById('destination-input').value;
+        document.getElementById('confirm-type').textContent = tripType.charAt(0).toUpperCase() + tripType.slice(1);
+
+        document.getElementById('confirm-when').textContent = scheduling === 'asap' ? 'ASAP' : `${document.getElementById('pickup-date').value} ${document.getElementById('pickup-time').value}`;
+        
+        if (routeInfo) {
+            document.getElementById('confirm-dist').textContent = `${routeInfo.distKm.toFixed(1)} km`;
+            document.getElementById('confirm-fare').textContent = document.getElementById('confirm-fare-value').value;
+        }
+
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.add('hidden');
+    }
+
+    function validateForm() {
+        const p = document.getElementById('pickup-input').value;
+        const d = document.getElementById('destination-input').value;
+        const btn = document.getElementById('submit-request-btn');
+        
+        const isValid = p && d && !isOffline;
+        btn.disabled = !isValid;
+        return isValid;
+    }
+
+    // ORIGINAL LOGIC (RETAINED & UPDATED)
+
+    // NEW: Request user location to pre-fill pickup
+    function requestUserLocation(GeocoderClass) {
+        localStorage.setItem('locationPromptHandled', 'true');
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    map.setCenter(pos);
+
+                    // Reverse geocode to get address string
+                    const geocoder = new GeocoderClass();
+                    geocoder.geocode({ location: pos }, (results, status) => {
+                        if (status === "OK" && results[0]) {
+                            document.getElementById('pickup-input').value = results[0].formatted_address;
+                            validateForm();
+                            autoUpdateRoute();
+                        }
+                    });
+                },
+                (error) => {
+                    console.warn("Geolocation failed:", error);
+                }
+            );
+        }
+    }
+
+    // 2. AUTOCOMPLETE SETUP
+    function setupAutocomplete(AutocompleteClass) {
+        const pInput = document.getElementById('pickup-input');
+        const dInput = document.getElementById('destination-input');
+        const options = { componentRestrictions: { country: "za" }, fields: ["geometry", "formatted_address", "name"] };
+
+        const pAuto = new AutocompleteClass(pInput, options);
+        const dAuto = new AutocompleteClass(dInput, options);
+
+        pAuto.addListener("place_changed", () => {
+            console.log("Pickup selected");
+            validateForm();
+            autoUpdateRoute();
+        });
+        dAuto.addListener("place_changed", () => {
+            console.log("Dest selected");
+            validateForm();
+            autoUpdateRoute();
+        });
+
+        pInput.addEventListener('input', validateForm);
+        dInput.addEventListener('input', validateForm);
+    }
+
+    function autoUpdateRoute() {
+        const origin = document.getElementById('pickup-input').value;
+        const destination = document.getElementById('destination-input').value;
+        if (origin && destination) {
+            updateRoute();
+        }
+    }
+
+    // 3. FETCH DATA
+    async function fetchDriver() {
+        showLoading(true);
+        try {
+            const snap = await db.collection('kasilayn').doc('fleet').collection('drivers').doc(driverUid).get();
+            if (!snap.exists) return;
+            driverData = snap.data();
+
+            const carReg = driverData.carRef?.id || driverData.carRegistration;
+            if (carReg) {
+                const carSnap = await db.collection('kasilayn').doc('fleet').collection('cars').doc(carReg).get();
+                if (carSnap.exists) carData = carSnap.data();
+            }
+
+            renderDriverUI();
+
+            if (driverData.lastLocation) {
+                new google.maps.Marker({
+                    position: { lat: driverData.lastLocation.latitude, lng: driverData.lastLocation.longitude },
+                    map: map,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/kml/shapes/truck.png',
+                        scaledSize: new google.maps.Size(32, 32)
+                    },
+                    title: driverData.displayName
+                });
+            }
+        } catch (e) { console.error("Firestore Error:", e); }
+        showLoading(false);
+    }
+
+    function renderDriverUI() {
+        if (!driverData) return;
+        document.getElementById('driver-summary').classList.remove('hidden');
+        document.getElementById('driver-photo').src = driverData.photoUrl || 'https://placehold.co/100x100';
+        document.getElementById('driver-name').textContent = driverData.displayName || 'Driver';
+        document.getElementById('driver-car').textContent = `${carData?.make || ''} ${carData?.model || ''} • ${carData?.registration || ''}`;
+    }
+
+    // 4. ROUTE CALCULATION
+    async function updateRoute() {
+        const origin = document.getElementById('pickup-input').value;
+        const destination = document.getElementById('destination-input').value;
+
+        if (!origin || !destination) return;
+
+        showLoading(true);
+        directionsService.route({
+            origin: origin,
+            destination: destination,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, (result, status) => {
+            showLoading(false);
+            if (status === "OK") {
+                directionsRenderer.setDirections(result);
+                const leg = result.routes[0].legs[0];
+
+                routeInfo = {
+                    distKm: leg.distance.value / 1000,
+                    durHr: leg.duration.value / 3600,
+                    durTxt: leg.duration.text,
+                    start: leg.start_address,
+                    end: leg.end_address,
+                    startCoords: leg.start_location,
+                    endCoords: leg.end_location
+                };
+
+                updateCalculations();
+            }
+        });
+    }
+
+    function updateCalculations() {
+        if (!routeInfo || !carData) return;
+
+        const pricing = carData.pricing || {};
+        const base = parseFloat(pricing.baseFee) || parseFloat(carData.baseFee) || 15;
+        const distRate = parseFloat(pricing.ratePerKm) || parseFloat(carData.ratePerKm) || 10;
+
+        let total = base + (distRate * routeInfo.distKm);
+
+        // Check for Fixed Pricing
+        const pickupValue = document.getElementById('pickup-input').value.toLowerCase();
+        const destValue = document.getElementById('destination-input').value.toLowerCase();
+        const isPoortjie = pickupValue.includes('poortjie') || pickupValue.includes('poortje');
+
+        if (isPoortjie && pricing.fixed && pricing.fixed.length > 0) {
+            const fixedMatch = pricing.fixed.find(f => destValue.includes(f.destination.toLowerCase()));
+            if (fixedMatch) {
+                total = fixedMatch.amount;
+                console.log("Fixed price applied:", total);
+            }
+        }
+
+        // Update route stats display
+        const routeStats = document.getElementById('route-stats');
+        const statDistance = document.getElementById('stat-distance');
+        const statPrice = document.getElementById('stat-price');
+        const mapContainer = document.getElementById('map-container');
+
+        if (routeStats && routeInfo) {
+            // Only show if map is also visible
+            if (mapContainer && !mapContainer.classList.contains('hidden')) {
+                routeStats.classList.remove('hidden');
+            }
+            if (statDistance) statDistance.textContent = `${routeInfo.distKm.toFixed(1)} km`;
+            if (statPrice) statPrice.textContent = `R ${total.toFixed(2)}`;
+        }
+
+        // Store fare for modal
+        const fareValue = `R ${total.toFixed(2)}`;
+        const hiddenFare = document.getElementById('confirm-fare-value') || document.createElement('input');
+        hiddenFare.type = 'hidden';
+        hiddenFare.id = 'confirm-fare-value';
+        hiddenFare.value = fareValue;
+        if (!document.getElementById('confirm-fare-value')) document.body.appendChild(hiddenFare);
+    }
+
+    // 5. SUBMIT HANDLER
+    document.getElementById('submit-request-btn').addEventListener('click', () => {
+        showModal();
+    });
+
+    async function finalizeBooking() {
+        if (!currentUser) {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../../authentication/login.html';
+            return;
+        }
+
+        const confirmBtn = document.querySelector('#modal-overlay button:last-child');
+        const editBtn = document.querySelector('#modal-overlay button:first-child');
+        
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Confirming...';
+        editBtn.classList.add('hidden');
+        showLoading(true);
+
+        try {
+            // Fetch real name from users collection
+            let realDisplayName = "Rider";
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            if (userDoc.exists && userDoc.data().displayName) {
+                realDisplayName = userDoc.data().displayName;
+            } else if (currentUser.displayName) {
+                realDisplayName = currentUser.displayName;
+            }
+
+            const bookingId = db.collection('kasilayn').doc('fleet').collection('bookings').doc().id;
+            const now = firebase.firestore.FieldValue.serverTimestamp();
+            
+            // Format whenText
+            let whenText;
+            const pickupDate = document.getElementById('pickup-date').value;
+            const pickupTime = document.getElementById('pickup-time').value;
+            
+            if (scheduling === 'asap') {
+                const d = new Date();
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                whenText = `ASAP from ${d.getDate()} ${months[d.getMonth()]} • ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+            } else {
+                // Simplified formatting for brevity, can be refined
+                whenText = `${pickupDate} • ${pickupTime}`;
+            }
+
+            const pickupShort = document.getElementById('pickup-input').value.split(',')[0].trim();
+            const destinationShort = document.getElementById('destination-input').value.split(',')[0].trim();
+
+            const bookingData = {
+                status: "PENDING",
+                requesterUid: currentUser.uid,
+                driverUid: driverUid,
+                pickup: document.getElementById('pickup-input').value,
+                destination: document.getElementById('destination-input').value,
+                pickupShort: pickupShort,
+                destinationShort: destinationShort,
+                pickupLat: routeInfo?.startCoords.lat() || 0,
+                pickupLng: routeInfo?.startCoords.lng() || 0,
+                destinationLat: routeInfo?.endCoords.lat() || 0,
+                destinationLng: routeInfo?.endCoords.lng() || 0,
+                requesterDisplayName: realDisplayName,
+                driverDisplayName: driverData?.displayName || "Driver",
+                estimatedFare: parseFloat(document.getElementById('confirm-fare-value').value.replace('R ', '')) || 0,
+                distanceKm: routeInfo?.distKm || 0,
+                asap: scheduling === 'asap',
+                returnTrip: tripType === 'return',
+                createdAt: now,
+                updatedAt: now,
+                whenText: whenText,
+                carRegistration: carData?.registration || "",
+                carMake: carData?.make || "",
+                carModel: carData?.model || "",
+                carBodyType: carData?.bodyType || "",
+                carPhotoUrls: carData?.photoUrls || [],
+                carSeats: carData?.seats || carData?.carSeats || 4,
+                purpose: document.getElementById('purpose-input').value,
+                scheduledDateText: document.getElementById('pickup-date').value,
+                scheduledTimeText: document.getElementById('pickup-time').value,
+                returnScheduledDateText: document.getElementById('return-date').value,
+                returnScheduledTimeText: document.getElementById('return-time').value,
+                bookDriverForEntireDuration: document.getElementById('book-entire-duration').checked
+            };
+
+            await db.collection('kasilayn').doc('fleet').collection('bookings').doc(bookingId).set(bookingData);
+            
+            window.location.href = `history.html`;
+        } catch (error) {
+            console.error("Booking failed:", error);
+            alert("Failed to create booking. Please try again.");
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirm';
+            editBtn.classList.remove('hidden');
+            showLoading(false);
+        }
+    }
+</script>
+</body>
+</html>

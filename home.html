@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poortjie Services</title>
+    <meta name="author" content="Musa Mgijima">
+    <meta name="description"
+          content="Poortjie Services connects you with local Kasi services: From school transport and tow trucks to professional designers and web developers.">
+    <meta name="keywords"
+          content="Poortjie, Kasi services, transport, school transport, graphic design, web development, South Africa">
+    <meta name="copyright" content="© 2026 Poortjie Services. All rights reserved.">
+    <meta name="robots" content="index,follow">
+    <meta name="theme-color" content="#22c55e">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
+    <link rel="shortcut icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <style>
+        /* Critical CSS to prevent FOUC when using Tailwind CDN */
+        #loader-overlay { background-color: #ffffff; }
+        .dark #loader-overlay { background-color: #0f172a; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div class="fixed top-5 left-5 z-50" id="business-form-control">
+    <a href="services/business-form.html" id="add-business-btn"
+       class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition flex items-center justify-center"
+       title="Add Your Business">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+    </a>
+</div>
+
+<div class="fixed top-5 right-5 z-50 flex gap-3" id="user-controls">
+    <!-- Theme Toggle removed from here and moved to hamburger menu -->
+
+    <div id="hamburger-menu" class="relative">
+        <button id="hamburger-btn"
+                class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        <div id="menu-items"
+             class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+            <button id="menu-theme-toggle"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                <span id="menu-theme-icon">🌓</span> Mode
+            </button>
+            <a id="admin-link" href="manage/business.html"
+               class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Business
+                Admin</a>
+            <a id="home-admin-link" href="manage/home-manager.html"
+               class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Home
+                Manager</a>
+            <a id="news-admin-link" href="manage/news-writer.html"
+               class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Post
+                News/Alert</a>
+            <a id="taxi-admin-link" href="manage/public transport.html"
+               class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Public Transport Admin</a>
+
+            <a href="support.html"
+               class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Support</a>
+
+            <a id="profile-link" href="authentication/profile.html"
+               class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Profile</a>
+            <div id="auth-divider" class="hidden border-t border-gray-100 dark:border-slate-700 my-1"></div>
+            <a id="login-link" href="authentication/login.html"
+               onclick="sessionStorage.setItem('redirectUrl', window.location.href); window.location.href = 'authentication/login.html'; return false;"
+               class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Login</a>
+            <button id="logout-btn"
+                    class="hidden w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">
+                Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+<header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center">
+    <div id="loader-overlay" class="fixed inset-0 bg-white dark:bg-slate-900 z-[60] flex items-center justify-center transition-opacity duration-500">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
+            <p class="text-sm font-medium opacity-50">Loading Poortjie...</p>
+        </div>
+    </div>
+    <div class="mb-4 flex justify-center">
+        <div class="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-bold tracking-widest uppercase">
+            services
+        </div>
+    </div>
+    <h1 class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</h1>
+    <div id="alert-container" class="max-w-2xl mx-auto mb-4 hidden">
+        <!-- Alerts will be injected here -->
+    </div>
+    <div id="news-slider-container" class="max-w-2xl mx-auto mb-8 hidden">
+        <div id="news-slider"
+             class="bg-green-50 dark:bg-slate-800/50 border border-green-100 dark:border-slate-700 rounded-2xl p-6 relative group overflow-hidden">
+            <div id="news-content-area" class="transition-opacity duration-500">
+                <!-- News content will be injected here -->
+                <div class="animate-pulse flex flex-col items-center">
+                    <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/2"></div>
+                </div>
+            </div>
+
+            <!-- Navigation Arrows -->
+            <button id="prev-news" class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/40 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none" aria-label="Previous news">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <button id="next-news" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/40 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none" aria-label="Next news">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+
+            <div class="flex justify-center gap-2 mt-4" id="slider-dots"></div>
+        </div>
+    </div>
+    <p id="hero-static-text" class="text-xl opacity-80 max-w-2xl mx-auto leading-relaxed">
+        The digital heartbeat of the township. Access reliable transport, professional designers, and expert
+        developers—all in one place.
+    </p>
+
+    <div class="flex flex-wrap justify-center gap-4 mt-8">
+        <a href="#services"
+           class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">Explore
+            Services</a>
+        <a href="services/public%20transport.html"
+           class="px-8 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition">Public Transport Info</a>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 pb-24" id="services">
+
+    <div class="mb-12 flex flex-col md:flex-row gap-4">
+        <div class="relative flex-grow">
+            <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                 stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <label for="search-bar"></label><input type="text" id="search-bar" placeholder="Search categories..."
+                                                   class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+        <label for="sort-list"></label><select id="sort-list"
+                                               class="px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+        <option value="asc">Name (A-Z)</option>
+        <option value="desc">Name (Z-A)</option>
+    </select>
+    </div>
+
+    <div id="services-grid" class="grid md:grid-cols-3 gap-8">
+    </div>
+
+    <div id="no-results-container" class="hidden mt-12 text-center p-12 bg-gray-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-700">
+        <div class="mb-4 text-5xl">🔍</div>
+        <h3 class="text-xl font-bold mb-2">No categories match your search</h3>
+        <p class="text-slate-500 dark:text-slate-400 mb-6">Can't find what you're looking for? We can search through all individual businesses.</p>
+        <button id="global-search-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
+            Search All Services
+        </button>
+        <div id="global-search-loading" class="hidden mt-4">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-2"></div>
+                <p class="text-sm">Searching every corner...</p>
+            </div>
+        </div>
+        <div id="global-results" class="mt-8 grid md:grid-cols-2 gap-4 text-left">
+            <!-- Global search results will appear here -->
+        </div>
+    </div>
+
+    <section class="mt-24 card p-10 rounded-3xl bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/10">
+        <div class="max-w-3xl">
+            <h2 class="text-3xl font-bold mb-4">Built for the community, by the community.</h2>
+            <p class="text-lg opacity-80 mb-6">
+                Poortjie Services is all about lifting our local businesses. We make sure every hustle in the hood has a professional home online, without any of the complicated talk or heavy costs.
+            </p>
+            <div class="flex gap-4">
+                <span class="text-[10px] font-bold px-2 py-1 border border-green-500/30 rounded text-green-500 uppercase tracking-widest">Mobile First</span>
+                <span class="text-[10px] font-bold px-2 py-1 border border-green-500/30 rounded text-green-500 uppercase tracking-widest">Kasi Focused</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Modal -->
+    <div id="business-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <button onclick="closeBusinessModal()" class="sticky top-4 float-right mr-4 z-10 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-full shadow-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div id="business-modal-content" class="p-1">
+                <!-- Business card will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal Container -->
+    <div id="rating-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"></div>
+
+</main>
+
+<footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
+    &copy; 2026 <a href="index.html" onclick="window.top.location.replace('index.html'); return false;"
+                   class="hover:underline">Poortjie Services</a>. Empowering poortjie economies.
+    <div class="mt-2 flex justify-center gap-4">
+        <a href="support.html" class="hover:underline">Support</a>
+        <a href="support.html" class="hover:underline">Data Policy</a>
+    </div>
+</footer>
+
+<!-- Maintenance Banner -->
+<div id="maintenance-banner" class="fixed bottom-0 left-0 w-full bg-amber-600 text-white text-center py-3 z-[100] font-bold shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center px-6">
+    <span class="flex-grow text-center">⚠️ Maintenance Mode: Browsing is limited. Full access returning soon.</span>
+    <button onclick="document.getElementById('maintenance-banner').remove()" class="text-white hover:text-amber-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+</div>
+
+<!-- Maintenance Modal -->
+<div id="maintenance-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md text-center shadow-2xl">
+        <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+            🛠️
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Under Maintenance</h2>
+        <p class="text-slate-600 dark:text-slate-300 mb-6">
+            We're currently performing essential upgrades to our storage systems.
+            You can browse the home page, but other pages and features are temporarily unavailable.
+            <br><br>
+            We apologize for the inconvenience and will be back shortly!
+        </p>
+        <button onclick="document.getElementById('maintenance-modal').classList.add('hidden')"
+                class="px-6 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition">
+            Understood
+        </button>
+    </div>
+</div>
+
+<script src="scripts/theme.js" defer></script>
+<script src="https://unpkg.com/dexie/dist/dexie.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
+<script src="scripts/firebase.js" defer></script>
+<script src="scripts/card-renderer.js" defer></script>
+<script src="scripts/rating.js" defer></script>
+
+<script>
+    // Maintenance Mode Script
+    (function() {
+        // Handle Image Errors (hide broken images)
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName.toLowerCase() === 'img') {
+                e.target.style.display = 'none';
+            }
+        }, true);
+
+        // Intercept Navigation
+        document.addEventListener('click', function(e) {
+            // Allow interactions within the maintenance modal
+            if (e.target.closest('#maintenance-modal')) return;
+            if (e.target.closest('#maintenance-banner')) return;
+
+            // Check for navigation links
+            const link = e.target.closest('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                // Allow anchor links on the same page
+                if (href && (href.startsWith('#') || href.startsWith('javascript:'))) {
+                    return;
+                }
+                // Allow mailto/tel
+                if (href && (href.startsWith('tel:') || href.startsWith('mailto:'))) {
+                    return;
+                }
+
+                // Block everything else
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('maintenance-modal').classList.remove('hidden');
+                return;
+            }
+        }, true);
+    })();
+
+    let allServices = [];
+
+    function renderCards(servicesData) {
+        if (!servicesData) return;
+        const grid = document.getElementById('services-grid');
+        grid.innerHTML = servicesData.map(service => `
+            <section class="space-y-6">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    <span class="w-8 h-1 bg-green-500"></span> ${service.category}
+                </h2>
+                <div class="card flex flex-col p-6 rounded-2xl border-l-4 border-l-green-500">
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-bold mb-2">${service.title}</h3>
+                        <p class="text-sm opacity-70 mb-4">${service.description}</p>
+                        <ul class="space-y-2 text-sm font-medium">
+                            ${service.list.map(item => `<li class="flex items-center gap-2">${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="mt-6 flex flex-col gap-2">
+                        <a href="${service.url}" class="block text-center py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition">${service.btnText}</a>
+                        ${service.category.toLowerCase() === 'transport' ? `<a href="kasilayn/laynrider/dashboard.html" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition mt-2">Book a Ride</a>` : ''}
+                        ${service.extraBtn ? `<a href="${service.extraBtn.url}" onclick="window.top.location.replace('${service.extraBtn.url}'); return false;" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition">${service.extraBtn.text}</a>` : ''}
+                    </div>
+                </div>
+            </section>
+        `).join('');
+    }
+
+    function filterAndSort() {
+        const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+        const sortValue = document.getElementById('sort-list').value;
+        const noResultsContainer = document.getElementById('no-results-container');
+        const servicesGrid = document.getElementById('services-grid');
+        const globalResults = document.getElementById('global-results');
+
+        let filtered = allServices.filter(service =>
+            service.category.toLowerCase().includes(searchTerm) ||
+            service.title.toLowerCase().includes(searchTerm) ||
+            service.description.toLowerCase().includes(searchTerm) ||
+            (service.tags && Array.isArray(service.tags) ? service.tags.join(" ").toLowerCase().includes(searchTerm) : (service.tags || "").toLowerCase().includes(searchTerm)) ||
+            service.list.some(item => item.toLowerCase().includes(searchTerm))
+        );
+
+        if (sortValue === 'asc') {
+            filtered.sort((a, b) => a.category.localeCompare(b.category));
+        } else if (sortValue === 'desc') {
+            filtered.sort((a, b) => b.category.localeCompare(a.category));
+        }
+
+        renderCards(filtered);
+
+        if (filtered.length === 0 && searchTerm.trim() !== '') {
+            noResultsContainer.classList.remove('hidden');
+            servicesGrid.classList.add('hidden');
+        } else {
+            noResultsContainer.classList.add('hidden');
+            servicesGrid.classList.remove('hidden');
+            globalResults.innerHTML = ''; // Clear old global results when searching something else
+        }
+    }
+
+    function fetchAndRenderServices() {
+        // 1. Try to load from cache first
+        try {
+            const cachedData = sessionStorage.getItem('homeServicesCache');
+            if (cachedData) {
+                allServices = JSON.parse(cachedData);
+                filterAndSort();
+            }
+        } catch (e) {
+            console.error("Could not read from sessionStorage:", e);
+        }
+
+        // 2. Fetch from Firestore
+        const servicesDocRef = firebase.firestore().collection('poortjie').doc('services');
+        
+        // Use a helper to process data
+        const processData = (doc) => {
+            if (doc.exists) {
+                const homeScreenData = doc.data().homeScreen;
+                if (homeScreenData && typeof homeScreenData === 'object') {
+                    const newServices = Object.keys(homeScreenData)
+                        .filter(key => homeScreenData[key].status !== 'inactive' && homeScreenData[key].status !== 'disabled')
+                        .map(key => {
+                            const service = homeScreenData[key];
+                            return {
+                                category: key,
+                                title: service.subtitle,
+                                description: service.description,
+                                list: service.listing || [],
+                                url: `services/${key.toLowerCase()}.html`,
+                                target: '_top',
+                                btnText: `Explore ${key}`
+                            };
+                        });
+
+                    // Only update and re-render if data has changed
+                    if (JSON.stringify(newServices) !== JSON.stringify(allServices)) {
+                        allServices = newServices;
+                        filterAndSort();
+                        
+                        // 3. Update cache
+                        try {
+                            sessionStorage.setItem('homeServicesCache', JSON.stringify(allServices));
+                        } catch (e) {
+                            console.error("Could not write to sessionStorage:", e);
+                        }
+                    }
+                }
+            }
+        };
+
+        // Get from server
+        servicesDocRef.get().then(processData).catch((error) => {
+            console.error("Error fetching services:", error);
+        });
+    }
+
+    window.onload = () => {
+        // Handle Global Search button
+        const globalSearchBtn = document.getElementById('global-search-btn');
+        if (globalSearchBtn) {
+            globalSearchBtn.onclick = async () => {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    const currentSearch = document.getElementById('search-bar').value;
+                    sessionStorage.setItem('pendingSearch', currentSearch);
+                    sessionStorage.setItem('redirectUrl', window.location.href);
+                    window.location.href = 'authentication/login.html';
+                    return;
+                }
+                
+                // Perform global search
+                const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+                const loading = document.getElementById('global-search-loading');
+                const resultsArea = document.getElementById('global-results');
+                
+                loading.classList.remove('hidden');
+                globalSearchBtn.classList.add('hidden');
+                resultsArea.innerHTML = '';
+
+                try {
+                    // Optimized Global Search: Search across all categories
+                    // Since we want to find WHICH category contains the item, 
+                    // we'll use a Collection Group query if they share a common field 
+                    // or a consolidated search approach.
+                    
+                    const matches = [];
+                    const categories = allServices.map(s => s.category);
+                    
+                    // Fetch from all active categories in parallel
+                    const searchPromises = categories.map(async (cat) => {
+                        const snapshot = await firebase.firestore()
+                            .collection('poortjie')
+                            .doc('services')
+                            .collection(cat)
+                            .where('status', '==', 'active')
+                            .get();
+                        
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            const name = (data.businessName || "").toLowerCase();
+                            const sub = (data.subHeading || "").toLowerCase();
+                            const desc = (data.description || "").toLowerCase();
+                            const tags = Array.isArray(data.tags) ? data.tags.join(" ").toLowerCase() : (data.tags || "").toLowerCase();
+                            const services = Array.isArray(data.services) 
+                                ? data.services.map(s => `${s.name || ""} ${s.description || ""}`).join(" ").toLowerCase()
+                                : "";
+
+                            if (name.includes(searchTerm) || sub.includes(searchTerm) || desc.includes(searchTerm) || tags.includes(searchTerm) || services.includes(searchTerm)) {
+                                matches.push({
+                                    businessName: data.businessName,
+                                    category: cat,
+                                    url: `services/${cat.toLowerCase()}.html`
+                                });
+                            }
+                        });
+                    });
+
+                    await Promise.all(searchPromises);
+
+                    loading.classList.add('hidden');
+                    globalSearchBtn.classList.remove('hidden');
+
+                    if (matches.length === 0) {
+                        resultsArea.innerHTML = '<p class="text-center col-span-full opacity-50">Still nothing found. Try a different keyword?</p>';
+                    } else {
+                        // Group by category to show "X is inside Y"
+                        const grouped = matches.reduce((acc, match) => {
+                            if (!acc[match.category]) acc[match.category] = [];
+                            acc[match.category].push(match.businessName);
+                            return acc;
+                        }, {});
+
+                        resultsArea.innerHTML = Object.keys(grouped).map(cat => `
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-green-100 dark:border-green-900/30">
+                                <p class="text-sm font-bold text-green-600 dark:text-green-400 mb-1">Results found inside:</p>
+                                <h4 class="text-lg font-bold mb-2">${cat}</h4>
+                                <p class="text-xs opacity-70 mb-3">Businesses like: ${grouped[cat].slice(0, 3).join(', ')}${grouped[cat].length > 3 ? '...' : ''}</p>
+                                <a href="services/${cat.toLowerCase()}.html?search=${encodeURIComponent(searchTerm)}" class="inline-block text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-3 py-1 rounded-full font-bold hover:bg-green-600 hover:text-white transition">Go to ${cat}</a>
+                            </div>
+                        `).join('');
+                    }
+
+                } catch (error) {
+                    console.error("Global search failed:", error);
+                    loading.classList.add('hidden');
+                    globalSearchBtn.classList.remove('hidden');
+                    resultsArea.innerHTML = '<p class="text-red-500 text-center col-span-full">Something went wrong. Please try again.</p>';
+                }
+            };
+        }
+
+        // Check for pending search after login
+        const pendingSearch = sessionStorage.getItem('pendingSearch');
+        if (pendingSearch) {
+            document.getElementById('search-bar').value = pendingSearch;
+            sessionStorage.removeItem('pendingSearch');
+            // Wait for allServices to load then filter
+            const interval = setInterval(() => {
+                if (allServices.length > 0) {
+                    filterAndSort();
+                    // Auto-trigger global search if user just came back from login
+                    if (firebase.auth().currentUser) {
+                        globalSearchBtn.click();
+                    }
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+
+        // Hide loader once everything is ready
+        const loader = document.getElementById('loader-overlay');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 500);
+        }
+
+        // --- News Slider Logic ---
+        let newsUpdates = [];
+        let alertUpdates = [];
+        let currentNewsIndex = 0;
+        let sliderInterval;
+
+        function startNewsSlider() {
+            if (newsUpdates.length === 0 && alertUpdates.length === 0) {
+                document.getElementById('news-slider-container').classList.add('hidden');
+                document.getElementById('alert-container').classList.add('hidden');
+                document.getElementById('hero-static-text').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('hero-static-text').classList.add('hidden');
+
+            if (alertUpdates.length > 0) {
+                renderAlerts();
+            } else {
+                document.getElementById('alert-container').classList.add('hidden');
+            }
+
+            if (newsUpdates.length > 0) {
+                document.getElementById('news-slider-container').classList.remove('hidden');
+                renderNewsSlide();
+                if (newsUpdates.length > 1) {
+                    resetSliderTimer();
+                }
+            } else {
+                document.getElementById('news-slider-container').classList.add('hidden');
+            }
+        }
+
+        function renderAlerts() {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = alertUpdates.map(alert => `
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-2xl p-4 flex items-start gap-4 text-left animate-bounce-subtle mb-2">
+                    <div class="bg-red-500 text-white p-2 rounded-full flex-shrink-0 mt-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-red-900 dark:text-red-400 uppercase text-xs tracking-wider">Emergency Alert</h3>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">${alert.title}</h2>
+                        <p class="text-sm opacity-80 leading-tight mt-1">${alert.content}</p>
+                    </div>
+                </div>
+            `).join('');
+            container.classList.remove('hidden');
+        }
+
+        const newsSlider = document.getElementById('news-slider');
+        newsSlider.addEventListener('mouseenter', () => {
+            if (newsUpdates.length > 1) {
+                clearInterval(sliderInterval);
+            }
+        });
+
+        newsSlider.addEventListener('mouseleave', () => {
+            if (newsUpdates.length > 1) {
+                resetSliderTimer();
+            }
+        });
+
+        function resetSliderTimer() {
+            clearInterval(sliderInterval);
+            sliderInterval = setInterval(() => {
+                showNextNews();
+            }, 10000);
+        }
+
+        function showNextNews() {
+            currentNewsIndex = (currentNewsIndex + 1) % newsUpdates.length;
+            renderNewsSlide();
+        }
+
+        function showPrevNews() {
+            currentNewsIndex = (currentNewsIndex - 1 + newsUpdates.length) % newsUpdates.length;
+            renderNewsSlide();
+        }
+
+        document.getElementById('next-news').addEventListener('click', () => {
+            showNextNews();
+            resetSliderTimer();
+        });
+
+        document.getElementById('prev-news').addEventListener('click', () => {
+            showPrevNews();
+            resetSliderTimer();
+        });
+
+        function renderNewsSlide() {
+            const news = newsUpdates[currentNewsIndex];
+            const contentArea = document.getElementById('news-content-area');
+            const dotsArea = document.getElementById('slider-dots');
+
+            contentArea.style.opacity = '0';
+
+            setTimeout(() => {
+                let typeLabel = '';
+                let typeColor = 'bg-green-500';
+                let actionButton = '';
+
+                if (news.type === 'event') {
+                    typeLabel = '📅 EVENT';
+                    typeColor = 'bg-blue-500';
+                } else if (news.type === 'promo') {
+                    typeLabel = '🎁 PROMO';
+                    typeColor = 'bg-purple-500';
+                    if (news.promoBusiness) {
+                        actionButton = `
+                            <button onclick="showPromoBusiness('${news.promoBusiness.id}', '${news.promoBusiness.collection}')" 
+                                    class="mt-4 px-6 py-2 ${typeColor} text-white font-bold rounded-full hover:scale-105 transition-transform shadow-md text-sm uppercase tracking-wider">
+                                View Promo
+                            </button>`;
+                    }
+                }
+
+                if (news.externalLink && news.externalLink.url) {
+                    const btnName = news.externalLink.name || 'View More';
+                    actionButton = `
+                        <button onclick="window.open('${news.externalLink.url}', '_blank')" 
+                                class="mt-4 px-6 py-2 bg-green-600 text-white font-bold rounded-full hover:scale-105 transition-transform shadow-md text-sm uppercase tracking-wider">
+                            ${btnName}
+                        </button>`;
+                }
+
+                contentArea.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        ${typeLabel ? `<span class="${typeColor} text-[10px] text-white font-black px-2 py-0.5 rounded mb-2">${typeLabel}</span>` : ''}
+                        <h2 class="text-2xl md:text-3xl font-black mb-2 text-center text-slate-900 dark:text-white leading-tight">${news.title}</h2>
+                        <p class="text-lg opacity-80 text-center max-w-lg leading-relaxed">${news.content}</p>
+                        ${actionButton}
+                    </div>
+                `;
+                contentArea.style.opacity = '1';
+
+                // Render Dots
+                if (newsUpdates.length > 1) {
+                    dotsArea.innerHTML = newsUpdates.map((_, i) => `
+                        <div onclick="goToNews(${i})" class="cursor-pointer w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentNewsIndex ? 'bg-green-600 w-4' : 'bg-gray-300 dark:bg-slate-600'}"></div>
+                    `).join('');
+                } else {
+                    dotsArea.innerHTML = '';
+                }
+            }, 300);
+        }
+
+        window.goToNews = (index) => {
+            currentNewsIndex = index;
+            renderNewsSlide();
+            resetSliderTimer();
+        };
+
+        window.showPromoBusiness = async (id, collection) => {
+            const modal = document.getElementById('business-modal');
+            const content = document.getElementById('business-modal-content');
+            
+            content.innerHTML = `
+                <div class="p-12 text-center">
+                    <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p class="opacity-50">Opening business profile...</p>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            try {
+                const doc = await db.collection('poortjie').doc('services').collection(collection).doc(id).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const card = await renderServiceCard({id: doc.id, ...data}, collection);
+                    content.innerHTML = '';
+                    content.appendChild(card);
+                } else {
+                    content.innerHTML = '<p class="p-8 text-center opacity-50">Business not found.</p>';
+                }
+            } catch (error) {
+                console.error("Error fetching business:", error);
+                content.innerHTML = '<p class="p-8 text-center text-red-500">Error loading business profile.</p>';
+            }
+        };
+
+        window.closeBusinessModal = () => {
+            document.getElementById('business-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        // Close modal on click outside
+        document.getElementById('business-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'business-modal') {
+                closeBusinessModal();
+            }
+        });
+
+        function fetchNews() {
+            const now = new Date();
+            
+            // 1. Try to load from cache
+            try {
+                const cachedNews = sessionStorage.getItem('newsUpdatesCache');
+                const cachedAlerts = sessionStorage.getItem('alertUpdatesCache');
+                if (cachedNews) newsUpdates = JSON.parse(cachedNews);
+                if (cachedAlerts) alertUpdates = JSON.parse(cachedAlerts);
+                if (newsUpdates.length > 0 || alertUpdates.length > 0) {
+                    startNewsSlider();
+                }
+            } catch (e) {
+                console.error("Error reading news cache:", e);
+            }
+
+            // 2. Fetch from Firestore
+            db.collection('poortjie').doc('news').collection('updates')
+                .where('status', '==', 'active')
+                .onSnapshot(snapshot => {
+                    const newNewsUpdates = [];
+                    const newAlertUpdates = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const isExpired = data.expiry && data.expiry.toDate() < now;
+                        const isFuture = data.showFrom && data.showFrom.toDate() > now;
+                        if (!isExpired && !isFuture) {
+                            if (data.type === 'alert') {
+                                newAlertUpdates.push({id: doc.id, ...data});
+                            } else {
+                                newNewsUpdates.push({id: doc.id, ...data});
+                            }
+                        }
+                    });
+
+                    const sortFn = (a, b) => {
+                        const dateA = a.createdAt?.toDate() || new Date(0);
+                        const dateB = b.createdAt?.toDate() || new Date(0);
+                        return dateB - dateA;
+                    };
+
+                    newNewsUpdates.sort(sortFn);
+                    newAlertUpdates.sort(sortFn);
+
+                    const finalNews = newNewsUpdates.slice(0, 5);
+                    const finalAlerts = newAlertUpdates.slice(0, 2);
+
+                    // 3. Compare and Update
+                    if (JSON.stringify(finalNews) !== JSON.stringify(newsUpdates) || 
+                        JSON.stringify(finalAlerts) !== JSON.stringify(alertUpdates)) {
+                        
+                        newsUpdates = finalNews;
+                        alertUpdates = finalAlerts;
+                        
+                        // Update Cache
+                        try {
+                            sessionStorage.setItem('newsUpdatesCache', JSON.stringify(newsUpdates));
+                            sessionStorage.setItem('alertUpdatesCache', JSON.stringify(alertUpdates));
+                        } catch (e) {
+                            console.error("Error saving news cache:", e);
+                        }
+
+                        startNewsSlider();
+                    }
+                }, error => {
+                    console.error("Error fetching news:", error);
+                    // If it's an index error, Firestore provides a link in the console
+                    if (error.message && error.message.includes('index')) {
+                        console.warn("Firestore Index Required: " + error.message);
+                    }
+                    document.getElementById('news-slider-container').classList.add('hidden');
+                    document.getElementById('hero-static-text').classList.remove('hidden');
+                });
+        }
+
+        fetchAndRenderServices();
+        fetchNews();
+
+        document.getElementById('search-bar').addEventListener('input', filterAndSort);
+        document.getElementById('sort-list').addEventListener('change', filterAndSort);
+
+        // AUTH & UI SCRIPTS
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const menuItems = document.getElementById('menu-items');
+        const profileLink = document.getElementById('profile-link');
+        const adminLink = document.getElementById('admin-link');
+        const homeAdminLink = document.getElementById('home-admin-link');
+        const taxiAdminLink = document.getElementById('taxi-admin-link');
+        const addBusinessLink = document.getElementById('add-business-link');
+        const newsAdminLink = document.getElementById('news-admin-link');
+        const authDivider = document.getElementById('auth-divider');
+        const loginLink = document.getElementById('login-link');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        hamburgerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuItems.classList.toggle('hidden');
+        });
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (authDivider) authDivider.classList.remove('hidden');
+            if (user) {
+                if (addBusinessLink) addBusinessLink.classList.remove('hidden');
+                if (profileLink) profileLink.classList.remove('hidden');
+                if (loginLink) loginLink.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden'); // Replaced by profile
+                firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        if (userData.displayName && profileLink) {
+                            profileLink.textContent = userData.displayName;
+                        }
+                        if (userData.photoUrl && profileLink) {
+                            // Optionally show user avatar in the menu
+                            const existingImg = profileLink.querySelector('img');
+                            if (existingImg) {
+                                existingImg.src = userData.photoUrl;
+                            } else {
+                                profileLink.innerHTML = `<img src="${userData.photoUrl}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt=""> ${userData.displayName || 'Profile'}`;
+                            }
+                        }
+                        const isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                        const isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
+                        const isTaxiRankAdmin = userData.roles?.poortjie?.isTaxiRankAdmin === true;
+
+                        if (isSuperUser || isPoortjieAdmin) {
+                            if (adminLink) adminLink.classList.remove('hidden');
+                            if (newsAdminLink) newsAdminLink.classList.remove('hidden');
+                        }
+                        if (isSuperUser) {
+                            if (homeAdminLink) homeAdminLink.classList.remove('hidden');
+                        }
+                        if (isSuperUser || isTaxiRankAdmin) {
+                            if (taxiAdminLink) taxiAdminLink.classList.remove('hidden');
+                        }
+                    }
+                });
+            } else {
+                if (profileLink) {
+                    profileLink.classList.add('hidden'); // Logout replaced by Profile, so Profile is only for logged in
+                    profileLink.innerHTML = 'Profile'; // Reset content
+                }
+                if (loginLink) loginLink.classList.remove('hidden');
+                if (adminLink) adminLink.classList.add('hidden');
+                if (homeAdminLink) homeAdminLink.classList.add('hidden');
+                if (taxiAdminLink) taxiAdminLink.classList.add('hidden');
+                if (addBusinessLink) addBusinessLink.classList.add('hidden');
+                if (newsAdminLink) newsAdminLink.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            firebase.auth().signOut();
+        });
+
+        window.onclick = (e) => {
+            if (hamburgerMenu && !hamburgerMenu.contains(e.target)) menuItems.classList.add('hidden');
+        };
+    };
+
+    console.log("website developed by Musa Mgijima");
+</script>
+</body>
+</html>

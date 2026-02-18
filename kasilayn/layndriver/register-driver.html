@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Become a Driver | Poortjie Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon/apple-touch-icon.png">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="../../scripts/firebase.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <style>
+        #image-modal { background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); transition: all 0.3s ease; }
+    </style>
+    <script src="../../scripts/theme.js" defer></script>
+    <link rel="manifest" href="../../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen">
+
+<header class="max-w-4xl mx-auto pt-10 pb-6 px-6 flex justify-between items-center">
+    <div class="flex items-center gap-4">
+        <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-xl font-black uppercase tracking-tight">Join the Fleet</h1>
+    </div>
+    <div class="flex items-center gap-3">
+        <!-- Commission Info Icon -->
+        <div class="relative group">
+            <button class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center transition-all hover:scale-110 shadow-sm">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <div class="absolute right-0 top-10 w-64 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 z-[60] -translate-y-2 group-hover:translate-y-0">
+                <p class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">Zero Commission Policy</p>
+                <p class="text-xs font-bold leading-relaxed opacity-70">There is no charge for using the Poortjie platform. Drivers get to keep <span class="text-green-600">100% of their earnings</span>.</p>
+            </div>
+        </div>
+        
+        <div id="hamburger-menu" class="relative z-50">
+            <button id="hamburger-btn" class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div id="menu-items" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl py-2 ring-1 ring-black ring-opacity-5 border border-slate-100 dark:border-slate-700">
+                <button id="menu-theme-toggle" class="w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <span id="menu-theme-icon">🌓</span> Mode
+                </button>
+                <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                <a href="../../index.html" class="block w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                    <i class="fas fa-home w-4 text-center"></i> Home
+                </a>
+                <button id="logout-btn" class="hidden w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-6 pb-24">
+    <div id="loader-overlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[100] flex flex-col items-center justify-center transition-opacity duration-300 hidden">
+        <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+        <p class="text-sm font-bold uppercase tracking-widest animate-pulse" id="loader-text">Processing...</p>
+    </div>
+
+    <div class="card p-8 rounded-[2.5rem] bg-white dark:bg-slate-800 shadow-xl space-y-8">
+        <div id="status-message" class="hidden p-4 rounded-2xl text-sm font-bold border-2 animate-fadeIn"></div>
+
+        <!-- Development Warning -->
+        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-2xl mb-6">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-tools text-red-600 dark:text-red-400"></i>
+                <p class="text-[10px] font-black uppercase tracking-widest text-red-700 dark:text-red-400">
+                    System Notice: This feature is still under development.
+                </p>
+            </div>
+        </div>
+
+        <form id="driver-form" class="space-y-8">
+            <!-- Driver Info Section -->
+            <section class="space-y-6">
+                <div class="flex items-center gap-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Driver Information</h2>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-6 items-center">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('photo-input').click()">
+                        <img id="driver-preview" src="https://placehold.co/150?text=Driver+Photo" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-green-500 shadow-md">
+                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            <i class="fas fa-camera text-white"></i>
+                        </div>
+                        <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="previewImage(this, 'driver-preview')">
+                    </div>
+                    <div class="flex-grow space-y-4 w-full">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Full Name</label>
+                            <label for="display-name"></label><input type="text" id="display-name" placeholder="Enter your full name" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition uppercase">
+                            <p id="error-display-name" class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 ml-2 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Car Info Section -->
+            <section class="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-700/50">
+                <div class="flex items-center gap-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Vehicle Details</h2>
+                </div>
+                
+                <div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-2xl" id="car-edit-warning">
+                    <p class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> Important: Car details cannot be changed later for safety reasons. Please ensure all information is accurate.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Registration Number</label>
+                        <input type="text" id="car-registration" placeholder="e.g. FGP123GP" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition uppercase" pattern="^[A-Z0-9]{1,10}$" title="Only uppercase letters and numbers, max 10 characters, no spaces allowed.">
+                        <p id="error-car-registration" class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 ml-2 hidden"></p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Make</label>
+                        <label for="car-make"></label><input type="text" id="car-make" placeholder="e.g. Toyota" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition uppercase">
+                        <p id="error-car-make" class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 ml-2 hidden"></p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Model</label>
+                        <label for="car-model"></label><input type="text" id="car-model" placeholder="e.g. Corolla" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition uppercase">
+                        <p id="error-car-model" class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 ml-2 hidden"></p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Color</label>
+                        <label for="car-color"></label><input type="text" id="car-color" placeholder="e.g. White" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition uppercase">
+                        <p id="error-car-color" class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 ml-2 hidden"></p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Body Type</label>
+                        <label for="car-body-type"></label><select id="car-body-type" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition appearance-none">
+                            <option value="AMBULANCE">Ambulance</option>
+                            <option value="BAKKIE">Bakkie</option>
+                            <option value="BIKE">Bike</option>
+                            <option value="BUS">Bus</option>
+                            <option value="CONVERTIBLE">Convertible</option>
+                            <option value="COUPE">Coupe</option>
+                            <option value="HATCHBACK">Hatchback</option>
+                            <option value="HEARSE">Hearse</option>
+                            <option value="MINIBUS">Minibus</option>
+                            <option value="MPV">MPV</option>
+                            <option value="PANEL_VAN">Panel Van</option>
+                            <option value="PICKUP">Pickup</option>
+                            <option value="QUAD_BIKE">Quad Bike</option>
+                            <option value="SEDAN">Sedan</option>
+                            <option value="SUV">SUV</option>
+                            <option value="TAXI">Taxi</option>
+                            <option value="TRUCK">Truck</option>
+                            <option value="VAN">Van</option>
+                            <option value="TOW_TRUCK">Tow Truck</option>
+                            <option value="FLATBED">Flatbed</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Available Seats</label>
+                        <label for="car-seats"></label><input type="number" id="car-seats" min="1" max="60" value="4" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Year of Manufacture</label>
+                        <label for="car-year"></label><input type="number" id="car-year" min="1990" max="2026" value="2024" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition">
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4">
+                    <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Vehicle Photos (Up to 3)</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Photo 1 -->
+                        <div id="car-photo-1-container" class="w-full h-32 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-green-500 transition group relative overflow-hidden" onclick="document.getElementById('car-photo-1-input').click()">
+                            <img id="car-preview-1" class="hidden w-full h-full object-cover rounded-2xl" alt="" src="">
+                            <div id="car-upload-placeholder-1" class="flex flex-col items-center">
+                                <i class="fas fa-car text-xl opacity-20 group-hover:text-green-500 transition"></i>
+                                <p class="text-[8px] font-black uppercase tracking-widest opacity-40 mt-1">Photo 1</p>
+                            </div>
+                            <input type="file" id="car-photo-1-input" accept="image/*" class="hidden" onchange="previewImage(this, 'car-preview-1', 'car-upload-placeholder-1')">
+                        </div>
+                        <!-- Photo 2 -->
+                        <div id="car-photo-2-container" class="w-full h-32 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-green-500 transition group relative overflow-hidden" onclick="document.getElementById('car-photo-2-input').click()">
+                            <img id="car-preview-2" class="hidden w-full h-full object-cover rounded-2xl" alt="" src="">
+                            <div id="car-upload-placeholder-2" class="flex flex-col items-center">
+                                <i class="fas fa-car text-xl opacity-20 group-hover:text-green-500 transition"></i>
+                                <p class="text-[8px] font-black uppercase tracking-widest opacity-40 mt-1">Photo 2</p>
+                            </div>
+                            <input type="file" id="car-photo-2-input" accept="image/*" class="hidden" onchange="previewImage(this, 'car-preview-2', 'car-upload-placeholder-2')">
+                        </div>
+                        <!-- Photo 3 -->
+                        <div id="car-photo-3-container" class="w-full h-32 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-green-500 transition group relative overflow-hidden" onclick="document.getElementById('car-photo-3-input').click()">
+                            <img id="car-preview-3" class="hidden w-full h-full object-cover rounded-2xl" alt="" src="">
+                            <div id="car-upload-placeholder-3" class="flex flex-col items-center">
+                                <i class="fas fa-car text-xl opacity-20 group-hover:text-green-500 transition"></i>
+                                <p class="text-[8px] font-black uppercase tracking-widest opacity-40 mt-1">Photo 3</p>
+                            </div>
+                            <input type="file" id="car-photo-3-input" accept="image/*" class="hidden" onchange="previewImage(this, 'car-preview-3', 'car-upload-placeholder-3')">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section -->
+            <section class="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-700/50">
+                <div class="flex items-center gap-2">
+                    <span class="w-1 h-4 bg-green-500 rounded-full"></span>
+                    <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Dynamic Pricing Structure</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Base Fee (R)</label>
+                        <label for="base-fee"></label><input type="number" id="base-fee" required min="0" value="15" step="0.01" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Rate per KM (R)</label>
+                        <label for="rate-km"></label><input type="number" id="rate-km" required min="0" value="10" step="0.01" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-5 py-3 text-sm font-bold outline-none transition">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fixed Pricing Section -->
+            <section class="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-700/50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1 h-4 bg-blue-500 rounded-full"></span>
+                        <h2 class="text-[10px] font-black uppercase tracking-widest opacity-40">Fixed Pricing (Poortjie Only)</h2>
+                    </div>
+                    <button type="button" onclick="addFixedPricingRow()" class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-1"></i> Add Destination
+                    </button>
+                </div>
+
+                <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl mb-4">
+                    <p class="text-[9px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-widest">
+                        <i class="fas fa-map-marker-alt mr-2"></i> Pickup Point: <span class="text-blue-900 dark:text-blue-200">Poortjie</span>
+                    </p>
+                </div>
+
+                <div id="fixed-pricing-container" class="space-y-3">
+                    <!-- Dynamic rows will be added here -->
+                </div>
+            </section>
+
+            <button type="submit" id="submit-btn" class="w-full py-5 bg-green-600 text-white text-xs font-black uppercase tracking-[0.3em] rounded-[1.5rem] shadow-xl shadow-green-500/20 transition-all active:scale-95">
+                Register as Driver
+            </button>
+        </form>
+    </div>
+</main>
+
+<!-- Image Modal -->
+<div id="image-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+    <button id="close-modal" class="absolute top-6 right-6 text-white hover:text-gray-300 transition focus:outline-none">
+        <i class="fas fa-times text-3xl"></i>
+    </button>
+    <img id="modal-image" src="" alt="Enlarged view" class="max-w-full max-h-full rounded-2xl shadow-2xl object-contain animate-fadeIn">
+</div>
+
+<script>
+    let currentUser = null;
+    let cropper = null;
+    let currentPreviewId = null;
+    let currentPlaceholderId = null;
+
+    let cropModal, cropImage, applyCropBtn, cancelCropBtn, rotateLeftBtn, rotateRightBtn;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        cropModal = document.getElementById('crop-modal');
+        cropImage = document.getElementById('crop-image');
+        applyCropBtn = document.getElementById('apply-crop');
+        cancelCropBtn = document.getElementById('cancel-crop');
+        rotateLeftBtn = document.getElementById('rotate-left');
+        rotateRightBtn = document.getElementById('rotate-right');
+
+        // Set up listeners for crop buttons
+        if (applyCropBtn) {
+            applyCropBtn.addEventListener('click', () => {
+                if (!cropper) return;
+                
+                const isProfile = currentPreviewId === 'driver-preview';
+                const canvas = cropper.getCroppedCanvas({
+                    width: isProfile ? 800 : 1200,
+                    height: isProfile ? 800 : 750
+                });
+                
+                let quality = 0.9;
+                let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                while (dataUrl.length * 0.75 > 1024 * 1024 && quality > 0.1) {
+                    quality -= 0.1;
+                    dataUrl = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                const previewEl = document.getElementById(currentPreviewId);
+                previewEl.src = dataUrl;
+                previewEl.classList.remove('hidden');
+                if (currentPlaceholderId) {
+                    document.getElementById(currentPlaceholderId).classList.add('hidden');
+                }
+                
+                cropModal.classList.add('hidden');
+                cropper.destroy();
+                cropper = null;
+            });
+        }
+
+        // Real-time uppercase and validation for car registration and others
+        const uppercaseInputs = ['car-registration', 'car-make', 'car-model', 'car-color', 'display-name'];
+        uppercaseInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    
+                    // Specific logic for registration: no spaces
+                    if (id === 'car-registration') {
+                        e.target.value = e.target.value.replace(/\s/g, '').toUpperCase();
+                    } else {
+                        e.target.value = e.target.value.toUpperCase();
+                    }
+                    
+                    e.target.setSelectionRange(start, end);
+                    
+                    // Clear error when user starts typing
+                    hideError(id);
+                });
+            }
+        });
+
+        // Car registration specific check
+        const regInput = document.getElementById('car-registration');
+        if (regInput) {
+            regInput.addEventListener('blur', async () => {
+                const reg = regInput.value.trim().toUpperCase();
+                if (reg.length >= 3) {
+                    const isUpdate = document.getElementById('submit-btn').textContent.includes("Update");
+                    if (!isUpdate) {
+                        const carSnap = await db.collection('kasilayn').doc('fleet').collection('cars').doc(reg).get();
+                        if (carSnap.exists) {
+                            const carData = carSnap.data();
+                            // Even if it exists, check if it belongs to the CURRENT user
+                            if (carData.addedByUid && carData.addedByUid === currentUser.uid) {
+                                // It's their own car, they can continue
+                                hideError('car-registration');
+                                setVehicleFieldsDisabled(false);
+                            } else {
+                                showFieldError('car-registration', "This vehicle is already registered by someone else.");
+                                // Disable other fields to prevent user from continuing
+                                setVehicleFieldsDisabled(true);
+                            }
+                        } else {
+                            hideError('car-registration');
+                            setVehicleFieldsDisabled(false);
+                        }
+                    }
+                }
+            });
+        }
+
+        function setVehicleFieldsDisabled(disabled) {
+            const fields = ['car-make', 'car-model', 'car-color', 'car-body-type', 'car-seats', 'car-year'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = disabled;
+            });
+            // Also handle photos if needed, but the user specifically mentioned filling in the form
+        }
+
+        if (cancelCropBtn) {
+            cancelCropBtn.addEventListener('click', () => {
+                cropModal.classList.add('hidden');
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            });
+        }
+
+        if (rotateLeftBtn) rotateLeftBtn.addEventListener('click', () => cropper && cropper.rotate(-90));
+        if (rotateRightBtn) rotateRightBtn.addEventListener('click', () => cropper && cropper.rotate(90));
+
+        // Hamburger Menu Logic
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const menuItems = document.getElementById('menu-items');
+
+        if (hamburgerBtn && menuItems) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuItems.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                menuItems.classList.add('hidden');
+            });
+
+            menuItems.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Logout Logic
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../../authentication/login.html';
+                });
+            });
+        }
+
+        firebase.auth().onAuthStateChanged(user => {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (!user) {
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+                sessionStorage.setItem('redirectUrl', window.location.href);
+                window.location.href = '../../authentication/login.html';
+                return;
+            }
+            currentUser = user;
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            document.getElementById('display-name').value = user.displayName || '';
+            
+            // Check if already a driver
+            checkDriverStatus(user.uid);
+        });
+    });
+
+    async function checkDriverStatus(uid) {
+        const snap = await db.collection('kasilayn').doc('fleet').collection('drivers').doc(uid).get();
+        if (snap.exists) {
+            document.getElementById('submit-btn').textContent = "Update Driver Info";
+            // Pre-fill existing data if needed
+            const data = snap.data();
+            document.getElementById('display-name').value = data.displayName || '';
+            if (data.photoUrl) document.getElementById('driver-preview').src = data.photoUrl;
+            
+            // Support both carRegistration (string) and carRef (reference)
+            let carReg = data.carRegistration;
+            if (!carReg && data.carRef) {
+                carReg = (typeof data.carRef === 'string') ? data.carRef : data.carRef.id;
+            }
+
+            if (carReg) {
+                const carSnap = await db.collection('kasilayn').doc('fleet').collection('cars').doc(carReg).get();
+                if (carSnap.exists) {
+                    const carData = carSnap.data();
+                    
+                    const lockFieldIfPresent = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            if (value !== undefined && value !== null && value.toString().trim() !== "") {
+                                el.value = value;
+                                el.disabled = true;
+                            } else {
+                                el.disabled = false;
+                            }
+                        }
+                    };
+
+                    lockFieldIfPresent('car-make', carData.make);
+                    lockFieldIfPresent('car-model', carData.model);
+                    lockFieldIfPresent('car-registration', carData.registration);
+                    lockFieldIfPresent('car-color', carData.color);
+                    
+                    if (carData.bodyType) {
+                        document.getElementById('car-body-type').value = carData.bodyType;
+                        document.getElementById('car-body-type').disabled = true;
+                    } else {
+                        document.getElementById('car-body-type').disabled = false;
+                    }
+                    
+                    lockFieldIfPresent('car-seats', carData.seats);
+                    lockFieldIfPresent('car-year', carData.year);
+
+                    if (carData.pricing) {
+                        document.getElementById('base-fee').value = carData.pricing.baseFee || 15;
+                        document.getElementById('rate-km').value = carData.pricing.ratePerKm || 10;
+                        
+                        // Fill fixed pricing
+                        if (carData.pricing.fixed && carData.pricing.fixed.length > 0) {
+                            carData.pricing.fixed.forEach(item => {
+                                addFixedPricingRow(item.destination, item.amount);
+                            });
+                        }
+                    }
+                    
+                    if (carData.photoUrls && carData.photoUrls.length > 0) {
+                        carData.photoUrls.forEach((url, index) => {
+                            if (index < 3) {
+                                const previewId = `car-preview-${index + 1}`;
+                                const placeholderId = `car-upload-placeholder-${index + 1}`;
+                                const containerId = `car-photo-${index + 1}-container`;
+                                
+                                const previewEl = document.getElementById(previewId);
+                                const placeholderEl = document.getElementById(placeholderId);
+                                const containerEl = document.getElementById(containerId);
+                                
+                                previewEl.src = url;
+                                previewEl.classList.remove('hidden');
+                                placeholderEl.classList.add('hidden');
+                                
+                                // Disable changes for present photos
+                                containerEl.onclick = null;
+                                containerEl.classList.remove('cursor-pointer', 'hover:border-green-500');
+                            }
+                        });
+                    }
+                    
+                    // Update warning text and styling to indicate restricted editing
+                    const warningEl = document.getElementById('car-edit-warning');
+                    if (warningEl) {
+                        warningEl.classList.replace('bg-amber-50', 'bg-blue-50');
+                        warningEl.classList.replace('dark:bg-amber-900/20', 'dark:bg-blue-900/20');
+                        warningEl.classList.replace('border-amber-500', 'border-blue-500');
+                        warningEl.querySelector('p').classList.replace('text-amber-700', 'text-blue-700');
+                        warningEl.querySelector('p').classList.replace('dark:text-amber-400', 'dark:text-blue-400');
+                        warningEl.querySelector('p').innerHTML = '<i class="fas fa-info-circle mr-2"></i> Your vehicle is already registered. You may only update your pricing structure or fill in missing details.';
+                    }
+                }
+            }
+        }
+    }
+
+    function previewImage(input, previewId, placeholderId) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            currentPreviewId = previewId;
+            currentPlaceholderId = placeholderId;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cropImage.src = e.target.result;
+                cropModal.classList.remove('hidden');
+                
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: previewId === 'driver-preview' ? 1 : 16/10,
+                    viewMode: 1,
+                    guides: true,
+                    background: false,
+                    autoCropArea: 1,
+                    responsive: true
+                });
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+
+    function addFixedPricingRow(destination = "", amount = "") {
+        const container = document.getElementById('fixed-pricing-container');
+        const rowId = 'fixed-row-' + Date.now();
+        const row = document.createElement('div');
+        row.id = rowId;
+        row.className = 'flex gap-3 items-end animate-fadeIn';
+        row.innerHTML = `
+            <div class="flex-grow">
+                <label class="block text-[8px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Destination</label>
+                <input type="text" name="fixed-dest" value="${destination}" placeholder="e.g. Lenasia" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-blue-500 rounded-xl px-4 py-2 text-xs font-bold outline-none transition uppercase">
+            </div>
+            <div class="w-24">
+                <label class="block text-[8px] font-black uppercase tracking-widest opacity-40 mb-1 ml-2">Price (R)</label>
+                <input type="number" name="fixed-price" min="1" step="0.01" value="${amount}" placeholder="500" class="w-full bg-slate-50 dark:bg-slate-900/50 border-2 border-transparent focus:border-blue-500 rounded-xl px-4 py-2 text-xs font-bold outline-none transition text-right">
+            </div>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="p-2.5 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-xl hover:bg-red-100 transition">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
+        container.appendChild(row);
+
+        // Add uppercase listener to the new input
+        const input = row.querySelector('input[name="fixed-dest"]');
+        input.addEventListener('input', (e) => {
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
+            e.target.value = e.target.value.toUpperCase();
+            e.target.setSelectionRange(start, end);
+        });
+    }
+
+    function showStatus(msg, type) {
+        const statusEl = document.getElementById('status-message');
+        statusEl.textContent = msg;
+        statusEl.className = `p-4 rounded-2xl text-sm font-bold border-2 animate-fadeIn ${
+            type === 'success' ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' : 
+            'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
+        }`;
+        statusEl.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showFieldError(fieldId, msg) {
+        const errorEl = document.getElementById(`error-${fieldId}`);
+        const inputEl = document.getElementById(fieldId);
+        if (errorEl) {
+            errorEl.textContent = msg;
+            errorEl.classList.remove('hidden');
+        }
+        if (inputEl) {
+            inputEl.classList.add('border-red-500');
+            inputEl.classList.remove('focus:border-green-500');
+        }
+    }
+
+    function hideError(fieldId) {
+        const errorEl = document.getElementById(`error-${fieldId}`);
+        const inputEl = document.getElementById(fieldId);
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+        }
+        if (inputEl) {
+            inputEl.classList.remove('border-red-500');
+            // If car registration is taken and we are typing to fix it, 
+            // the fields might still be disabled. 
+            // But usually hideError is called on 'input' event.
+            if (fieldId === 'car-registration') {
+                const isUpdate = document.getElementById('submit-btn').textContent.includes("Update");
+                if (!isUpdate) {
+                    setVehicleFieldsDisabled(false);
+                }
+            }
+            inputEl.classList.add('focus:border-green-500');
+        }
+    }
+
+    function toggleLoader(show, text = "Processing...") {
+        const loader = document.getElementById('loader-overlay');
+        document.getElementById('loader-text').textContent = text;
+        if (show) {
+            loader.classList.remove('hidden');
+        } else {
+            loader.classList.add('hidden');
+        }
+    }
+
+    // Form Submission
+    document.getElementById('driver-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+
+        // Reset errors
+        ['car-registration', 'car-make', 'car-model', 'car-color', 'display-name'].forEach(id => hideError(id));
+
+        const displayName = document.getElementById('display-name').value.trim();
+        const carMake = document.getElementById('car-make').value.trim();
+        const carModel = document.getElementById('car-model').value.trim();
+        const carReg = document.getElementById('car-registration').value.toUpperCase().trim();
+        const carColor = document.getElementById('car-color').value.trim();
+        const carBodyType = document.getElementById('car-body-type').value.toUpperCase();
+        const carSeats = parseInt(document.getElementById('car-seats').value);
+        const carYear = parseInt(document.getElementById('car-year').value);
+        
+        let hasError = false;
+
+        if (!displayName) {
+            showFieldError('display-name', "Full name is required.");
+            hasError = true;
+        }
+
+        // Basic validation
+        if (!carReg || carReg.length < 3) {
+            showFieldError('car-registration', "Please enter a valid registration number (min 3 chars).");
+            hasError = true;
+        }
+
+        if (!carMake) {
+            showFieldError('car-make', "Vehicle make is required.");
+            hasError = true;
+        }
+
+        if (!carModel) {
+            showFieldError('car-model', "Vehicle model is required.");
+            hasError = true;
+        }
+
+        if (!carColor) {
+            showFieldError('car-color', "Vehicle color is required.");
+            hasError = true;
+        }
+
+        if (hasError) {
+            const firstError = document.querySelector('[id^="error-"]:not(.hidden)');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        toggleLoader(true, "Promoting to Driver...");
+
+        // Check if car details were disabled (meaning we are only updating pricing)
+        const isCarLocked = document.getElementById('car-make').disabled;
+
+        try {
+            // Photos
+            let driverPhotoUrl = document.getElementById('driver-preview').src;
+            if (driverPhotoUrl.startsWith('https://placehold.co')) driverPhotoUrl = "";
+            
+            const carPhotoUrls = [];
+            for (let i = 1; i <= 3; i++) {
+                const img = document.getElementById(`car-preview-${i}`);
+                if (img && !img.classList.contains('hidden') && !img.src.startsWith('https://placehold.co')) {
+                    carPhotoUrls.push(img.src);
+                }
+            }
+
+            // Collect Fixed Pricing
+            const fixedPricing = [];
+            const destInputs = document.querySelectorAll('input[name="fixed-dest"]');
+            const priceInputs = document.querySelectorAll('input[name="fixed-price"]');
+            
+            destInputs.forEach((input, index) => {
+                const dest = input.value.trim();
+                const amount = parseFloat(priceInputs[index].value);
+                if (dest && !isNaN(amount)) {
+                    fixedPricing.push({
+                        destination: dest,
+                        amount: amount
+                    });
+                }
+            });
+
+            // ATOMIC TRANSACTION: User to Driver Promotion
+            await db.runTransaction(async (transaction) => {
+                const uid = currentUser.uid;
+                const userRef = db.collection('users').doc(uid);
+                const driverRef = db.collection('kasilayn').doc('fleet').collection('drivers').doc(uid);
+                const carRef = db.collection('kasilayn').doc('fleet').collection('cars').doc(carReg);
+
+                // 1. Read User Profile
+                const userDoc = await transaction.get(userRef);
+                if (!userDoc.exists) throw new Error("User profile not found.");
+                const userData = userDoc.data();
+
+                // 2. Pre-condition Check
+                const driverDoc = await transaction.get(driverRef);
+                const carSnap = await transaction.get(carRef);
+                const isUpdate = document.getElementById('submit-btn').textContent.includes("Update");
+                
+                // 2. Pre-condition Checks
+                if (!isUpdate && driverDoc.exists) {
+                    throw new Error("ALREADY_DRIVER");
+                }
+
+                // IMPORTANT: Check if car is already registered to someone else
+                if (carSnap.exists) {
+                    const carData = carSnap.data();
+                    // If we are NOT in update mode, and the car exists, it's an error
+                    // If we ARE in update mode, but the car's owner is NOT the current user, it's an error
+                    if (!isUpdate || (carData.addedByUid && carData.addedByUid !== uid)) {
+                        throw new Error("CAR_ALREADY_REGISTERED");
+                    }
+                }
+
+                // 3. Create/Update Driver Document
+                const now = firebase.firestore.FieldValue.serverTimestamp();
+                const driverPayload = {
+                    userRef: userRef,
+                    userUid: uid,
+                    username: userData.username || "",
+                    email: userData.email || "",
+                    displayName: userData.displayName || document.getElementById('display-name').value,
+                    phone: userData.phone || userData.phoneNumber || "",
+                    photoUrl: driverPhotoUrl || userData.photoUrl || "",
+                    bio: userData.bio || "",
+                    status: driverDoc.exists ? (driverDoc.data().status || "OFFLINE") : "OFFLINE",
+                    suspended: driverDoc.exists ? (driverDoc.data().suspended || false) : false,
+                    addedByUid: uid, 
+                    createdAt: driverDoc.exists ? (driverDoc.data().createdAt || now) : now,
+                    updatedAt: now,
+                    carRegistration: carReg,
+                    carRef: carRef
+                };
+                transaction.set(driverRef, driverPayload, { merge: true });
+
+                // 4. Update Original User Document (Roles)
+                transaction.set(userRef, {
+                    roles: {
+                        kasilayn: {
+                            isDriver: true,
+                            driverRef: `kasilayn/fleet/drivers/${uid}`
+                        }
+                    }
+                }, { merge: true });
+
+                // 5. Save Car Data (Atomic part of the same transaction)
+                const carPayload = {
+                    registration: carReg,
+                    userRef: userRef, // Linked to the person adding the car
+                    addedByUid: uid,
+                    pricing: {
+                        baseFee: parseFloat(document.getElementById('base-fee').value),
+                        ratePerKm: parseFloat(document.getElementById('rate-km').value),
+                        fixed: fixedPricing
+                    },
+                    status: 'active'
+                };
+
+                // Only update physical car details if NOT locked
+                if (!isCarLocked) {
+                    carPayload.make = carMake;
+                    carPayload.model = carModel;
+                    carPayload.color = carColor;
+                    carPayload.seats = carSeats;
+                    carPayload.year = carYear;
+                    carPayload.bodyType = carBodyType;
+                    carPayload.photoUrls = carPhotoUrls;
+                    carPayload.createdAt = driverDoc.exists ? (driverDoc.data().carCreatedAt || now) : now;
+                } else {
+                    // If car is locked, we still might have added NEW photos if some were empty
+                    carPayload.photoUrls = carPhotoUrls;
+                }
+                
+                transaction.set(carRef, carPayload, { merge: true });
+            });
+
+            showStatus("Success! You are now officially part of the fleet.", "success");
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 2000);
+
+        } catch (error) {
+            console.error("Registration error:", error);
+            if (error.message === "ALREADY_DRIVER") {
+                showStatus("You are already registered as a driver.", "error");
+            } else if (error.message === "CAR_ALREADY_REGISTERED") {
+                showFieldError('car-registration', "This vehicle is already registered by someone else.");
+                showStatus("This vehicle is already registered by someone else. Please use a different registration number.", "error");
+                setVehicleFieldsDisabled(true);
+            } else {
+                showStatus("Failed to register: " + error.message, "error");
+            }
+        } finally {
+            toggleLoader(false);
+        }
+    });
+</script>
+
+<!-- Crop Modal -->
+<div id="crop-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center bg-black bg-opacity-90 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-[2rem] max-w-lg w-full overflow-hidden shadow-2xl">
+        <div class="p-6 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="font-black text-sm uppercase tracking-widest">Crop Photo</h3>
+            <button id="cancel-crop" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4 max-h-[50vh] flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+            <img id="crop-image" src="" class="max-w-full" alt="">
+        </div>
+        <div class="p-6 flex gap-3">
+            <button id="rotate-left" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition font-black text-[10px] uppercase tracking-widest">
+                <i class="fas fa-undo mr-1"></i> Left
+            </button>
+            <button id="rotate-right" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition font-black text-[10px] uppercase tracking-widest">
+                <i class="fas fa-redo mr-1"></i> Right
+            </button>
+        </div>
+        <div class="p-6 bg-slate-50 dark:bg-slate-900/50 flex gap-3">
+            <button id="apply-crop" class="flex-[2] py-4 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-green-500/20">
+                Apply Crop
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
