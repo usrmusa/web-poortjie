@@ -19,28 +19,12 @@
     <link rel="shortcut icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="manifest" href="favicon/site.webmanifest">
-    <script>
-        if (window.console && window.console.log) {
-            const originalLog = window.console.log;
-            window.console.log = function() {
-                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) {
-                    return;
-                }
-                originalLog.apply(window.console, arguments);
-            };
-        }
-    </script>
     <style>
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
         }
 
         iframe {
@@ -50,7 +34,7 @@
         }
     </style>
 </head>
-<body oncopy="return false" oncut="return false" oncontextmenu="return false">
+<body>
 <iframe src="home.html" id="main-frame" title="Poortjie Services Main Content"></iframe>
 <script>
     const iframe = document.getElementById('main-frame');
@@ -60,10 +44,6 @@
             if (iframe.contentWindow.location.origin === 'null' || iframe.contentWindow.location.origin === window.location.origin) {
                 const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
                 
-                iframeDoc.body.oncopy = () => false;
-                iframeDoc.body.oncut = () => false;
-                iframeDoc.body.oncontextmenu = () => false;
-
                 const iframeTitle = iframeDoc.title;
                 if (iframeTitle) {
                     document.title = iframeTitle;

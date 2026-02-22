@@ -234,32 +234,6 @@
     </div>
 </footer>
 
-<!-- Maintenance Banner -->
-<div id="maintenance-banner" class="fixed bottom-0 left-0 w-full bg-amber-600 text-white text-center py-3 z-[100] font-bold shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center px-6">
-    <span class="flex-grow text-center">⚠️ Maintenance Mode: Browsing is limited. Full access returning soon.</span>
-    <button onclick="document.getElementById('maintenance-banner').remove()" class="text-white hover:text-amber-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-</div>
-
-<!-- Maintenance Modal -->
-<div id="maintenance-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md text-center shadow-2xl">
-        <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-            🛠️
-        </div>
-        <h2 class="text-2xl font-bold mb-2">Under Maintenance</h2>
-        <p class="text-slate-600 dark:text-slate-300 mb-6">
-            We're currently performing essential upgrades to our storage systems.
-            You can browse the home page, but other pages and features are temporarily unavailable.
-            <br><br>
-            We apologize for the inconvenience and will be back shortly!
-        </p>
-        <button onclick="document.getElementById('maintenance-modal').classList.add('hidden')"
-                class="px-6 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition">
-            Understood
-        </button>
-    </div>
-</div>
-
 <script src="scripts/theme.js" defer></script>
 <script src="https://unpkg.com/dexie/dist/dexie.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
@@ -272,43 +246,6 @@
 <script src="scripts/rating.js" defer></script>
 
 <script>
-    // Maintenance Mode Script
-    (function() {
-        // Handle Image Errors (hide broken images)
-        document.addEventListener('error', function(e) {
-            if (e.target.tagName.toLowerCase() === 'img') {
-                e.target.style.display = 'none';
-            }
-        }, true);
-
-        // Intercept Navigation
-        document.addEventListener('click', function(e) {
-            // Allow interactions within the maintenance modal
-            if (e.target.closest('#maintenance-modal')) return;
-            if (e.target.closest('#maintenance-banner')) return;
-
-            // Check for navigation links
-            const link = e.target.closest('a');
-            if (link) {
-                const href = link.getAttribute('href');
-                // Allow anchor links on the same page
-                if (href && (href.startsWith('#') || href.startsWith('javascript:'))) {
-                    return;
-                }
-                // Allow mailto/tel
-                if (href && (href.startsWith('tel:') || href.startsWith('mailto:'))) {
-                    return;
-                }
-
-                // Block everything else
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('maintenance-modal').classList.remove('hidden');
-                return;
-            }
-        }, true);
-    })();
-
     let allServices = [];
 
     function renderCards(servicesData) {
