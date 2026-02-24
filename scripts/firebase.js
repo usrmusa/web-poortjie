@@ -21,21 +21,6 @@ try {
   console.warn("Firebase Analytics could not be initialized:", e);
 }
 
-// Connect to Firebase Emulators if running locally
-if (location.hostname === "localhost" ||
-    location.hostname === "127.0.0.1" ||
-    location.hostname.startsWith("192.168.") ||
-    location.hostname.startsWith("10.") ||
-    location.hostname.endsWith(".local")) {
-  const host = location.hostname;
-  console.log(`Connecting to Firebase Emulators at ${host}...`);
-  db.useEmulator(host, 8080);
-  auth.useEmulator(`http://${host}:9099`);
-  if (typeof firebase.storage === 'function') {
-    firebase.storage().useEmulator(host, 9199);
-  }
-}
-
 // Enable offline persistence with multi-tab support
 if (location.protocol !== 'file:') {
 // For Firebase JS SDK v9 compat, multi-tab persistence is enabled by default if available.
