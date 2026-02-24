@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management | Poortjie Services</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#22c55e">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div id="admin-content" class="hidden">
+    <header class="max-w-6xl mx-auto pt-24 pb-16 px-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-4xl font-extrabold tracking-tight">User Management</h1>
+            <a href="../index.html"
+               onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+               class="w-full md:w-auto text-center px-6 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition whitespace-nowrap">
+                Back to Home
+            </a>
+        </div>
+        <p class="text-xl opacity-80">View and manage all registered users.</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-24">
+        <div class="card p-8 rounded-2xl mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">All Users</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400" id="user-count">Loading...</div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <th class="py-4 px-4 font-bold text-sm uppercase text-gray-500 dark:text-gray-400">User</th>
+                        <th class="py-4 px-4 font-bold text-sm uppercase text-gray-500 dark:text-gray-400">Email</th>
+                        <th class="py-4 px-4 font-bold text-sm uppercase text-gray-500 dark:text-gray-400">Joined</th>
+                        <th class="py-4 px-4 font-bold text-sm uppercase text-gray-500 dark:text-gray-400">Role</th>
+                    </tr>
+                    </thead>
+                    <tbody id="users-list" class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <!-- Users will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="../scripts/theme.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+
+<script>
+    const usersList = document.getElementById('users-list');
+    const userCount = document.getElementById('user-count');
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            // Check if user is superuser
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if (doc.exists && doc.data().roles?.digilayn?.isSuperUser) {
+                    document.getElementById('admin-content').classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    window.top.location.replace('../index.html');
+                }
+            }).catch(error => {
+                console.error("Error checking permissions:", error);
+                window.top.location.replace('../index.html');
+            });
+        } else {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.top.location.replace('../authentication/login.html');
+        }
+    });
+
+    async function loadUsers() {
+        try {
+            const snapshot = await db.collection('users').get();
+            const users = [];
+            snapshot.forEach(doc => {
+                users.push({ id: doc.id, ...doc.data() });
+            });
+
+            userCount.textContent = `${users.length} users found`;
+            renderUsers(users);
+        } catch (error) {
+            console.error("Error loading users:", error);
+            userCount.textContent = "Error loading users";
+        }
+    }
+
+    function renderUsers(users) {
+        usersList.innerHTML = users.map(user => {
+            const joinedDate = user.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'Unknown';
+            // Fallback for joined date if not in metadata, try createdAt or similar fields if they exist in your schema
+            // For now, assuming metadata.creationTime might be available or we just show 'Unknown' or handle it if stored differently.
+            // Note: Firestore client SDK user object has metadata, but documents in 'users' collection might not unless saved.
+            // Let's try to use a timestamp if available in the document, otherwise 'N/A'.
+
+            let joinedDisplay = 'N/A';
+            if (user.createdAt) {
+                joinedDisplay = new Date(user.createdAt.seconds * 1000).toLocaleDateString();
+            } else if (user.joinedAt) {
+                 joinedDisplay = new Date(user.joinedAt.seconds * 1000).toLocaleDateString();
+            }
+
+            const photoUrl = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`;
+            const name = user.displayName || 'Anonymous';
+            const email = user.email || 'No email';
+
+            let role = 'User';
+            if (user.roles?.digilayn?.isSuperUser) role = 'Super User';
+            else if (user.roles?.digilayn?.isAdmin) role = 'Admin';
+
+            return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="py-4 px-4">
+                        <div class="flex items-center">
+                            <img src="${photoUrl}" alt="${name}" class="w-10 h-10 rounded-full object-cover mr-3 border border-gray-200 dark:border-gray-700">
+                            <div>
+                                <div class="font-bold text-slate-900 dark:text-slate-100">${name}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 md:hidden">${email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 hidden md:table-cell text-slate-600 dark:text-slate-300">${email}</td>
+                    <td class="py-4 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">${joinedDisplay}</td>
+                    <td class="py-4 px-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded-full ${role === 'Super User' ? 'bg-purple-100 text-purple-700' : (role === 'Admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700')}">
+                            ${role}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+</script>
+</body>
+</html>
