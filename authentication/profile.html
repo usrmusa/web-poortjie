@@ -43,7 +43,7 @@
     <div class="card flex flex-col p-8 rounded-2xl border-l-4 border-l-green-500">
         <h2 class="text-2xl font-bold mb-6 text-center">Your Profile</h2>
         <div id="status-message" class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"></div>
-        
+
         <form id="profile-form">
             <div class="flex flex-col items-center mb-6">
                 <div class="relative group cursor-pointer">
@@ -80,7 +80,7 @@
                 </div>
                 <label for="bio"></label><textarea id="bio" name="bio" rows="3" maxlength="100" placeholder="Tell us about yourself..." class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"></textarea>
             </div>
-            
+
             <div id="admin-toggle-section" class="hidden mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
                 <div class="flex items-center justify-between">
                     <div>
@@ -93,7 +93,7 @@
                     </label>
                 </div>
             </div>
-            
+
             <button type="button" id="save-btn" class="w-full px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md mb-4">
                 Back
             </button>
@@ -148,10 +148,14 @@
 </footer>
 
 <script src="../scripts/theme.js"></script>
+
+<!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
 <script src="../scripts/firebase.js"></script>
 
 <script>
@@ -208,7 +212,7 @@
             listForSupport: listForSupportToggle.checked
         };
 
-        const hasChanged = 
+        const hasChanged =
             currentData.displayName !== initialData.displayName ||
             currentData.phone !== initialData.phone ||
             currentData.bio !== initialData.bio ||
@@ -272,6 +276,53 @@
         }
     });
 
+    // ---- NEW: convert canvas to JPEG Blob with <= 1MB target (quality + scale down) ----
+    async function canvasToJpegBlobUnder1MB(canvas) {
+        const MAX_BYTES = 1024 * 1024; // 1MB
+        let quality = 0.9;
+
+        // Lower quality first
+        for (let i = 0; i < 9; i++) {
+            const blob = await new Promise((resolve) =>
+                canvas.toBlob(resolve, "image/jpeg", quality)
+            );
+            if (blob && blob.size <= MAX_BYTES) return blob;
+            quality -= 0.1;
+            if (quality < 0.1) break;
+        }
+
+        // If still too big, scale down dimensions and retry
+        let w = canvas.width;
+        let h = canvas.height;
+
+        for (let j = 0; j < 6; j++) {
+            w = Math.floor(w * 0.85);
+            h = Math.floor(h * 0.85);
+
+            const smaller = document.createElement("canvas");
+            smaller.width = w;
+            smaller.height = h;
+            const ctx = smaller.getContext("2d");
+            ctx.drawImage(canvas, 0, 0, w, h);
+
+            quality = 0.8;
+            for (let i = 0; i < 8; i++) {
+                const blob = await new Promise((resolve) =>
+                    smaller.toBlob(resolve, "image/jpeg", quality)
+                );
+                if (blob && blob.size <= MAX_BYTES) return blob;
+                quality -= 0.1;
+                if (quality < 0.1) break;
+            }
+        }
+
+        // Worst case: return something
+        return await new Promise((resolve) =>
+            canvas.toBlob(resolve, "image/jpeg", 0.6)
+        );
+    }
+
+    // Load profile
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             emailInput.value = user.email;
@@ -284,7 +335,7 @@
                     bioInput.value = userData.bio || '';
                     photoUrlInput.value = userData.photoUrl || '';
                     profilePicture.src = userData.photoUrl || DEFAULT_AVATAR;
-                    
+
                     if (userData.roles?.poortjie?.isAdmin === true) {
                         adminToggleSection.classList.remove('hidden');
                         listForSupportToggle.checked = userData.roles?.poortjie?.listForSupport === true;
@@ -309,6 +360,7 @@
         }
     });
 
+    // Open crop modal
     photoInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -317,11 +369,11 @@
         reader.onload = (event) => {
             cropImage.src = event.target.result;
             cropModal.classList.remove('hidden');
-            
+
             if (cropper) {
                 cropper.destroy();
             }
-            
+
             cropper = new Cropper(cropImage, {
                 aspectRatio: 1,
                 viewMode: 1,
@@ -334,29 +386,53 @@
         reader.readAsDataURL(file);
     });
 
-    applyCropBtn.addEventListener('click', () => {
+    // ---- FIXED: Apply crop uploads to Storage, saves URL (NO base64 in Firestore) ----
+    applyCropBtn.addEventListener('click', async () => {
         if (!cropper) return;
-        
-        const canvas = cropper.getCroppedCanvas({
-            width: 800,
-            height: 800
-        });
-        
-        let quality = 0.9;
-        let dataUrl = canvas.toDataURL('image/jpeg', quality);
-        
-        while (dataUrl.length * 0.75 > 1024 * 1024 && quality > 0.1) {
-            quality -= 0.1;
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            showStatus("Not logged in.", true);
+            return;
         }
-        
-        profilePicture.src = dataUrl;
-        photoUrlInput.value = dataUrl;
-        
-        cropModal.classList.add('hidden');
-        cropper.destroy();
-        cropper = null;
-        checkChanges();
+
+        const canvas = cropper.getCroppedCanvas({ width: 800, height: 800 });
+
+        try {
+            showStatus("Uploading photo...");
+            applyCropBtn.disabled = true;
+
+            const blob = await canvasToJpegBlobUnder1MB(canvas);
+            if (!blob) throw new Error("Could not convert image");
+
+            const storageRef = firebase.storage().ref();
+            const fileRef = storageRef.child(`users/${user.uid}/profile.jpg`);
+
+            await fileRef.put(blob, {
+                contentType: "image/jpeg",
+                cacheControl: "public,max-age=86400"
+            });
+
+            const url = await fileRef.getDownloadURL();
+
+            profilePicture.src = url;
+            photoUrlInput.value = url;
+
+            cropModal.classList.add('hidden');
+            cropper.destroy();
+            cropper = null;
+
+            // Reset file input so user can re-select same file later
+            photoInput.value = '';
+
+            checkChanges();
+            showStatus("Photo uploaded. Now save changes.");
+        } catch (err) {
+            console.error("Upload failed:", err);
+            showStatus("Upload failed. Check Storage rules / permissions.", true);
+        } finally {
+            applyCropBtn.disabled = false;
+        }
     });
 
     cancelCropBtn.addEventListener('click', () => {
@@ -382,7 +458,10 @@
         const newDisplayName = displayNameInput.value.trim();
         const newPhoneNumber = phoneNumberInput.value.trim();
         const newBio = bioInput.value.trim();
+
+        // IMPORTANT: now this is a URL (Storage download URL), not base64
         const newPhotoUrl = photoUrlInput.value;
+
         const newListForSupport = listForSupportToggle.checked;
 
         firebase.firestore().collection('users').doc(user.uid).update({
@@ -394,7 +473,6 @@
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             showStatus("Profile updated successfully!");
-            // Update initialData to current values after successful save
             initialData = {
                 displayName: newDisplayName,
                 phone: newPhoneNumber,
@@ -403,7 +481,7 @@
                 listForSupport: newListForSupport
             };
             checkChanges();
-            // Also update the auth profile if possible
+
             user.updateProfile({
                 displayName: newDisplayName,
                 photoURL: newPhotoUrl
@@ -421,7 +499,6 @@
             window.top.location.replace('../index.html');
         }).catch(error => {
             console.error("Logout failed:", error);
-            // Fallback: force redirect even if signOut fails
             window.top.location.replace('../index.html');
         });
     });

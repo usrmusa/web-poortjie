@@ -21,5 +21,6 @@
     <orderEntry type="library" name="firebase-storage-compat" level="application" />
     <orderEntry type="library" name="dexie" level="application" />
     <orderEntry type="library" name="firebase-analytics-compat" level="application" />
+    <orderEntry type="library" name="cropperjs" level="application" />
   </component>
 </module>
