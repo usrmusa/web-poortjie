@@ -219,7 +219,7 @@
     function renderUsers(users) {
         usersList.innerHTML = users.map(user => {
             const joinedDisplay = user._joinedDate.getTime() > 0 ? user._joinedDate.toLocaleDateString() : 'N/A';
-            const photoUrl = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`;
+            const photoUrl = user.photoUrl || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`;
             const name = user.displayName || 'Anonymous';
             const email = user.email || 'No email';
             const rolesHtml = getRolesBadges(user);
