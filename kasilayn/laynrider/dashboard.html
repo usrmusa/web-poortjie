@@ -20,11 +20,11 @@
         }
     </script>
     <link rel="stylesheet" href="../../styles/main.css">
-    <link rel="icon" type="image/png" sizes="48x48" href="../../favicon/favicon-48x48.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="../../favicon/favicon-96x96.png">
-    <link rel="icon" type="image/svg+xml" href="../../favicon/favicon.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon/apple-touch-icon.png">
-    <link rel="manifest" href="../../favicon/site.webmanifest">
+    <link rel="icon" type="image/png" sizes="48x48" href="../../favicon/kasilayn/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../../favicon/kasilayn/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../../favicon/kasilayn/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon/kasilayn/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon/kasilayn/site.webmanifest">
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -544,11 +544,6 @@
                 }, { merge: true });
             });
 
-            // Success: Redirect to Driver Dashboard or Registration for car details
-            // The instructions say "immediately do what android does which makes the user driver immediately"
-            // Android seems to just do the writes. I'll redirect to the register page so they can add car details,
-            // or just to the dashboard. Usually, a driver needs a car.
-            // But if they are now a driver, let's take them to the driver dashboard.
             window.location.href = '../layndriver/dashboard.html';
 
         } catch (error) {
