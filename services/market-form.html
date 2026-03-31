@@ -35,9 +35,7 @@
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
 <header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center text-gray-900 dark:text-gray-100">
-    <a href="../market.html"
-       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../market.html'); return false; }"
-       class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
+    <a href="../market.html" class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
 </header>
 
 <main class="max-w-2xl mx-auto px-6 pb-24">
@@ -48,47 +46,41 @@
         <div id="status-container" class="hidden mb-6"></div>
 
         <form id="market-form" novalidate class="space-y-6">
-            <div class="form-group mb-4">
+            <div class="form-group">
                 <label for="item-title" class="block mb-1 font-bold text-sm uppercase tracking-wider">What are you selling?</label>
-                <div class="relative">
-                    <input type="text" id="item-title" name="title" maxlength="50" placeholder="e.g. iPhone 12 Pro"
-                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
-                </div>
+                <input type="text" id="item-title" name="title" maxlength="50" placeholder="e.g. iPhone 12 Pro"
+                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
                 <p id="title-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Item title is required</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-                <div class="form-group mb-4">
+                <div class="form-group">
                     <label for="item-price" class="block mb-1 font-bold text-sm uppercase tracking-wider">Price (R)</label>
-                    <div class="relative">
-                        <input type="number" id="item-price" name="price" placeholder="0"
-                               class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
-                    </div>
+                    <input type="number" id="item-price" name="price" placeholder="0"
+                           class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
                     <p id="price-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please enter a valid price</p>
                 </div>
-                <div class="form-group mb-4">
+                <div class="form-group">
                     <label for="item-category" class="block mb-1 font-bold text-sm uppercase tracking-wider">Category</label>
-                    <div class="relative">
-                        <select id="item-category" name="category"
-                                class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
-                            <option value="" disabled selected>Select a category</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Vehicles">Vehicles</option>
-                            <option value="Property">Property</option>
-                            <option value="Clothing">Clothing</option>
-                            <option value="Home">Home</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
+                    <select id="item-category" name="category"
+                            class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                        <option value="" disabled selected>Select a category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Vehicles">Vehicles</option>
+                        <option value="Property">Property</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Home">Home</option>
+                        <option value="Other">Other</option>
+                    </select>
                     <p id="category-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please select a category</p>
                 </div>
             </div>
 
-            <div class="form-group mb-4">
+            <div class="form-group">
                 <label for="item-description" class="block mb-1 font-bold text-sm uppercase tracking-wider">Description</label>
                 <div class="relative">
                     <textarea id="item-description" name="description" rows="4" maxlength="500" placeholder="Describe the condition, features, etc."
-                              class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"></textarea>
+                              class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"></textarea>
                     <div id="description-counter" class="absolute right-2 bottom-2 text-[10px] opacity-40 font-mono text-gray-900 dark:text-white">
                         0/500
                     </div>
@@ -96,21 +88,21 @@
                 <p id="description-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please provide a description</p>
             </div>
 
-            <div class="form-group mb-4">
+            <div class="form-group">
                 <label class="block mb-1 font-bold text-sm uppercase tracking-wider">Photos (max 5)</label>
                 <div id="photo-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     <!-- Photo slots will be rendered here -->
                 </div>
                 <p id="photos-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">At least one photo is required</p>
-                <p class="text-[10px] mt-2 opacity-50 italic text-gray-900 dark:text-white">Upload and crop your photos. Optimized under 1MB automatically.</p>
+                <p class="text-[10px] mt-2 opacity-50 italic">Upload and crop your photos. Flexible cropping enabled.</p>
                 <input type="hidden" id="item-photos" name="photos">
             </div>
 
             <div class="form-group mb-6">
-                <label for="address" class="block mb-1 font-bold text-sm uppercase tracking-wider">Item Location</label>
+                <label for="address" class="block mb-1 font-bold text-sm uppercase tracking-wider">Pick-up Location</label>
                 <div class="relative">
                     <input type="text" id="address" name="address" placeholder="Poortjie" value="Poortjie" readonly
-                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition cursor-pointer">
+                           class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition cursor-pointer">
                     <div class="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
                         <i class="fa-solid fa-map-location-dot"></i>
                     </div>
@@ -188,6 +180,7 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -571,7 +564,7 @@
             price: document.getElementById('item-price').value,
             category: document.getElementById('item-category').value,
             description: descInput.value.trim(),
-            address: addressInput.value.trim(),
+            location: addressInput.value.trim(),
             latitude: selectedLat,
             longitude: selectedLng,
             images: uploadedPhotos,
@@ -594,6 +587,14 @@
                 await firebase.firestore().collection('poortjie').doc('market').collection('items').doc(editingId).update(data);
             } else {
                 await firebase.firestore().collection('poortjie').doc('market').collection('items').add(data);
+            }
+
+            // Analytics: Post Item
+            if (typeof analytics !== 'undefined') {
+                analytics.logEvent(editingId ? 'update_listing' : 'post_item', {
+                    item_category: data.category,
+                    price: data.price
+                });
             }
 
             statusContainer.innerHTML = `
