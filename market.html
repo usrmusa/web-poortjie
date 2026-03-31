@@ -485,7 +485,11 @@
             deleteBtn.onclick = () => deleteItem(id);
         } else {
             publicActions.classList.remove('hidden');
+            ownerActions.classList.remove('hidden'); // Reset to hidden if not owner in next step
+
+            // Re-hide owner actions if not owner
             ownerActions.classList.add('hidden');
+            publicActions.classList.remove('hidden');
 
             const handleContact = (type) => {
                 if (!currentUser) {
