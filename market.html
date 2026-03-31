@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poortjie Marketplace</title>
+    <meta name="author" content="Musa Mgijima">
+    <meta name="description"
+          content="Buy and sell items within the Poortjie community. From electronics to clothing and more.">
+    <meta name="keywords"
+          content="Poortjie, Marketplace, Buy and Sell, Kasi economy, local trade">
+    <meta name="theme-color" content="#22c55e">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind production warnings
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .category-pill.active {
+            background-color: #22c55e;
+            color: white;
+        }
+        .item-card img {
+            aspect-ratio: 1/1;
+            object-fit: cover;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="font-sans antialiased bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<div class="fixed top-5 left-5 z-50">
+    <a href="services/market-form.html" id="sell-item-btn"
+       class="p-3 pr-5 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition flex items-center gap-2"
+       title="Sell Something">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span class="font-bold text-sm">Sell</span>
+    </a>
+</div>
+
+<div class="fixed top-5 right-5 z-50 flex gap-3" id="user-controls">
+    <div id="hamburger-menu" class="relative">
+        <button id="hamburger-btn"
+                class="p-3 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition border border-gray-100 dark:border-slate-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        <div id="menu-items"
+             class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+            <a href="home.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Services Home</a>
+            <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+            <button id="menu-theme-toggle"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
+                <span id="menu-theme-icon">🌓</span> Mode
+            </button>
+            <a href="authentication/profile.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Profile</a>
+            <a href="support.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Support</a>
+        </div>
+    </div>
+</div>
+
+<header class="max-w-6xl mx-auto pt-24 pb-8 px-6">
+    <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+        <div>
+            <h1 class="text-4xl font-extrabold tracking-tight">Marketplace</h1>
+            <p class="text-slate-500 dark:text-slate-400">Buy and sell in Poortjie</p>
+        </div>
+        <div class="w-full md:w-96">
+            <div class="relative">
+                <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                     stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <label for="market-search" class="sr-only">Search marketplace</label>
+                <input type="text" id="market-search" placeholder="Search marketplace..."
+                       class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm">
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="flex gap-2 mt-8 overflow-x-auto pb-2 no-scrollbar" id="categories-container">
+        <button class="category-pill active whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="all">All</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Electronics">Electronics</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Vehicles">Vehicles</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Property">Property</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Clothing">Clothing</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Home">Home</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Other">Other</button>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 pb-24">
+    <div id="items-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <!-- Skeleton Loading -->
+        <div class="animate-pulse bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm">
+            <div class="bg-gray-200 dark:bg-slate-700 aspect-square"></div>
+            <div class="p-3 space-y-2">
+                <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded w-1/2"></div>
+                <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4"></div>
+                <div class="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/3"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="no-items" class="hidden text-center py-20">
+        <div class="text-6xl mb-4">🛍️</div>
+        <h2 class="text-xl font-bold">No items found</h2>
+        <p class="text-slate-500">Try adjusting your search or category.</p>
+    </div>
+</main>
+
+<!-- Item Detail Modal -->
+<div id="item-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col md:flex-row">
+        <button onclick="closeItemModal()" class="absolute top-4 right-4 z-10 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-full shadow-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div class="w-full md:w-1/2 bg-black flex items-center justify-center min-h-[300px]">
+            <img id="modal-image" src="" alt="" class="max-w-full max-h-[70vh] object-contain">
+        </div>
+
+        <div class="w-full md:w-1/2 p-6 md:p-8 flex flex-col">
+            <div id="modal-content">
+                <!-- Content will be injected -->
+            </div>
+            <div class="mt-auto pt-8 flex gap-3">
+                <a id="modal-whatsapp" href="#" target="_blank" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-center hover:bg-green-700 transition flex items-center justify-center gap-2">
+                    <i class="fab fa-whatsapp"></i> Message Seller
+                </a>
+                <a id="modal-call" href="#" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl text-center hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="scripts/theme.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="scripts/firebase.js"></script>
+
+<script>
+    let allItems = [];
+    let currentCategory = 'all';
+
+    const itemsGrid = document.getElementById('items-grid');
+    const noItems = document.getElementById('no-items');
+    const searchInput = document.getElementById('market-search');
+    const categoryPills = document.querySelectorAll('.category-pill');
+
+    function renderItems(items) {
+        if (items.length === 0) {
+            itemsGrid.innerHTML = '';
+            noItems.classList.remove('hidden');
+            return;
+        }
+        noItems.classList.add('hidden');
+
+        itemsGrid.innerHTML = items.map(item => `
+            <div class="item-card group bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 dark:border-slate-700" onclick="openItemModal('${item.id}')">
+                <div class="relative aspect-square overflow-hidden">
+                    <img src="${item.images && item.images[0] ? item.images[0] : 'https://via.placeholder.com/400?text=No+Image'}"
+                         alt="${item.title}"
+                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        ${item.category}
+                    </div>
+                </div>
+                <div class="p-3">
+                    <h3 class="font-bold text-lg text-green-600 dark:text-green-400">R${item.price}</h3>
+                    <h4 class="text-sm font-medium line-clamp-2 mb-1">${item.title}</h4>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <i class="fas fa-map-marker-alt"></i> ${item.location || 'Poortjie'}
+                    </p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterItems() {
+        const searchTerm = searchInput.value.toLowerCase();
+        let filtered = allItems;
+
+        if (currentCategory !== 'all') {
+            filtered = filtered.filter(item => item.category === currentCategory);
+        }
+
+        if (searchTerm) {
+            filtered = filtered.filter(item =>
+                item.title.toLowerCase().includes(searchTerm) ||
+                item.description.toLowerCase().includes(searchTerm) ||
+                item.category.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        renderItems(filtered);
+    }
+
+    async function fetchItems() {
+        db.collection('poortjie').doc('market').collection('items')
+            .where('status', '==', 'active')
+            .onSnapshot(snapshot => {
+                allItems = [];
+                snapshot.forEach(doc => {
+                    allItems.push({ id: doc.id, ...doc.data() });
+                });
+
+                allItems.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate() || new Date(0);
+                    const dateB = b.createdAt?.toDate() || new Date(0);
+                    return dateB - dateA;
+                });
+
+                filterItems();
+            }, error => {
+                console.error("Error fetching market items:", error);
+                itemsGrid.innerHTML = '<p class="col-span-full text-center py-10 opacity-50">Error loading items.</p>';
+            });
+    }
+
+    const modal = document.getElementById('item-modal');
+    const modalImg = document.getElementById('modal-image');
+    const modalContent = document.getElementById('modal-content');
+    const modalWhatsApp = document.getElementById('modal-whatsapp');
+    const modalCall = document.getElementById('modal-call');
+
+    window.openItemModal = (id) => {
+        const item = allItems.find(i => i.id === id);
+        if (!item) return;
+
+        modalImg.src = item.images && item.images[0] ? item.images[0] : 'https://via.placeholder.com/400?text=No+Image';
+        modalContent.innerHTML = `
+            <div class="mb-4">
+                <span class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400">${item.category}</span>
+                <h2 class="text-3xl font-black mt-1">${item.title}</h2>
+                <h3 class="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">R${item.price}</h3>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-sm font-bold uppercase opacity-50 tracking-wider">Description</h4>
+                    <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${item.description || 'No description provided.'}</p>
+                </div>
+                <div class="flex items-center gap-4 py-4 border-y border-gray-100 dark:border-slate-800">
+                    <div class="w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
+                        <img src="${item.sellerPhoto || 'https://via.placeholder.com/100'}" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs opacity-50">Seller</p>
+                        <p class="font-bold">${item.sellerName || 'Local Seller'}</p>
+                    </div>
+                </div>
+                <p class="text-xs opacity-50 flex items-center gap-1">
+                    <i class="fas fa-clock"></i> Posted ${item.createdAt ? formatRelativeTime(item.createdAt.toDate()) : 'recently'}
+                </p>
+            </div>
+        `;
+
+        const phone = item.sellerPhone || '';
+        modalCall.href = `tel:${phone}`;
+        modalWhatsApp.href = `https://wa.me/27${phone.substring(1)}?text=Hi, I am interested in your ${item.title} on Poortjie Marketplace.`;
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeItemModal = () => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+
+    function formatRelativeTime(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    }
+
+    searchInput.addEventListener('input', filterItems);
+
+    categoryPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            categoryPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            currentCategory = pill.dataset.category;
+            filterItems();
+        });
+    });
+
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const menuItems = document.getElementById('menu-items');
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuItems.classList.toggle('hidden');
+    });
+
+    window.onclick = (e) => {
+        if (e.target === modal) closeItemModal();
+        if (menuItems && !menuItems.contains(e.target)) menuItems.classList.add('hidden');
+    };
+
+    fetchItems();
+</script>
+</body>
+</html>
