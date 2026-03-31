@@ -102,17 +102,22 @@
                     <!-- Photo slots will be rendered here -->
                 </div>
                 <p id="photos-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">At least one photo is required</p>
-                <p class="text-[10px] mt-2 opacity-50 italic">Upload and crop your photos. Optimized under 1MB automatically.</p>
+                <p class="text-[10px] mt-2 opacity-50 italic text-gray-900 dark:text-white">Upload and crop your photos. Optimized under 1MB automatically.</p>
                 <input type="hidden" id="item-photos" name="photos">
             </div>
 
             <div class="form-group mb-6">
-                <label for="item-location" class="block mb-1 font-bold text-sm uppercase tracking-wider">Location</label>
+                <label for="address" class="block mb-1 font-bold text-sm uppercase tracking-wider">Item Location</label>
                 <div class="relative">
-                    <input type="text" id="item-location" name="location" value="Poortjie"
-                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                    <input type="text" id="address" name="address" placeholder="Poortjie" value="Poortjie" readonly
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition cursor-pointer">
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
                 </div>
-                <p id="location-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Location is required</p>
+                <p id="address-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please pin your exact location on the map</p>
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
             </div>
 
             <div class="pt-4">
@@ -124,12 +129,42 @@
     </div>
 </main>
 
+<!-- Address Modal -->
+<div id="address-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-800">
+        <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Pin Location</h3>
+            <button type="button" id="close-address-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="form-group">
+                <label for="modal-address" class="block mb-1 font-bold text-xs uppercase tracking-wider opacity-70 text-gray-900 dark:text-white">Type your address</label>
+                <input type="text" id="modal-address" placeholder="Start typing your address..."
+                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-sm uppercase tracking-wider opacity-70 text-gray-900 dark:text-white text-center">Drag pin to exact spot</h4>
+                <div id="map" class="w-full h-64 rounded-xl border-2 border-gray-100 dark:border-slate-800"></div>
+                <p class="text-[10px] text-gray-500 italic text-center">Must be within 5km of Poortjie</p>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50 dark:bg-slate-800/50">
+            <button type="button" id="confirm-address" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
+                Confirm Location
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Crop Modal -->
 <div id="crop-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center bg-black bg-opacity-90 p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl">
-        <div class="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="font-bold text-lg">Crop Product Photo</h3>
-            <button id="cancel-crop" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition">
+        <div class="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center text-gray-900 dark:text-white">
+            <h3 class="font-bold text-lg">Crop Photo</h3>
+            <button id="cancel-crop" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
@@ -137,16 +172,16 @@
             <img id="crop-image" src="" class="max-w-full" alt="">
         </div>
         <div class="p-4 flex gap-3">
-            <button id="rotate-left" class="flex-1 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 transition font-bold text-xs uppercase tracking-widest">
+            <button id="rotate-left" class="flex-1 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 transition font-bold text-xs uppercase tracking-widest text-gray-900 dark:text-white">
                 <i class="fas fa-undo mr-1"></i> Left
             </button>
-            <button id="rotate-right" class="flex-1 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 transition font-bold text-xs uppercase tracking-widest">
+            <button id="rotate-right" class="flex-1 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 transition font-bold text-xs uppercase tracking-widest text-gray-900 dark:text-white">
                 <i class="fas fa-redo mr-1"></i> Right
             </button>
         </div>
         <div class="p-4 bg-gray-50 dark:bg-slate-900 flex gap-3">
             <button id="apply-crop" class="flex-[2] py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold uppercase tracking-widest shadow-lg">
-                Upload Cropped Photo
+                Upload Photo
             </button>
         </div>
     </div>
@@ -170,6 +205,18 @@
     const statusContainer = document.getElementById('status-container');
     const descInput = document.getElementById('item-description');
     const descCounter = document.getElementById('description-counter');
+
+    // Address & Map elements
+    const addressInput = document.getElementById('address');
+    const modalAddressInput = document.getElementById('modal-address');
+    const addressModal = document.getElementById('address-modal');
+    const closeAddressModalBtn = document.getElementById('close-address-modal');
+    const confirmAddressBtn = document.getElementById('confirm-address');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    let map, marker, geocoder;
+    let selectedLat = null;
+    let selectedLng = null;
 
     const cropModal = document.getElementById('crop-modal');
     const cropImage = document.getElementById('crop-image');
@@ -227,7 +274,7 @@
 
             if (cropper) cropper.destroy();
             cropper = new Cropper(cropImage, {
-                aspectRatio: 1,
+                aspectRatio: NaN, // Flexible cropping
                 viewMode: 1,
                 guides: true,
                 background: false,
@@ -251,30 +298,6 @@
             if (quality < 0.1) break;
         }
 
-        let w = canvas.width;
-        let h = canvas.height;
-
-        for (let j = 0; j < 6; j++) {
-            w = Math.floor(w * 0.85);
-            h = Math.floor(h * 0.85);
-
-            const smaller = document.createElement("canvas");
-            smaller.width = w;
-            smaller.height = h;
-            const ctx = smaller.getContext("2d");
-            ctx.drawImage(canvas, 0, 0, w, h);
-
-            quality = 0.8;
-            for (let i = 0; i < 8; i++) {
-                const blob = await new Promise((resolve) =>
-                    smaller.toBlob(resolve, "image/jpeg", quality)
-                );
-                if (blob && blob.size <= MAX_BYTES) return blob;
-                quality -= 0.1;
-                if (quality < 0.1) break;
-            }
-        }
-
         return await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.6));
     }
 
@@ -289,7 +312,7 @@
         cropModal.classList.add('hidden');
 
         try {
-            const canvas = cropper.getCroppedCanvas({ width: 1200, height: 1200 });
+            const canvas = cropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 1600 });
             const blob = await canvasToJpegBlobUnder1MB(canvas);
 
             const fileName = `market/${user.uid}/${Date.now()}_${currentUploadIndex}.jpg`;
@@ -318,32 +341,171 @@
     rotateLeftBtn.onclick = () => cropper && cropper.rotate(-90);
     rotateRightBtn.onclick = () => cropper && cropper.rotate(90);
 
-    window.removePhoto = (index) => {
+    window.removePhoto = async (index) => {
+        const url = uploadedPhotos[index];
+        if (url.includes('firebasestorage')) {
+            try {
+                await firebase.storage().refFromURL(url).delete();
+            } catch (e) {
+                console.warn("Storage cleanup failed", e);
+            }
+        }
         uploadedPhotos.splice(index, 1);
         renderPhotoSlots();
     };
+
+    // --- MAP & ADDRESS LOGIC ---
+    addressInput.addEventListener('click', () => {
+        addressModal.classList.remove('hidden');
+        modalAddressInput.value = addressInput.value === 'Poortjie' ? '' : addressInput.value;
+        if (!map) {
+            initMap();
+        } else {
+            google.maps.event.trigger(map, 'resize');
+            if (selectedLat && selectedLng) {
+                const pos = {lat: selectedLat, lng: selectedLng};
+                map.setCenter(pos);
+                marker.setPosition(pos);
+            }
+        }
+    });
+
+    closeAddressModalBtn.addEventListener('click', () => addressModal.classList.add('hidden'));
+
+    confirmAddressBtn.addEventListener('click', () => {
+        if (modalAddressInput.value.trim()) {
+            addressInput.value = modalAddressInput.value.trim();
+        } else {
+            addressInput.value = 'Poortjie';
+        }
+        addressModal.classList.add('hidden');
+        validateForm();
+    });
+
+    function initMap() {
+        const poortjieCenter = {lat: -26.456323807221267, lng: 27.77044633885547};
+        geocoder = new google.maps.Geocoder();
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: poortjieCenter,
+            zoom: 14,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
+        });
+
+        new google.maps.Circle({
+            strokeColor: "#22c55e",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#22c55e",
+            fillOpacity: 0.1,
+            map: map,
+            center: poortjieCenter,
+            radius: 5000,
+            clickable: false
+        });
+
+        marker = new google.maps.Marker({
+            position: selectedLat ? {lat: selectedLat, lng: selectedLng} : poortjieCenter,
+            map: map,
+            draggable: true,
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+        });
+
+        marker.addListener("dragend", () => {
+            const pos = marker.getPosition();
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(pos, poortjieCenter);
+
+            if (distance > 5000) {
+                const heading = google.maps.geometry.spherical.computeHeading(poortjieCenter, pos);
+                const newPos = google.maps.geometry.spherical.computeOffset(poortjieCenter, 4990, heading);
+                marker.setPosition(newPos);
+                updateAddressFromPos(newPos);
+            } else {
+                updateAddressFromPos(pos);
+            }
+        });
+
+        map.addListener("click", (e) => {
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(e.latLng, poortjieCenter);
+            if (distance <= 5000) {
+                marker.setPosition(e.latLng);
+                updateAddressFromPos(e.latLng);
+            }
+        });
+    }
+
+    function updateAddressFromPos(pos) {
+        selectedLat = pos.lat();
+        selectedLng = pos.lng();
+        latitudeInput.value = selectedLat;
+        longitudeInput.value = selectedLng;
+        document.getElementById('address-error').classList.add('hidden');
+
+        if (!modalAddressInput.value.trim()) {
+            modalAddressInput.value = "Poortjie";
+        }
+    }
+
+    function initAutocomplete() {
+        const poortjieCenter = {lat: -26.456323807221267, lng: 27.77044633885547};
+        const circle = new google.maps.Circle({ center: poortjieCenter, radius: 5000 });
+
+        const autocomplete = new google.maps.places.Autocomplete(modalAddressInput, {
+            bounds: circle.getBounds(),
+            strictBounds: true,
+            componentRestrictions: {country: "za"},
+            fields: ["formatted_address", "geometry"],
+            types: ["address"],
+        });
+
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                modalAddressInput.value = place.formatted_address;
+                if (place.geometry && place.geometry.location) {
+                    updateAddressFromPos(place.geometry.location);
+                    if (map && marker) {
+                        marker.setPosition(place.geometry.location);
+                        map.setCenter(place.geometry.location);
+                    }
+                }
+            }
+        });
+    }
 
     const validateForm = (showErrors = false) => {
         const title = document.getElementById('item-title').value.trim();
         const price = document.getElementById('item-price').value.trim();
         const category = document.getElementById('item-category').value;
         const description = descInput.value.trim();
-        const isPhotosValid = uploadedPhotos.length > 0;
+        const address = addressInput.value.trim();
 
         const isTitleValid = title.length > 0;
         const isPriceValid = price.length > 0 && parseFloat(price) >= 0;
         const isCategoryValid = category && category !== '';
         const isDescriptionValid = description.length > 0;
+        const isLocationValid = address !== 'Poortjie' && selectedLat !== null;
+        const isPhotosValid = uploadedPhotos.length > 0;
 
         if (showErrors) {
             document.getElementById('title-error').classList.toggle('hidden', isTitleValid);
             document.getElementById('price-error').classList.toggle('hidden', isPriceValid);
             document.getElementById('category-error').classList.toggle('hidden', isCategoryValid);
             document.getElementById('description-error').classList.toggle('hidden', isDescriptionValid);
+            document.getElementById('address-error').classList.toggle('hidden', isLocationValid);
             document.getElementById('photos-error').classList.toggle('hidden', isPhotosValid);
+        } else {
+            if (isTitleValid) document.getElementById('title-error').classList.add('hidden');
+            if (isPriceValid) document.getElementById('price-error').classList.add('hidden');
+            if (isCategoryValid) document.getElementById('category-error').classList.add('hidden');
+            if (isDescriptionValid) document.getElementById('description-error').classList.add('hidden');
+            if (isLocationValid) document.getElementById('address-error').classList.add('hidden');
+            if (isPhotosValid) document.getElementById('photos-error').classList.add('hidden');
         }
 
-        return isTitleValid && isPriceValid && isCategoryValid && isDescriptionValid && isPhotosValid;
+        return isTitleValid && isPriceValid && isCategoryValid && isDescriptionValid && isLocationValid && isPhotosValid;
     };
 
     async function loadItemData() {
@@ -365,7 +527,11 @@
                 document.getElementById('item-price').value = data.price;
                 document.getElementById('item-category').value = data.category;
                 descInput.value = data.description;
-                document.getElementById('item-location').value = data.location;
+                addressInput.value = data.location || data.address || 'Poortjie';
+                selectedLat = data.latitude || null;
+                selectedLng = data.longitude || null;
+                latitudeInput.value = selectedLat;
+                longitudeInput.value = selectedLng;
                 uploadedPhotos = data.images || [];
 
                 pageTitle.textContent = "Edit Listing";
@@ -405,7 +571,9 @@
             price: document.getElementById('item-price').value,
             category: document.getElementById('item-category').value,
             description: descInput.value.trim(),
-            location: document.getElementById('item-location').value.trim(),
+            address: addressInput.value.trim(),
+            latitude: selectedLat,
+            longitude: selectedLng,
             images: uploadedPhotos,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -429,7 +597,7 @@
             }
 
             statusContainer.innerHTML = `
-                <div class="p-4 rounded-lg bg-green-100 text-green-700 font-bold border border-green-200">
+                <div class="p-4 rounded-lg bg-green-100 text-green-700 font-bold border border-green-200 text-center">
                     Success! Your item has been ${editingId ? 'updated' : 'posted'}.
                 </div>
             `;
@@ -445,11 +613,9 @@
         }
     };
 
-    [document.getElementById('item-title'), document.getElementById('item-price'), document.getElementById('item-category'), descInput, document.getElementById('item-location')].forEach(el => {
+    [document.getElementById('item-title'), document.getElementById('item-price'), document.getElementById('item-category'), descInput].forEach(el => {
         el.addEventListener('input', () => {
-            if (el === descInput) {
-                descCounter.textContent = `${descInput.value.length}/500`;
-            }
+            if (el === descInput) descCounter.textContent = `${descInput.value.length}/500`;
             validateForm(false);
         });
     });
@@ -470,5 +636,6 @@
 
     renderPhotoSlots();
 </script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANCpYHeLyWkgVtWL06xpI7XsP08xu9GPA&loading=async&libraries=places,geometry&callback=initAutocomplete"></script>
 </body>
 </html>
