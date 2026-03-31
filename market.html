@@ -57,6 +57,15 @@
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .image-carousel-container {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .image-carousel-item {
+            scroll-snap-align: center;
+            flex: 0 0 100%;
+        }
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
@@ -150,34 +159,40 @@
 </main>
 
 <!-- Item Detail Modal -->
-<div id="item-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col md:flex-row">
-        <button onclick="closeItemModal()" class="absolute top-4 right-4 z-10 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-full shadow-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+<div id="item-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-none md:rounded-2xl w-full max-w-4xl h-full md:h-auto md:max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col md:flex-row">
+        <button onclick="closeItemModal()" class="absolute top-4 right-4 z-20 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-full shadow-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
 
-        <div class="w-full md:w-1/2 bg-black flex items-center justify-center min-h-[300px] relative">
-            <img id="modal-image" src="" alt="" class="max-w-full max-h-[70vh] object-contain">
-            <button id="modal-share-btn" class="absolute bottom-4 right-4 p-3 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full transition shadow-lg" title="Share Item">
+        <div class="w-full md:w-1/2 bg-black flex flex-col items-center justify-center relative min-h-[300px] md:min-h-[500px]">
+            <div id="carousel-viewport" class="w-full h-full flex overflow-x-auto no-scrollbar image-carousel-container">
+                <!-- Images will be injected here -->
+            </div>
+
+            <!-- Indicators -->
+            <div id="carousel-indicators" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10"></div>
+
+            <button id="modal-share-btn" class="absolute bottom-4 right-4 p-3 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full transition shadow-lg z-10" title="Share Item">
                 <i class="fas fa-share-nodes"></i>
             </button>
         </div>
 
-        <div class="w-full md:w-1/2 p-6 md:p-8 flex flex-col">
-            <div id="modal-content">
+        <div class="w-full md:w-1/2 p-6 md:p-8 flex flex-col h-full overflow-y-auto">
+            <div id="modal-content" class="mb-auto">
                 <!-- Content will be injected -->
             </div>
 
-            <div id="public-actions" class="mt-auto pt-8 flex gap-3">
+            <div id="public-actions" class="mt-8 flex gap-3 pb-6 md:pb-0">
                 <button id="modal-whatsapp" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-center hover:bg-green-700 transition flex items-center justify-center gap-2">
-                    <i class="fab fa-whatsapp"></i> Message Seller
+                    <i class="fab fa-whatsapp text-xl"></i> <span>Message</span>
                 </button>
                 <button id="modal-call" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl text-center hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-phone"></i> Call
+                    <i class="fas fa-phone"></i> <span>Call</span>
                 </button>
             </div>
 
-            <div id="owner-actions" class="hidden mt-auto pt-8 flex flex-col gap-3">
+            <div id="owner-actions" class="hidden mt-8 flex flex-col gap-3 pb-6 md:pb-0">
                 <div class="flex gap-3">
                     <button id="toggle-sold-btn" class="flex-1 bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700 transition flex items-center justify-center gap-2">
                         <i class="fas fa-check-circle"></i> Mark as Sold
@@ -186,12 +201,25 @@
                         <i class="fas fa-box-open"></i> Out of Stock
                     </button>
                 </div>
-                <button id="delete-item-btn" class="w-full bg-red-100 text-red-600 font-bold py-3 rounded-xl hover:bg-red-200 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-trash"></i> Delete Listing
-                </button>
+                <div class="flex gap-3">
+                    <button id="edit-item-btn" class="flex-1 bg-green-100 text-green-600 font-bold py-3 rounded-xl hover:bg-green-200 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-edit"></i> Edit Listing
+                    </button>
+                    <button id="delete-item-btn" class="flex-1 bg-red-100 text-red-600 font-bold py-3 rounded-xl hover:bg-red-200 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Fullscreen Gallery -->
+<div id="gallery-fullscreen" class="fixed inset-0 z-[150] hidden flex items-center justify-center bg-black">
+    <button onclick="closeFullscreen()" class="absolute top-6 right-6 z-20 p-3 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full text-white transition">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    <img id="fullscreen-img" src="" class="max-w-full max-h-full object-contain" alt="">
 </div>
 
 <!-- Login Alert Modal -->
@@ -326,7 +354,8 @@
     }
 
     const modal = document.getElementById('item-modal');
-    const modalImg = document.getElementById('modal-image');
+    const carouselViewport = document.getElementById('carousel-viewport');
+    const carouselIndicators = document.getElementById('carousel-indicators');
     const modalContent = document.getElementById('modal-content');
     const modalWhatsApp = document.getElementById('modal-whatsapp');
     const modalCall = document.getElementById('modal-call');
@@ -336,54 +365,108 @@
     const deleteBtn = document.getElementById('delete-item-btn');
     const soldBtn = document.getElementById('toggle-sold-btn');
     const stockBtn = document.getElementById('toggle-stock-btn');
+    const editBtn = document.getElementById('edit-item-btn');
+
+    const fullscreenGallery = document.getElementById('gallery-fullscreen');
+    const fullscreenImg = document.getElementById('fullscreen-img');
+
+    window.openFullscreen = (src) => {
+        fullscreenImg.src = src;
+        fullscreenGallery.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeFullscreen = () => {
+        fullscreenGallery.classList.add('hidden');
+        if (!modal.classList.contains('hidden')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    };
 
     window.openItemModal = (id) => {
         const item = allItems.find(i => i.id === id);
         if (!item) return;
 
-        // Update URL for sharing without reload
         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
         window.history.pushState({path: newUrl}, '', newUrl);
 
         const currentUser = firebase.auth().currentUser;
         const isOwner = currentUser && item.userId === currentUser.uid;
 
-        modalImg.src = item.images && item.images[0] ? item.images[0] : 'https://via.placeholder.com/400?text=No+Image';
+        // Render Carousel
+        const images = item.images && item.images.length > 0 ? item.images : ['https://via.placeholder.com/400?text=No+Image'];
+        carouselViewport.innerHTML = images.map(img => `
+            <div class="image-carousel-item w-full h-full flex-shrink-0 flex items-center justify-center bg-black cursor-zoom-in" onclick="openFullscreen('${img}')">
+                <img src="${img}" class="w-full h-full object-contain">
+            </div>
+        `).join('');
+
+        // Render Indicators
+        carouselIndicators.innerHTML = images.map((_, idx) => `
+            <div class="w-2 h-2 rounded-full bg-white/30 transition-all duration-300 ${idx === 0 ? 'bg-white w-4' : ''}" data-idx="${idx}"></div>
+        `).join('');
+
+        // Carousel Scroll Listener
+        carouselViewport.onscroll = () => {
+            const width = carouselViewport.offsetWidth;
+            const idx = Math.round(carouselViewport.scrollLeft / width);
+            Array.from(carouselIndicators.children).forEach((dot, i) => {
+                dot.classList.toggle('bg-white', i === idx);
+                dot.classList.toggle('w-4', i === idx);
+                dot.classList.toggle('bg-white/30', i !== idx);
+            });
+        };
 
         let statusTag = '';
-        if (item.status === 'out of stock') statusTag = '<span class="ml-2 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded">OUT OF STOCK</span>';
-        if (item.status === 'sold') statusTag = '<span class="ml-2 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">SOLD</span>';
+        if (item.status === 'out of stock') statusTag = '<span class="ml-2 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded font-black">OUT OF STOCK</span>';
+        if (item.status === 'sold') statusTag = '<span class="ml-2 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded font-black">SOLD</span>';
 
         modalContent.innerHTML = `
-            <div class="mb-4">
-                <div class="flex items-center">
+            <div class="mb-6">
+                <div class="flex items-center mb-1">
                     <span class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400">${item.category}</span>
                     ${statusTag}
                 </div>
-                <h2 class="text-3xl font-black mt-1">${item.title}</h2>
+                <h2 class="text-3xl font-black mt-1 leading-tight">${item.title}</h2>
                 <h3 class="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">R${item.price}</h3>
             </div>
-            <div class="space-y-4">
-                <div>
-                    <h4 class="text-sm font-bold uppercase opacity-50 tracking-wider">Description</h4>
-                    <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${item.description || 'No description provided.'}</p>
+
+            <div class="space-y-6">
+                <div class="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-700/50">
+                    <h4 class="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2">Item Description</h4>
+                    <p class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">${item.description || 'No description provided.'}</p>
                 </div>
-                <div class="flex items-center gap-4 py-4 border-y border-gray-100 dark:border-slate-800">
-                    <div class="w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
+
+                <div class="flex items-center gap-4 py-4 px-2 border-y border-gray-100 dark:border-slate-800">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full overflow-hidden border-2 border-green-500 shadow-sm">
                         <img src="${item.sellerPhoto || 'https://via.placeholder.com/100'}" class="w-full h-full object-cover">
                     </div>
-                    <div>
-                        <p class="text-xs opacity-50">Seller</p>
-                        <p class="font-bold">${item.sellerName || 'Local Seller'}</p>
+                    <div class="flex-1">
+                        <p class="text-[10px] font-black uppercase opacity-40 tracking-widest mb-0.5">Contact Seller</p>
+                        <p class="font-bold text-lg">${item.sellerName || 'Local Seller'}</p>
+                        <p class="text-xs opacity-50 flex items-center gap-1">
+                            <i class="fas fa-map-marker-alt"></i> ${item.location || 'Poortjie'}
+                        </p>
                     </div>
                 </div>
-                <p class="text-xs opacity-50 flex items-center gap-1">
-                    <i class="fas fa-clock"></i> Posted ${item.createdAt ? formatRelativeTime(item.createdAt.toDate()) : 'recently'}
-                </p>
+
+                <div class="flex justify-between items-center px-2">
+                    <p class="text-[10px] font-black uppercase opacity-30 tracking-widest flex items-center gap-1">
+                        <i class="fas fa-clock"></i> Posted ${item.createdAt ? formatRelativeTime(item.createdAt.toDate()) : 'recently'}
+                    </p>
+                    <p class="text-[10px] font-black uppercase opacity-30 tracking-widest">
+                        ID: ${id.substring(0,8)}
+                    </p>
+                </div>
             </div>
         `;
 
-        modalShare.onclick = () => shareItem(item);
+        modalShare.onclick = (e) => {
+            e.stopPropagation();
+            shareItem(item);
+        };
 
         if (isOwner) {
             publicActions.classList.add('hidden');
@@ -392,8 +475,12 @@
             soldBtn.innerHTML = item.status === 'sold' ? '<i class="fas fa-redo"></i> Relist Item' : '<i class="fas fa-check-circle"></i> Mark as Sold';
             soldBtn.onclick = () => updateItemStatus(id, item.status === 'sold' ? 'active' : 'sold');
 
-            stockBtn.innerHTML = item.status === 'out of stock' ? '<i class="fas fa-box"></i> Back in Stock' : '<i class="fas fa-box-open"></i> Out of Stock';
+            stockBtn.innerHTML = item.status === 'out of stock' ? '<i class="fas fa-box text-sm"></i> Back in Stock' : '<i class="fas fa-box-open text-sm"></i> Out of Stock';
             stockBtn.onclick = () => updateItemStatus(id, item.status === 'out of stock' ? 'active' : 'out of stock');
+
+            editBtn.onclick = () => {
+                window.location.href = `services/market-form.html?id=${id}`;
+            };
 
             deleteBtn.onclick = () => deleteItem(id);
         } else {
@@ -428,17 +515,18 @@
     };
 
     async function shareItem(item) {
+        const shareUrl = window.location.origin + window.location.pathname + '?id=' + item.id;
         const shareData = {
             title: `Poortjie Marketplace: ${item.title}`,
             text: `Check out this ${item.title} for R${item.price} on Poortjie Marketplace!`,
-            url: window.location.href
+            url: shareUrl
         };
 
         try {
             if (navigator.share) {
                 await navigator.share(shareData);
             } else {
-                await navigator.clipboard.writeText(window.location.href);
+                await navigator.clipboard.writeText(shareUrl);
                 alert("Link copied to clipboard!");
             }
         } catch (err) {
@@ -471,7 +559,6 @@
     window.closeItemModal = () => {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
-        // Remove item ID from URL
         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.pushState({path: newUrl}, '', newUrl);
     };

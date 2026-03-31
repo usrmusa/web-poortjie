@@ -71,9 +71,10 @@
 
             <div class="form-group">
                 <label class="block mb-1 font-bold text-sm uppercase tracking-wider">Photos (max 5)</label>
-                <div id="photo-grid" class="grid grid-cols-5 gap-2">
+                <div id="photo-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     <!-- Photo slots will be rendered here -->
                 </div>
+                <p class="text-[10px] mt-2 opacity-50 italic">Photos will be cropped to 1:1 square automatically.</p>
                 <input type="hidden" id="item-photos" name="photos">
             </div>
 
@@ -122,15 +123,15 @@
             if (uploadedPhotos[i]) {
                 slot.innerHTML = `
                     <img src="${uploadedPhotos[i]}" class="w-full h-full object-cover">
-                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">
+                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-lg">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
             } else {
                 slot.innerHTML = `
-                    <label class="cursor-pointer w-full h-full flex items-center justify-center">
-                        <i class="fas fa-camera text-gray-400"></i>
-                        <input type="file" class="hidden" accept="image/*" onchange="uploadPhoto(event, ${i})">
+                    <label class="cursor-pointer w-full h-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+                        <i class="fas fa-camera text-gray-400 text-xl"></i>
+                        <input type="file" class="hidden" accept="image/*" onchange="handlePhotoUpload(event, ${i})">
                     </label>
                 `;
             }
@@ -138,20 +139,71 @@
         }
     }
 
-    async function uploadPhoto(event, index) {
+    const processImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // 1:1 Crop logic
+                    let size = Math.min(width, height);
+                    let xOffset = (width - size) / 2;
+                    let yOffset = (height - size) / 2;
+
+                    const MAX_DIM = 1200;
+                    let targetSize = Math.min(size, MAX_DIM);
+
+                    canvas.width = targetSize;
+                    canvas.height = targetSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, xOffset, yOffset, size, size, 0, 0, targetSize, targetSize);
+
+                    let quality = 0.9;
+                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+                    // Ensure < 1MB
+                    while (dataUrl.length * 0.75 > 1024 * 1024 && quality > 0.1) {
+                        quality -= 0.1;
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+
+                    fetch(dataUrl)
+                        .then(res => res.blob())
+                        .then(blob => resolve(blob))
+                        .catch(reject);
+                };
+                img.onerror = reject;
+                img.src = event.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    async function handlePhotoUpload(event, index) {
         const file = event.target.files[0];
         if (!file) return;
 
         const slot = photoGrid.children[index];
-        slot.innerHTML = '<div class="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full"></div>';
+        slot.innerHTML = `
+            <div class="flex flex-col items-center gap-1">
+                <div class="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full"></div>
+                <span class="text-[8px] font-bold opacity-50 uppercase">Uploading</span>
+            </div>
+        `;
 
         try {
             const user = firebase.auth().currentUser;
             if (!user) throw new Error("Please log in first.");
 
-            const fileName = `market/${user.uid}/${Date.now()}_${index}`;
+            const processedBlob = await processImage(file);
+            const fileName = `market/${user.uid}/${Date.now()}_${index}.jpg`;
             const storageRef = firebase.storage().ref(fileName);
-            const snapshot = await storageRef.put(file);
+            const snapshot = await storageRef.put(processedBlob);
             const url = await snapshot.ref.getDownloadURL();
 
             uploadedPhotos.push(url);
@@ -181,7 +233,7 @@
         const data = {
             userId: user.uid,
             sellerName: user.displayName || 'Anonymous',
-            sellerPhone: '', // Should be fetched from profile
+            sellerPhone: '',
             sellerPhoto: user.photoURL || '',
             title: document.getElementById('item-title').value,
             price: document.getElementById('item-price').value,
@@ -194,7 +246,6 @@
         };
 
         try {
-            // Get user phone from profile
             const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
             if (userDoc.exists) {
                 data.sellerPhone = userDoc.data().phone || '';
@@ -221,7 +272,6 @@
         }
     });
 
-    // Fallback: hide loader if Firebase auth is taking too long or script errors
     window.onload = () => {
         setTimeout(safeHideLoader, 3000);
     };

@@ -1,5 +1,4 @@
 User-agent: *
-Allow: /favicon/
+Allow: /
 
-User-agent: Googlebot-Image
-Allow: /favicon/
+Sitemap: https://poortjie.services/sitemap.xml
