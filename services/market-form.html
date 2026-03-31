@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Item | Poortjie Marketplace</title>
+    <meta name="author" content="Musa Mgijima">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (window.console && window.console.log) {
+            const originalLog = window.console.log;
+            window.console.log = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                originalLog.apply(window.console, arguments);
+            };
+        }
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="../favicon/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="../favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon/site.webmanifest">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <script src="../scripts/loader.js"></script>
+</head>
+<body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+<header class="max-w-6xl mx-auto pt-20 pb-12 px-6 text-center">
+    <a href="../market.html" class="text-4xl font-extrabold tracking-tight">Marketplace</a>
+    <h1 class="text-xl mt-2 opacity-70">List an item for sale</h1>
+</header>
+
+<main class="max-w-2xl mx-auto px-6 pb-24">
+    <div class="card p-8 rounded-2xl border-l-4 border-l-green-500 bg-white dark:bg-slate-800 shadow-sm">
+        <form id="market-form" class="space-y-6">
+            <div class="form-group">
+                <label for="item-title" class="block mb-1 font-bold text-sm uppercase tracking-wider">What are you selling?</label>
+                <input type="text" id="item-title" name="title" required maxlength="50" placeholder="e.g. iPhone 12 Pro"
+                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label for="item-price" class="block mb-1 font-bold text-sm uppercase tracking-wider">Price (R)</label>
+                    <input type="number" id="item-price" name="price" required placeholder="0"
+                           class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                </div>
+                <div class="form-group">
+                    <label for="item-category" class="block mb-1 font-bold text-sm uppercase tracking-wider">Category</label>
+                    <select id="item-category" name="category" required
+                            class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                        <option value="Electronics">Electronics</option>
+                        <option value="Vehicles">Vehicles</option>
+                        <option value="Property">Property</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Home">Home</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="item-description" class="block mb-1 font-bold text-sm uppercase tracking-wider">Description</label>
+                <textarea id="item-description" name="description" rows="4" required maxlength="500" placeholder="Describe the condition, features, etc."
+                          class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 focus:outline-none transition"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="block mb-1 font-bold text-sm uppercase tracking-wider">Photos (max 5)</label>
+                <div id="photo-grid" class="grid grid-cols-5 gap-2">
+                    <!-- Photo slots will be rendered here -->
+                </div>
+                <input type="hidden" id="item-photos" name="photos">
+            </div>
+
+            <div class="form-group">
+                <label for="item-location" class="block mb-1 font-bold text-sm uppercase tracking-wider">Location</label>
+                <input type="text" id="item-location" name="location" value="Poortjie"
+                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="submit-btn" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 transition shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Post Item
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../scripts/firebase.js"></script>
+
+<script>
+    let uploadedPhotos = [];
+    const photoGrid = document.getElementById('photo-grid');
+    const form = document.getElementById('market-form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function safeHideLoader() {
+        if (typeof hideLoader === 'function') {
+            hideLoader();
+        } else {
+            const loader = document.getElementById('global-loader');
+            if (loader) loader.style.display = 'none';
+        }
+    }
+
+    function renderPhotoSlots() {
+        photoGrid.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'aspect-square rounded-lg border-2 border-dashed border-gray-200 dark:border-slate-700 overflow-hidden relative flex items-center justify-center bg-gray-50 dark:bg-slate-800';
+
+            if (uploadedPhotos[i]) {
+                slot.innerHTML = `
+                    <img src="${uploadedPhotos[i]}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+            } else {
+                slot.innerHTML = `
+                    <label class="cursor-pointer w-full h-full flex items-center justify-center">
+                        <i class="fas fa-camera text-gray-400"></i>
+                        <input type="file" class="hidden" accept="image/*" onchange="uploadPhoto(event, ${i})">
+                    </label>
+                `;
+            }
+            photoGrid.appendChild(slot);
+        }
+    }
+
+    async function uploadPhoto(event, index) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const slot = photoGrid.children[index];
+        slot.innerHTML = '<div class="animate-spin h-5 w-5 border-2 border-green-500 border-t-transparent rounded-full"></div>';
+
+        try {
+            const user = firebase.auth().currentUser;
+            if (!user) throw new Error("Please log in first.");
+
+            const fileName = `market/${user.uid}/${Date.now()}_${index}`;
+            const storageRef = firebase.storage().ref(fileName);
+            const snapshot = await storageRef.put(file);
+            const url = await snapshot.ref.getDownloadURL();
+
+            uploadedPhotos.push(url);
+            renderPhotoSlots();
+        } catch (error) {
+            alert("Upload failed: " + error.message);
+            renderPhotoSlots();
+        }
+    }
+
+    window.removePhoto = (index) => {
+        uploadedPhotos.splice(index, 1);
+        renderPhotoSlots();
+    };
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("Please login to post items.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> Posting...';
+
+        const data = {
+            userId: user.uid,
+            sellerName: user.displayName || 'Anonymous',
+            sellerPhone: '', // Should be fetched from profile
+            sellerPhoto: user.photoURL || '',
+            title: document.getElementById('item-title').value,
+            price: document.getElementById('item-price').value,
+            category: document.getElementById('item-category').value,
+            description: document.getElementById('item-description').value,
+            location: document.getElementById('item-location').value,
+            images: uploadedPhotos,
+            status: 'active',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            // Get user phone from profile
+            const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                data.sellerPhone = userDoc.data().phone || '';
+                data.sellerName = userDoc.data().displayName || data.sellerName;
+            }
+
+            await firebase.firestore().collection('poortjie').doc('market').collection('items').add(data);
+            alert("Item posted successfully!");
+            window.location.href = '../market.html';
+        } catch (error) {
+            console.error(error);
+            alert("Failed to post item.");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Post Item';
+        }
+    };
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (!user) {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../authentication/login.html';
+        } else {
+            safeHideLoader();
+        }
+    });
+
+    // Fallback: hide loader if Firebase auth is taking too long or script errors
+    window.onload = () => {
+        setTimeout(safeHideLoader, 3000);
+    };
+
+    renderPhotoSlots();
+</script>
+</body>
+</html>
