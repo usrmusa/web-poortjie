@@ -19,7 +19,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Suppress Tailwind production warnings
         if (window.console && window.console.log) {
             const originalLog = window.console.log;
             window.console.log = function() {
@@ -112,6 +111,7 @@
         <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Clothing">Clothing</button>
         <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Home">Home</button>
         <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition" data-category="Other">Other</button>
+        <button class="category-pill whitespace-nowrap px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm font-medium transition hidden" id="my-listings-pill" data-category="my-listings">My Listings</button>
     </div>
 </header>
 
@@ -150,13 +150,28 @@
             <div id="modal-content">
                 <!-- Content will be injected -->
             </div>
-            <div class="mt-auto pt-8 flex gap-3">
+
+            <div id="public-actions" class="mt-auto pt-8 flex gap-3">
                 <a id="modal-whatsapp" href="#" target="_blank" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-center hover:bg-green-700 transition flex items-center justify-center gap-2">
                     <i class="fab fa-whatsapp"></i> Message Seller
                 </a>
                 <a id="modal-call" href="#" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl text-center hover:bg-blue-700 transition flex items-center justify-center gap-2">
                     <i class="fas fa-phone"></i> Call
                 </a>
+            </div>
+
+            <div id="owner-actions" class="hidden mt-auto pt-8 flex flex-col gap-3">
+                <div class="flex gap-3">
+                    <button id="toggle-sold-btn" class="flex-1 bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-check-circle"></i> Mark as Sold
+                    </button>
+                    <button id="toggle-stock-btn" class="flex-1 bg-amber-600 text-white font-bold py-3 rounded-xl hover:bg-amber-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-box-open"></i> Out of Stock
+                    </button>
+                </div>
+                <button id="delete-item-btn" class="w-full bg-red-100 text-red-600 font-bold py-3 rounded-xl hover:bg-red-200 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-trash"></i> Delete Listing
+                </button>
             </div>
         </div>
     </div>
@@ -177,6 +192,7 @@
     const noItems = document.getElementById('no-items');
     const searchInput = document.getElementById('market-search');
     const categoryPills = document.querySelectorAll('.category-pill');
+    const myListingsPill = document.getElementById('my-listings-pill');
 
     function renderItems(items) {
         if (items.length === 0) {
@@ -186,32 +202,57 @@
         }
         noItems.classList.add('hidden');
 
-        itemsGrid.innerHTML = items.map(item => `
-            <div class="item-card group bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 dark:border-slate-700" onclick="openItemModal('${item.id}')">
-                <div class="relative aspect-square overflow-hidden">
-                    <img src="${item.images && item.images[0] ? item.images[0] : 'https://via.placeholder.com/400?text=No+Image'}"
-                         alt="${item.title}"
-                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                    <div class="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        ${item.category}
+        itemsGrid.innerHTML = items.map(item => {
+            let statusBadge = '';
+            let opacity = 'opacity-100';
+
+            if (item.status === 'out of stock') {
+                statusBadge = '<div class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded shadow-sm">OUT OF STOCK</div>';
+            } else if (item.status === 'sold') {
+                statusBadge = '<div class="absolute top-2 right-2 bg-purple-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow-sm">SOLD</div>';
+                opacity = 'opacity-60';
+            }
+
+            return `
+                <div class="item-card group bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 dark:border-slate-700 ${opacity}" onclick="openItemModal('${item.id}')">
+                    <div class="relative aspect-square overflow-hidden">
+                        <img src="${item.images && item.images[0] ? item.images[0] : 'https://via.placeholder.com/400?text=No+Image'}"
+                             alt="${item.title}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                            ${item.category}
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-bold text-lg text-green-600 dark:text-green-400">R${item.price}</h3>
+                        <h4 class="text-sm font-medium line-clamp-2 mb-1">${item.title}</h4>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <i class="fas fa-map-marker-alt"></i> ${item.location || 'Poortjie'}
+                        </p>
                     </div>
                 </div>
-                <div class="p-3">
-                    <h3 class="font-bold text-lg text-green-600 dark:text-green-400">R${item.price}</h3>
-                    <h4 class="text-sm font-medium line-clamp-2 mb-1">${item.title}</h4>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <i class="fas fa-map-marker-alt"></i> ${item.location || 'Poortjie'}
-                    </p>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function filterItems() {
         const searchTerm = searchInput.value.toLowerCase();
+        const currentUser = firebase.auth().currentUser;
         let filtered = allItems;
 
-        if (currentCategory !== 'all') {
+        // Security/Privacy Filter
+        filtered = filtered.filter(item => {
+            if (item.status === 'active' || item.status === 'out of stock') return true;
+            if (item.status === 'sold' && currentUser && item.userId === currentUser.uid) return true;
+            return false;
+        });
+
+        if (currentCategory === 'my-listings') {
+            if (currentUser) {
+                filtered = filtered.filter(item => item.userId === currentUser.uid);
+            }
+        } else if (currentCategory !== 'all') {
             filtered = filtered.filter(item => item.category === currentCategory);
         }
 
@@ -227,8 +268,8 @@
     }
 
     async function fetchItems() {
+        // Fetch everything, local filter for statuses
         db.collection('poortjie').doc('market').collection('items')
-            .where('status', '==', 'active')
             .onSnapshot(snapshot => {
                 allItems = [];
                 snapshot.forEach(doc => {
@@ -253,15 +294,31 @@
     const modalContent = document.getElementById('modal-content');
     const modalWhatsApp = document.getElementById('modal-whatsapp');
     const modalCall = document.getElementById('modal-call');
+    const publicActions = document.getElementById('public-actions');
+    const ownerActions = document.getElementById('owner-actions');
+    const deleteBtn = document.getElementById('delete-item-btn');
+    const soldBtn = document.getElementById('toggle-sold-btn');
+    const stockBtn = document.getElementById('toggle-stock-btn');
 
     window.openItemModal = (id) => {
         const item = allItems.find(i => i.id === id);
         if (!item) return;
 
+        const currentUser = firebase.auth().currentUser;
+        const isOwner = currentUser && item.userId === currentUser.uid;
+
         modalImg.src = item.images && item.images[0] ? item.images[0] : 'https://via.placeholder.com/400?text=No+Image';
+
+        let statusTag = '';
+        if (item.status === 'out of stock') statusTag = '<span class="ml-2 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded">OUT OF STOCK</span>';
+        if (item.status === 'sold') statusTag = '<span class="ml-2 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">SOLD</span>';
+
         modalContent.innerHTML = `
             <div class="mb-4">
-                <span class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400">${item.category}</span>
+                <div class="flex items-center">
+                    <span class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400">${item.category}</span>
+                    ${statusTag}
+                </div>
                 <h2 class="text-3xl font-black mt-1">${item.title}</h2>
                 <h3 class="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">R${item.price}</h3>
             </div>
@@ -285,13 +342,58 @@
             </div>
         `;
 
-        const phone = item.sellerPhone || '';
-        modalCall.href = `tel:${phone}`;
-        modalWhatsApp.href = `https://wa.me/27${phone.substring(1)}?text=Hi, I am interested in your ${item.title} on Poortjie Marketplace.`;
+        if (isOwner) {
+            publicActions.classList.add('hidden');
+            ownerActions.classList.remove('hidden');
+
+            soldBtn.innerHTML = item.status === 'sold' ? '<i class="fas fa-redo"></i> Relist Item' : '<i class="fas fa-check-circle"></i> Mark as Sold';
+            soldBtn.onclick = () => updateItemStatus(id, item.status === 'sold' ? 'active' : 'sold');
+
+            stockBtn.innerHTML = item.status === 'out of stock' ? '<i class="fas fa-box"></i> Back in Stock' : '<i class="fas fa-box-open"></i> Out of Stock';
+            stockBtn.onclick = () => updateItemStatus(id, item.status === 'out of stock' ? 'active' : 'out of stock');
+
+            deleteBtn.onclick = () => deleteItem(id);
+        } else {
+            publicActions.classList.remove('hidden');
+            ownerActions.classList.add('hidden');
+
+            const phone = item.sellerPhone || '';
+            modalCall.href = `tel:${phone}`;
+            modalWhatsApp.href = `https://wa.me/27${phone.substring(1)}?text=Hi, I am interested in your ${item.title} on Poortjie Marketplace.`;
+
+            // Disable actions if sold
+            if (item.status === 'sold') {
+                publicActions.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                publicActions.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
 
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     };
+
+    async function updateItemStatus(id, newStatus) {
+        try {
+            await db.collection('poortjie').doc('market').collection('items').doc(id).update({
+                status: newStatus,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeItemModal();
+        } catch (error) {
+            alert("Failed to update status: " + error.message);
+        }
+    }
+
+    async function deleteItem(id) {
+        if (!confirm("Are you sure you want to delete this listing permanently?")) return;
+        try {
+            await db.collection('poortjie').doc('market').collection('items').doc(id).delete();
+            closeItemModal();
+        } catch (error) {
+            alert("Failed to delete listing: " + error.message);
+        }
+    }
 
     window.closeItemModal = () => {
         modal.classList.add('hidden');
@@ -329,6 +431,19 @@
         if (e.target === modal) closeItemModal();
         if (menuItems && !menuItems.contains(e.target)) menuItems.classList.add('hidden');
     };
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            myListingsPill.classList.remove('hidden');
+        } else {
+            myListingsPill.classList.add('hidden');
+            if (currentCategory === 'my-listings') {
+                currentCategory = 'all';
+                categoryPills[0].classList.add('active');
+            }
+        }
+        filterItems();
+    });
 
     fetchItems();
 </script>
