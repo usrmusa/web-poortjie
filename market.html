@@ -390,6 +390,17 @@
         const item = allItems.find(i => i.id === id);
         if (!item) return;
 
+        // Analytics: View Item
+        if (typeof analytics !== 'undefined') {
+            analytics.logEvent('view_item', {
+                item_id: id,
+                item_name: item.title,
+                item_category: item.category,
+                price: item.price
+            });
+        }
+
+        // Update URL for sharing without reload
         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
         window.history.pushState({path: newUrl}, '', newUrl);
 
@@ -494,6 +505,17 @@
                     return;
                 }
                 const phone = item.sellerPhone || '';
+
+                // Analytics: Contact Seller
+                if (typeof analytics !== 'undefined') {
+                    analytics.logEvent('contact_seller', {
+                        method: type,
+                        item_id: id,
+                        item_name: item.title,
+                        seller_name: item.sellerName
+                    });
+                }
+
                 if (type === 'call') {
                     window.location.href = `tel:${phone}`;
                 } else {
@@ -522,6 +544,14 @@
             text: `Check out this ${item.title} for R${item.price} on Poortjie Marketplace!`,
             url: shareUrl
         };
+
+        // Analytics: Share Item
+        if (typeof analytics !== 'undefined') {
+            analytics.logEvent('share', {
+                content_type: 'market_item',
+                item_id: item.id
+            });
+        }
 
         try {
             if (navigator.share) {
