@@ -3,13 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poortjie Marketplace</title>
+    <title>Poortjie Marketplace | Buy & Sell Local</title>
     <meta name="author" content="Musa Mgijima">
     <meta name="description"
-          content="Buy and sell items within the Poortjie community. From electronics to clothing and more.">
+          content="Connect with the Poortjie community. Buy and sell electronics, vehicles, property, and clothing. The best local Kasi marketplace.">
     <meta name="keywords"
-          content="Poortjie, Marketplace, Buy and Sell, Kasi economy, local trade">
+          content="Poortjie, Marketplace, Buy and Sell, Kasi economy, local trade, South Africa, Township deals">
     <meta name="theme-color" content="#22c55e">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://poortjie.services/market.html">
+    <meta property="og:title" content="Poortjie Marketplace | Buy & Sell Local">
+    <meta property="og:description" content="Find the best deals in Poortjie. Post your items for free and reach your local community.">
+    <meta property="og:image" content="https://poortjie.services/favicon/web-app-manifest-512x512.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://poortjie.services/market.html">
+    <meta property="twitter:title" content="Poortjie Marketplace | Buy & Sell Local">
+    <meta property="twitter:description" content="Find the best deals in Poortjie. Post your items for free and reach your local community.">
+    <meta property="twitter:image" content="https://poortjie.services/favicon/web-app-manifest-512x512.png">
 
     <link rel="icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
     <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
@@ -142,8 +156,11 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
 
-        <div class="w-full md:w-1/2 bg-black flex items-center justify-center min-h-[300px]">
+        <div class="w-full md:w-1/2 bg-black flex items-center justify-center min-h-[300px] relative">
             <img id="modal-image" src="" alt="" class="max-w-full max-h-[70vh] object-contain">
+            <button id="modal-share-btn" class="absolute bottom-4 right-4 p-3 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full transition shadow-lg" title="Share Item">
+                <i class="fas fa-share-nodes"></i>
+            </button>
         </div>
 
         <div class="w-full md:w-1/2 p-6 md:p-8 flex flex-col">
@@ -152,12 +169,12 @@
             </div>
 
             <div id="public-actions" class="mt-auto pt-8 flex gap-3">
-                <a id="modal-whatsapp" href="#" target="_blank" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-center hover:bg-green-700 transition flex items-center justify-center gap-2">
+                <button id="modal-whatsapp" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-xl text-center hover:bg-green-700 transition flex items-center justify-center gap-2">
                     <i class="fab fa-whatsapp"></i> Message Seller
-                </a>
-                <a id="modal-call" href="#" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl text-center hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                </button>
+                <button id="modal-call" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl text-center hover:bg-blue-700 transition flex items-center justify-center gap-2">
                     <i class="fas fa-phone"></i> Call
-                </a>
+                </button>
             </div>
 
             <div id="owner-actions" class="hidden mt-auto pt-8 flex flex-col gap-3">
@@ -173,6 +190,21 @@
                     <i class="fas fa-trash"></i> Delete Listing
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Alert Modal -->
+<div id="login-alert-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+        <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fas fa-user-lock"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">Login Required</h3>
+        <p class="opacity-70 mb-6">You need to be logged in to contact sellers or post items.</p>
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('login-alert-modal').classList.add('hidden')" class="flex-1 py-3 border border-gray-200 dark:border-slate-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
+            <button onclick="window.location.href='authentication/login.html'" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition shadow-lg">Login Now</button>
         </div>
     </div>
 </div>
@@ -268,19 +300,23 @@
     }
 
     async function fetchItems() {
-        // Fetch everything, local filter for statuses
         db.collection('poortjie').doc('market').collection('items')
             .onSnapshot(snapshot => {
-                allItems = [];
-                snapshot.forEach(doc => {
-                    allItems.push({ id: doc.id, ...doc.data() });
-                });
+                allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 allItems.sort((a, b) => {
                     const dateA = a.createdAt?.toDate() || new Date(0);
                     const dateB = b.createdAt?.toDate() || new Date(0);
                     return dateB - dateA;
                 });
+
+                // Check for direct link
+                const urlParams = new URLSearchParams(window.location.search);
+                const itemId = urlParams.get('id');
+                if (itemId) {
+                    const found = allItems.find(i => i.id === itemId);
+                    if (found) openItemModal(itemId);
+                }
 
                 filterItems();
             }, error => {
@@ -294,6 +330,7 @@
     const modalContent = document.getElementById('modal-content');
     const modalWhatsApp = document.getElementById('modal-whatsapp');
     const modalCall = document.getElementById('modal-call');
+    const modalShare = document.getElementById('modal-share-btn');
     const publicActions = document.getElementById('public-actions');
     const ownerActions = document.getElementById('owner-actions');
     const deleteBtn = document.getElementById('delete-item-btn');
@@ -303,6 +340,10 @@
     window.openItemModal = (id) => {
         const item = allItems.find(i => i.id === id);
         if (!item) return;
+
+        // Update URL for sharing without reload
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+        window.history.pushState({path: newUrl}, '', newUrl);
 
         const currentUser = firebase.auth().currentUser;
         const isOwner = currentUser && item.userId === currentUser.uid;
@@ -342,6 +383,8 @@
             </div>
         `;
 
+        modalShare.onclick = () => shareItem(item);
+
         if (isOwner) {
             publicActions.classList.add('hidden');
             ownerActions.classList.remove('hidden');
@@ -357,11 +400,22 @@
             publicActions.classList.remove('hidden');
             ownerActions.classList.add('hidden');
 
-            const phone = item.sellerPhone || '';
-            modalCall.href = `tel:${phone}`;
-            modalWhatsApp.href = `https://wa.me/27${phone.substring(1)}?text=Hi, I am interested in your ${item.title} on Poortjie Marketplace.`;
+            const handleContact = (type) => {
+                if (!currentUser) {
+                    document.getElementById('login-alert-modal').classList.remove('hidden');
+                    return;
+                }
+                const phone = item.sellerPhone || '';
+                if (type === 'call') {
+                    window.location.href = `tel:${phone}`;
+                } else {
+                    window.open(`https://wa.me/27${phone.substring(1)}?text=Hi, I am interested in your ${item.title} on Poortjie Marketplace.`, '_blank');
+                }
+            };
 
-            // Disable actions if sold
+            modalCall.onclick = () => handleContact('call');
+            modalWhatsApp.onclick = () => handleContact('whatsapp');
+
             if (item.status === 'sold') {
                 publicActions.classList.add('opacity-50', 'pointer-events-none');
             } else {
@@ -372,6 +426,25 @@
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     };
+
+    async function shareItem(item) {
+        const shareData = {
+            title: `Poortjie Marketplace: ${item.title}`,
+            text: `Check out this ${item.title} for R${item.price} on Poortjie Marketplace!`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                alert("Link copied to clipboard!");
+            }
+        } catch (err) {
+            console.error("Share failed", err);
+        }
+    }
 
     async function updateItemStatus(id, newStatus) {
         try {
@@ -398,6 +471,9 @@
     window.closeItemModal = () => {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
+        // Remove item ID from URL
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.pushState({path: newUrl}, '', newUrl);
     };
 
     function formatRelativeTime(date) {
