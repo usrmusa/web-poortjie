@@ -139,6 +139,15 @@
     const userInitial = document.getElementById('user-initial');
     const userAvatar = document.getElementById('user-avatar');
     const loader = document.getElementById('loader-overlay');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let hasActiveBooking = false;
+    const ACTIVE_STATUSES = [
+        'PENDING_OWNER_REVIEW',
+        'PENDING_USER_CONFIRMATION',
+        'READY_FOR_ASSIGNMENT',
+        'ASSIGNED_TO_DRIVER'
+    ];
 
     const PATHS = {
         ROOT_COLLECTION: "kasilayn",
@@ -181,12 +190,33 @@
                 // Fix: Remove loading opacity once data is received
                 bookingsList.classList.remove('opacity-50');
 
+                hasActiveBooking = false;
+                snapshot.forEach(doc => {
+                    const b = doc.data();
+                    if (ACTIVE_STATUSES.includes(b.status || 'PENDING_OWNER_REVIEW')) {
+                        hasActiveBooking = true;
+                    }
+                });
+
+                updateFormState();
                 renderBookings(snapshot);
             }, error => {
                 console.error(error);
                 bookingsList.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold uppercase tracking-widest">Error loading bookings</div>`;
                 if (loader) loader.remove();
             });
+    }
+
+    function updateFormState() {
+        if (hasActiveBooking) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            submitBtn.innerHTML = `<i class="fas fa-clock"></i> <span>Request in Progress</span>`;
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i> <span>Book Now</span>`;
+        }
     }
 
     function renderBookings(snapshot) {
@@ -229,7 +259,7 @@
     bookingForm.onsubmit = async (e) => {
         e.preventDefault();
         const user = firebase.auth().currentUser;
-        if (!user) return;
+        if (!user || hasActiveBooking) return;
 
         const pickupInput = document.getElementById('pickup-input');
         const destinationInput = document.getElementById('destination-input');
@@ -239,9 +269,8 @@
 
         if (!pickupVal || !destinationVal) return;
 
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
 
         try {
             // Consistent name retrieval
@@ -264,9 +293,10 @@
             bookingForm.reset();
         } catch (error) {
             alert("Error: " + error.message);
+            updateFormState(); // Restore button state if error occurred
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fas fa-paper-plane"></i> <span>Book Now</span>`;
+            // No need to reset button here if success, because subscribeToBookings will handle it
+            // via updateFormState when the new booking appears in the snapshot.
         }
     };
 </script>
