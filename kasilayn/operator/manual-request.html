@@ -380,8 +380,7 @@
                         longitude: 0.0
                     },
                     price: price,
-                    // Logic: If driver selected, status is ASSIGNED_TO_DRIVER. Otherwise, PENDING_OWNER_REVIEW.
-                    status: selectedDriverId ? 'ASSIGNED_TO_DRIVER' : 'PENDING_OWNER_REVIEW',
+                    status: selectedDriverId ? 'ASSIGNED_TO_DRIVER' : 'READY_FOR_ASSIGNMENT',
                     assignedDriverId: selectedDriverId || null,
                     assignedDriverName: selectedDriver ? (selectedDriver.displayName || "Driver") : null,
                     createdAt: now,
