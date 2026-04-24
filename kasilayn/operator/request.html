@@ -168,9 +168,16 @@
             <p id="header-user-bio" class="text-[7px] sm:text-[8px] font-bold opacity-40 mt-1 leading-none text-slate-500 dark:text-slate-400 truncate max-w-[150px] sm:max-w-none"></p>
         </a>
 
-        <a href="../../authentication/profile.html" id="user-avatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-700 dark:text-green-400 font-bold overflow-hidden">
-            <span id="user-initial" class="text-xs sm:text-sm">?</span>
-        </a>
+        <div class="flex items-center gap-3">
+             <!-- Manual Request Button (Visible only to owner) -->
+            <a id="nav-manual-booking" href="manual-request.html" class="hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-700 dark:text-blue-400 transition hover:bg-blue-200 dark:hover:bg-blue-900/50">
+                <i class="fas fa-plus text-xs"></i>
+            </a>
+
+            <a href="../../authentication/profile.html" id="user-avatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-700 dark:text-green-400 font-bold overflow-hidden">
+                <span id="user-initial" class="text-xs sm:text-sm">?</span>
+            </a>
+        </div>
     </div>
 </header>
 
@@ -186,6 +193,12 @@
         <h1 class="text-4xl sm:text-5xl font-black tracking-tight">Poortjie<br><span class="text-green-600">Requests</span></h1>
         <div class="mt-3 sm:mt-4 inline-block bg-green-500/10 text-green-600 dark:text-green-400 px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em]">
             TukTuk Operator
+        </div>
+        <div id="owner-manage-container" class="mt-6 hidden">
+             <a href="manual-request.html" class="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] rounded-2xl border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
+                <i class="fas fa-tasks"></i>
+                Manage Requests
+            </a>
         </div>
     </div>
 
@@ -290,6 +303,8 @@
     const submitBtn = document.getElementById('submit-btn');
     const detailsModal = document.getElementById('details-modal');
     const modalActions = document.getElementById('modal-actions');
+    const navManualBooking = document.getElementById('nav-manual-booking');
+    const ownerManageContainer = document.getElementById('owner-manage-container');
 
     let hasActiveBooking = false;
     let allBookings = [];
@@ -347,6 +362,13 @@
                 }
                 if (currentUserData.bio) {
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
+                }
+
+                // Role detection logic (matching AppNavigation.kt)
+                const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
+                if (isOwner) {
+                    navManualBooking.classList.remove('hidden');
+                    ownerManageContainer.classList.remove('hidden');
                 }
             }
         } catch (e) {
@@ -477,7 +499,11 @@
         document.getElementById('modal-pickup').textContent = trip.pickupLocation?.name || 'Unknown';
         document.getElementById('modal-destination').textContent = trip.destinationLocation?.name || 'Unknown';
         document.getElementById('modal-driver').textContent = trip.assignedDriverName || 'Awaiting Driver';
-        document.getElementById('modal-driver-id').textContent = trip.assignedDriverId ? `UID: ${trip.assignedDriverId}` : '';
+
+        // Hide UID unless current user is an owner
+        const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
+        document.getElementById('modal-driver-id').textContent = (isOwner && trip.assignedDriverId) ? `UID: ${trip.assignedDriverId}` : '';
+
         document.getElementById('modal-passengers').textContent = trip.passengers || '1';
 
         const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';

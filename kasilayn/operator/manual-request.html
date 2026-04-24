@@ -113,6 +113,10 @@
                     <p id="modal-time" class="text-xs sm:text-sm font-bold"></p>
                 </div>
                 <div>
+                    <p class="text-[9px] sm:text-[10px] font-black uppercase opacity-40">Passengers</p>
+                    <p id="modal-passengers" class="text-xs sm:text-sm font-bold"></p>
+                </div>
+                <div class="sm:col-span-2">
                     <p class="text-[9px] sm:text-[10px] font-black uppercase opacity-40">Reason</p>
                     <p id="modal-reason" class="text-xs sm:text-sm font-bold"></p>
                 </div>
@@ -401,6 +405,15 @@
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
+
+                // Security Check: Only owners can access this page
+                const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
+                if (!isOwner) {
+                    alert("Unauthorized access. Owners only.");
+                    window.location.href = 'request.html';
+                    return;
+                }
+
                 if (currentUserData.displayName) {
                     name = currentUserData.displayName;
                     document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
@@ -412,6 +425,10 @@
                 if (currentUserData.bio) {
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
                 }
+            } else {
+                // If user doc doesn't exist, they can't be an owner
+                 window.location.href = 'request.html';
+                 return;
             }
         } catch (e) {
             console.error("Error fetching user data:", e);
@@ -635,6 +652,7 @@
 
         const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
         document.getElementById('modal-time').textContent = bookedAt;
+        document.getElementById('modal-passengers').textContent = trip.passengers || '1';
         document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
 
         const callBtn = document.getElementById('modal-call-btn');
