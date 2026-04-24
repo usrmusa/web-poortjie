@@ -167,6 +167,11 @@
         </div>
 
         <div class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row gap-4">
+            <a id="modal-call-driver-btn" href="#"
+               class="hidden flex-grow py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition shadow-xl shadow-green-500/20">
+                <i class="fas fa-phone"></i>
+                Call Driver
+            </a>
             <a id="modal-call-btn" href="#"
                class="flex-grow py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition shadow-xl shadow-blue-500/20">
                 <i class="fas fa-phone"></i>
@@ -422,7 +427,7 @@
                 if (currentUserData.photoUrl) {
                     document.getElementById('user-avatar').innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover">`;
                 }
-                if (currentUserData.bio) {
+                if (currentUserData.phone) {
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
                 }
             } else {
@@ -633,7 +638,7 @@
     filterDriver.onchange = renderHistory;
     filterDate.onchange = renderHistory;
 
-    window.showBookingDetails = (bookingId) => {
+    window.showBookingDetails = async (bookingId) => {
         const trip = allBookings.find(b => b.id === bookingId);
         if (!trip) return;
 
@@ -662,6 +667,32 @@
         } else {
             callBtn.href = "#";
             callBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        // Call Driver Button Logic (Owners Only)
+        const callDriverBtn = document.getElementById('modal-call-driver-btn');
+        if (trip.status === 'ASSIGNED_TO_DRIVER' && trip.assignedDriverId) {
+             callDriverBtn.classList.remove('hidden');
+             callDriverBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Fetching...</span>`;
+             callDriverBtn.href = "#";
+             callDriverBtn.classList.add('opacity-50', 'pointer-events-none');
+
+             try {
+                 const driverDoc = await db.collection('users').doc(trip.assignedDriverId).get();
+                 if (driverDoc.exists && driverDoc.data().phone) {
+                     const phone = driverDoc.data().phone;
+                     callDriverBtn.href = `tel:${phone}`;
+                     callDriverBtn.innerHTML = `<i class="fas fa-phone"></i> <span>Call Driver</span>`;
+                     callDriverBtn.classList.remove('opacity-50', 'pointer-events-none');
+                 } else {
+                     callDriverBtn.classList.add('hidden');
+                 }
+             } catch (e) {
+                 console.error("Error fetching driver phone:", e);
+                 callDriverBtn.classList.add('hidden');
+             }
+        } else {
+            callDriverBtn.classList.add('hidden');
         }
 
         const operatorActions = document.getElementById('modal-operator-actions');
