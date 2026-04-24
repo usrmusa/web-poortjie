@@ -30,6 +30,7 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 10px; }
+        .pac-container { z-index: 9999 !important; border-radius: 1rem; border: none; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-top: 5px; }
     </style>
 </head>
 
@@ -213,44 +214,47 @@
     <div class="bg-white dark:bg-slate-800 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
         <h2 class="text-xl sm:text-2xl font-black mb-6">Request a Ride</h2>
 
-        <form id="booking-form" class="space-y-4 sm:space-y-5">
+        <form id="booking-form" class="space-y-4 sm:space-y-5" novalidate>
 
-            <div>
+            <div class="form-group">
                 <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
                     Pickup Location
                 </label>
                 <div class="relative">
                     <i class="fas fa-location-dot absolute left-5 top-1/2 -translate-y-1/2 text-red-500"></i>
-                    <input type="text" id="pickup-input" required placeholder="Where are you?"
-                           class="w-full pl-12 pr-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
+                    <input type="text" id="pickup-input" required placeholder="Where are you?" readonly
+                           class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
                 </div>
+                <p id="pickup-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Pickup location is required</p>
             </div>
 
-            <div>
+            <div class="form-group">
                 <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
                     Destination
                 </label>
                 <div class="relative">
                     <i class="fas fa-flag-checkered absolute left-5 top-1/2 -translate-y-1/2 text-green-500"></i>
-                    <input type="text" id="destination-input" required placeholder="Where are you going?"
-                           class="w-full pl-12 pr-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
+                    <input type="text" id="destination-input" required placeholder="Where are you going?" readonly
+                           class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
                 </div>
+                <p id="destination-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Destination is required</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div class="form-group">
                     <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
                         Phone Number
                     </label>
                     <input type="tel" id="phone-input" required placeholder="071 234 5678" maxlength="10" pattern="[0-9]{10}"
-                           class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
+                           class="w-full px-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm">
+                    <p id="phone-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please enter a valid 10-digit phone number</p>
                 </div>
-                <div>
+                <div class="form-group">
                     <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
                         Passengers
                     </label>
                     <select id="passengers-input" required
-                            class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm appearance-none">
+                            class="w-full px-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm appearance-none">
                         <option value="1">1 Passenger</option>
                         <option value="2">2 Passengers</option>
                         <option value="3">3 Passengers</option>
@@ -258,12 +262,12 @@
                 </div>
             </div>
 
-            <div>
+            <div class="form-group">
                 <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
                     Reason (Optional)
                 </label>
                 <input type="text" id="reason-input" placeholder="e.g. School Run"
-                       class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
+                       class="w-full px-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm">
             </div>
 
             <button type="submit" id="submit-btn"
@@ -288,6 +292,40 @@
 
 </main>
 
+<!-- Address Selection Modal -->
+<div id="address-selection-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-800">
+        <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 id="address-modal-title" class="text-xl font-bold">Select Location</h3>
+            <button type="button" id="close-address-selection-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="form-group">
+                <label for="modal-address" class="block mb-1 font-bold text-xs uppercase tracking-wider opacity-70">Type address</label>
+                <input type="text" id="modal-address" placeholder="Start typing address or place name..."
+                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-sm uppercase tracking-wider opacity-70">Confirm on map</h4>
+                <div id="map" class="w-full h-64 rounded-xl border-2 border-gray-100 dark:border-slate-800"></div>
+                <p class="text-[10px] text-gray-500 italic text-center">Drag pin to exact location (5km radius)</p>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50 dark:bg-slate-800/50">
+            <button type="button" id="confirm-selection" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
+                Confirm Location
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
+    &copy; 2026 Poortjie Services. Empowering poortjie economies.
+</footer>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -306,10 +344,29 @@
     const navManualBooking = document.getElementById('nav-manual-booking');
     const ownerManageContainer = document.getElementById('owner-manage-container');
 
+    const pickupInput = document.getElementById('pickup-input');
+    const destinationInput = document.getElementById('destination-input');
+    const phoneInput = document.getElementById('phone-input');
+    const reasonInput = document.getElementById('reason-input');
+    const passengersInput = document.getElementById('passengers-input');
+
+    const addressSelectionModal = document.getElementById('address-selection-modal');
+    const closeAddressSelectionModalBtn = document.getElementById('close-address-selection-modal');
+    const modalAddressInput = document.getElementById('modal-address');
+    const confirmSelectionBtn = document.getElementById('confirm-selection');
+    const addressModalTitle = document.getElementById('address-modal-title');
+
     let hasActiveBooking = false;
     let allBookings = [];
     let currentModalBookingId = null;
     let currentUserData = null;
+    let map, marker;
+    let currentTargetInput = null; // 'pickup' or 'destination'
+
+    const locations = {
+        pickup: { name: '', lat: null, lng: null },
+        destination: { name: '', lat: null, lng: null }
+    };
 
     const ACTIVE_STATUSES = [
         'PENDING_OWNER_REVIEW',
@@ -358,7 +415,7 @@
                     userAvatar.innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover">`;
                 }
                 if (currentUserData.phone) {
-                    document.getElementById('phone-input').value = currentUserData.phone;
+                    phoneInput.value = currentUserData.phone;
                 }
                 if (currentUserData.bio) {
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
@@ -577,24 +634,173 @@
         }
     };
 
+    // Address selection logic
+    function openAddressModal(target) {
+        currentTargetInput = target;
+        addressModalTitle.textContent = target === 'pickup' ? 'Select Pickup Location' : 'Select Destination';
+        addressSelectionModal.classList.remove('hidden');
+        modalAddressInput.value = locations[target].name || '';
+
+        if (!map) {
+            initMap();
+        } else {
+            google.maps.event.trigger(map, 'resize');
+            const pos = {
+                lat: locations[target].lat || -26.456323807221267,
+                lng: locations[target].lng || 27.77044633885547
+            };
+            map.setCenter(pos);
+            marker.setPosition(pos);
+        }
+    }
+
+    pickupInput.onclick = () => openAddressModal('pickup');
+    destinationInput.onclick = () => openAddressModal('destination');
+
+    closeAddressSelectionModalBtn.onclick = () => addressSelectionModal.classList.add('hidden');
+
+    confirmSelectionBtn.onclick = () => {
+        const addr = modalAddressInput.value.trim();
+        const target = currentTargetInput;
+        if (addr) {
+            locations[target].name = addr;
+            const inputEl = target === 'pickup' ? pickupInput : destinationInput;
+            inputEl.value = addr;
+
+            // Hide error if it was showing
+            document.getElementById(target + '-error').classList.add('hidden');
+        }
+        addressSelectionModal.classList.add('hidden');
+        validateForm();
+    };
+
+    function initMap() {
+        const poortjieCenter = {lat: -26.456323807221267, lng: 27.77044633885547};
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: poortjieCenter,
+            zoom: 14,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            styles: [{"featureType": "poi", "stylers": [{"visibility": "off"}]}]
+        });
+
+        new google.maps.Circle({
+            strokeColor: "#22c55e",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#22c55e",
+            fillOpacity: 0.1,
+            map: map,
+            center: poortjieCenter,
+            radius: 5000,
+            clickable: false
+        });
+
+        marker = new google.maps.Marker({
+            position: poortjieCenter,
+            map: map,
+            draggable: true,
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+        });
+
+        marker.addListener("dragend", () => {
+            const pos = marker.getPosition();
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(pos, poortjieCenter);
+            if (distance > 5000) {
+                const heading = google.maps.geometry.spherical.computeHeading(poortjieCenter, pos);
+                const newPos = google.maps.geometry.spherical.computeOffset(poortjieCenter, 4990, heading);
+                marker.setPosition(newPos);
+                updateSelectedLocation(newPos);
+            } else {
+                updateSelectedLocation(pos);
+            }
+        });
+
+        map.addListener("click", (e) => {
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(e.latLng, poortjieCenter);
+            if (distance <= 5000) {
+                marker.setPosition(e.latLng);
+                updateSelectedLocation(e.latLng);
+            }
+        });
+    }
+
+    function updateSelectedLocation(pos) {
+        locations[currentTargetInput].lat = pos.lat();
+        locations[currentTargetInput].lng = pos.lng();
+        if (!modalAddressInput.value.trim()) {
+            modalAddressInput.value = "Selected Pin";
+        }
+    }
+
+    function initAutocomplete() {
+        const poortjieCenter = {lat: -26.456323807221267, lng: 27.77044633885547};
+        const circle = new google.maps.Circle({ center: poortjieCenter, radius: 5000 });
+        const autocomplete = new google.maps.places.Autocomplete(modalAddressInput, {
+            bounds: circle.getBounds(),
+            strictBounds: true,
+            componentRestrictions: {country: "za"},
+            fields: ["formatted_address", "geometry"],
+            // Removed types: ["address"] to allow businesses/malls/POIs
+        });
+
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                modalAddressInput.value = place.formatted_address;
+                if (place.geometry && place.geometry.location) {
+                    locations[currentTargetInput].lat = place.geometry.location.lat();
+                    locations[currentTargetInput].lng = place.geometry.location.lng();
+                    if (map && marker) {
+                        marker.setPosition(place.geometry.location);
+                        map.setCenter(place.geometry.location);
+                    }
+                }
+            }
+        });
+    }
+
+    function validateForm(showErrors = false) {
+        const isPhoneValid = /^\d{10}$/.test(phoneInput.value.trim());
+        const isPickupValid = pickupInput.value.trim().length > 0;
+        const isDestinationValid = destinationInput.value.trim().length > 0;
+
+        if (showErrors) {
+            document.getElementById('phone-error').classList.toggle('hidden', isPhoneValid);
+            document.getElementById('pickup-error').classList.toggle('hidden', isPickupValid);
+            document.getElementById('destination-error').classList.toggle('hidden', isDestinationValid);
+        } else {
+             if (isPhoneValid) document.getElementById('phone-error').classList.add('hidden');
+             if (isPickupValid) document.getElementById('pickup-error').classList.add('hidden');
+             if (isDestinationValid) document.getElementById('destination-error').classList.add('hidden');
+        }
+
+        return isPhoneValid && isPickupValid && isDestinationValid;
+    }
+
+    phoneInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+        validateForm(false);
+    });
+
     bookingForm.onsubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm(true)) {
+            const firstError = document.querySelector('p[id$="-error"]:not(.hidden)');
+            if (firstError) firstError.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
         const user = firebase.auth().currentUser;
         if (!user || hasActiveBooking) return;
-
-        const pickupInput = document.getElementById('pickup-input');
-        const destinationInput = document.getElementById('destination-input');
-        const phoneInput = document.getElementById('phone-input');
-        const reasonInput = document.getElementById('reason-input');
-        const passengersInput = document.getElementById('passengers-input');
 
         const pickupVal = pickupInput.value.trim();
         const destinationVal = destinationInput.value.trim();
         const phoneVal = phoneInput.value.trim();
         const reasonVal = reasonInput.value.trim();
         const passengersVal = parseInt(passengersInput.value) || 1;
-
-        if (!pickupVal || !destinationVal || !phoneVal) return;
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
@@ -609,8 +815,16 @@
                 userPhone: phoneVal,
                 reason: reasonVal,
                 passengers: passengersVal,
-                pickupLocation: { name: pickupVal, latitude: 0.0, longitude: 0.0 },
-                destinationLocation: { name: destinationVal, latitude: 0.0, longitude: 0.0 },
+                pickupLocation: {
+                    name: pickupVal,
+                    latitude: locations.pickup.lat || 0.0,
+                    longitude: locations.pickup.lng || 0.0
+                },
+                destinationLocation: {
+                    name: destinationVal,
+                    latitude: locations.destination.lat || 0.0,
+                    longitude: locations.destination.lng || 0.0
+                },
                 status: 'PENDING_OWNER_REVIEW',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -621,14 +835,14 @@
             passengersInput.value = "1";
             // Try to keep the phone number after reset if it was pre-filled or typed
             phoneInput.value = phoneVal;
+            locations.pickup = { name: '', lat: null, lng: null };
+            locations.destination = { name: '', lat: null, lng: null };
         } catch (error) {
             alert("Error: " + error.message);
             updateFormState(); // Restore button state if error occurred
-        } finally {
-            // No need to reset button here if success, because subscribeToBookings will handle it
         }
     };
 </script>
-
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANCpYHeLyWkgVtWL06xpI7XsP08xu9GPA&loading=async&libraries=places,geometry&callback=initAutocomplete"></script>
 </body>
 </html>
