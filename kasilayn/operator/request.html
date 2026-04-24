@@ -41,6 +41,100 @@
     <p class="text-xs font-black uppercase tracking-widest animate-pulse">Connecting to Kasilayn...</p>
 </div>
 
+<!-- Details Modal -->
+<div id="details-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <div>
+                <h3 class="text-2xl font-black tracking-tight">Booking Details</h3>
+                <p id="modal-booking-id" class="text-[9px] font-black uppercase tracking-widest opacity-30 mt-1"></p>
+            </div>
+            <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-8 overflow-y-auto custom-scrollbar space-y-8">
+            <!-- Status & Price Badge -->
+            <div class="flex justify-between items-center">
+                <span id="modal-status" class="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white"></span>
+                <span id="modal-price" class="text-2xl font-black text-green-600"></span>
+            </div>
+
+            <!-- Route Info -->
+            <div class="space-y-4">
+                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Route</h4>
+                <div class="space-y-3">
+                    <div class="flex gap-4">
+                        <i class="fas fa-location-dot text-red-500 mt-1"></i>
+                        <div>
+                            <p class="text-[10px] font-black uppercase opacity-40">Pickup</p>
+                            <p id="modal-pickup" class="font-bold"></p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <i class="fas fa-flag-checkered text-green-500 mt-1"></i>
+                        <div>
+                            <p class="text-[10px] font-black uppercase opacity-40">Destination</p>
+                            <p id="modal-destination" class="font-bold"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment Info -->
+            <div class="space-y-4">
+                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Assignment</h4>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xl">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div>
+                        <p id="modal-driver" class="font-black"></p>
+                        <p id="modal-driver-id" class="text-[10px] font-bold opacity-30"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata Info -->
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <div>
+                    <p class="text-[10px] font-black uppercase opacity-40">Booked At</p>
+                    <p id="modal-time" class="text-sm font-bold"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black uppercase opacity-40">Reason</p>
+                    <p id="modal-reason" class="text-sm font-bold"></p>
+                </div>
+            </div>
+
+            <!-- Timing Info -->
+            <div id="modal-timing-section" class="pt-4 border-t border-slate-100 dark:border-slate-700 hidden">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase opacity-40">Assigned At</p>
+                        <p id="modal-assigned-time" class="text-xs font-bold"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase opacity-40">Completed At</p>
+                        <p id="modal-completed-time" class="text-xs font-bold"></p>
+                    </div>
+                </div>
+                <div id="modal-duration-container" class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-100 dark:border-green-800 hidden">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-green-600 dark:text-green-400 mb-1 text-center">Trip Duration</p>
+                    <p id="modal-duration" class="text-xl font-black text-center text-green-700 dark:text-green-300"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 bg-slate-50 dark:bg-slate-900/50">
+            <button onclick="closeModal()" class="w-full py-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-2xl font-black uppercase text-xs tracking-widest transition">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Header -->
 <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
     <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -105,6 +199,23 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
+                        Phone Number
+                    </label>
+                    <input type="tel" id="phone-input" required placeholder="071 234 5678"
+                           class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1">
+                        Reason (Optional)
+                    </label>
+                    <input type="text" id="reason-input" placeholder="e.g. School Run"
+                           class="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
+                </div>
+            </div>
+
             <button type="submit" id="submit-btn"
                     class="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-green-500/20 transition-all transform active:scale-95 flex items-center justify-center gap-2 mt-2">
                 <i class="fas fa-paper-plane"></i>
@@ -140,8 +251,11 @@
     const userAvatar = document.getElementById('user-avatar');
     const loader = document.getElementById('loader-overlay');
     const submitBtn = document.getElementById('submit-btn');
+    const detailsModal = document.getElementById('details-modal');
 
     let hasActiveBooking = false;
+    let allBookings = [];
+
     const ACTIVE_STATUSES = [
         'PENDING_OWNER_REVIEW',
         'PENDING_USER_CONFIRMATION',
@@ -173,6 +287,14 @@
             userAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
         }
 
+        // Try to pre-fill phone if available in user doc
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().phoneNumber) {
+                document.getElementById('phone-input').value = userDoc.data().phoneNumber;
+            }
+        } catch (e) {}
+
         subscribeToBookings(user.uid);
     });
 
@@ -190,16 +312,17 @@
                 // Fix: Remove loading opacity once data is received
                 bookingsList.classList.remove('opacity-50');
 
+                allBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
                 hasActiveBooking = false;
-                snapshot.forEach(doc => {
-                    const b = doc.data();
+                allBookings.forEach(b => {
                     if (ACTIVE_STATUSES.includes(b.status || 'PENDING_OWNER_REVIEW')) {
                         hasActiveBooking = true;
                     }
                 });
 
                 updateFormState();
-                renderBookings(snapshot);
+                renderBookings();
             }, error => {
                 console.error(error);
                 bookingsList.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold uppercase tracking-widest">Error loading bookings</div>`;
@@ -219,8 +342,21 @@
         }
     }
 
-    function renderBookings(snapshot) {
-        if (snapshot.empty) {
+    function getStatusColor(status) {
+        switch (status) {
+            case 'PENDING_OWNER_REVIEW': return 'bg-yellow-500';
+            case 'PENDING_USER_CONFIRMATION': return 'bg-orange-500';
+            case 'READY_FOR_ASSIGNMENT': return 'bg-amber-500';
+            case 'ASSIGNED_TO_DRIVER': return 'bg-blue-500';
+            case 'COMPLETED': return 'bg-emerald-600';
+            case 'CANCELLED': return 'bg-red-500';
+            case 'REJECTED_BY_USER': return 'bg-red-700';
+            default: return 'bg-slate-400';
+        }
+    }
+
+    function renderBookings() {
+        if (allBookings.length === 0) {
             bookingsList.innerHTML = `
                 <div class="py-10 text-center opacity-30">
                     <i class="fas fa-taxi text-4xl mb-4"></i>
@@ -231,10 +367,10 @@
         }
 
         bookingsList.innerHTML = '';
-        snapshot.forEach(doc => {
-            const b = doc.data();
+        allBookings.forEach(b => {
             const div = document.createElement('div');
-            div.className = "p-5 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between text-left";
+            div.className = "p-5 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between text-left cursor-pointer hover:border-green-500/50 transition-all";
+            div.onclick = () => showBookingDetails(b.id);
 
             const status = b.status || 'PENDING_OWNER_REVIEW';
 
@@ -245,7 +381,6 @@
                         <span class="opacity-20 mx-1">→</span>
                         <span class="text-green-600">${b.destinationLocation?.name || 'Unknown'}</span>
                     </p>
-                    <!-- Fix: Increased opacity from 40 to 70 for better visibility -->
                     <p class="text-[9px] font-black uppercase tracking-widest opacity-70">${status.replace(/_/g, ' ')}</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
@@ -256,6 +391,55 @@
         });
     }
 
+    window.showBookingDetails = (bookingId) => {
+        const trip = allBookings.find(b => b.id === bookingId);
+        if (!trip) return;
+
+        document.getElementById('modal-booking-id').textContent = `ID: ${trip.id}`;
+        document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
+        document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
+        document.getElementById('modal-price').textContent = trip.price ? `R ${trip.price.toFixed(2)}` : 'Awaiting Price';
+        document.getElementById('modal-pickup').textContent = trip.pickupLocation?.name || 'Unknown';
+        document.getElementById('modal-destination').textContent = trip.destinationLocation?.name || 'Unknown';
+        document.getElementById('modal-driver').textContent = trip.assignedDriverName || 'Awaiting Driver';
+        document.getElementById('modal-driver-id').textContent = trip.assignedDriverId ? `UID: ${trip.assignedDriverId}` : '';
+
+        const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
+        document.getElementById('modal-time').textContent = bookedAt;
+        document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
+
+        // Timing Info
+        const timingSection = document.getElementById('modal-timing-section');
+        const assignedTime = document.getElementById('modal-assigned-time');
+        const completedTime = document.getElementById('modal-completed-time');
+        const durationContainer = document.getElementById('modal-duration-container');
+        const durationText = document.getElementById('modal-duration');
+
+        if (trip.assignedAt || trip.completedAt) {
+            timingSection.classList.remove('hidden');
+            assignedTime.textContent = trip.assignedAt ? new Date(trip.assignedAt.seconds * 1000).toLocaleString() : '---';
+            completedTime.textContent = trip.completedAt ? new Date(trip.completedAt.seconds * 1000).toLocaleString() : '---';
+
+            if (trip.assignedAt && trip.completedAt) {
+                const diffMs = (trip.completedAt.seconds - trip.assignedAt.seconds) * 1000;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffSecs = Math.floor((diffMs % 60000) / 1000);
+                durationText.textContent = `${diffMins}m ${diffSecs}s`;
+                durationContainer.classList.remove('hidden');
+            } else {
+                durationContainer.classList.add('hidden');
+            }
+        } else {
+            timingSection.classList.add('hidden');
+        }
+
+        detailsModal.classList.remove('hidden');
+    };
+
+    window.closeModal = () => {
+        detailsModal.classList.add('hidden');
+    };
+
     bookingForm.onsubmit = async (e) => {
         e.preventDefault();
         const user = firebase.auth().currentUser;
@@ -263,11 +447,15 @@
 
         const pickupInput = document.getElementById('pickup-input');
         const destinationInput = document.getElementById('destination-input');
+        const phoneInput = document.getElementById('phone-input');
+        const reasonInput = document.getElementById('reason-input');
 
         const pickupVal = pickupInput.value.trim();
         const destinationVal = destinationInput.value.trim();
+        const phoneVal = phoneInput.value.trim();
+        const reasonVal = reasonInput.value.trim();
 
-        if (!pickupVal || !destinationVal) return;
+        if (!pickupVal || !destinationVal || !phoneVal) return;
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
@@ -283,6 +471,8 @@
             await getBookingsRef().add({
                 userId: user.uid,
                 userName: userName,
+                userPhone: phoneVal,
+                reason: reasonVal,
                 pickupLocation: { name: pickupVal, latitude: 0.0, longitude: 0.0 },
                 destinationLocation: { name: destinationVal, latitude: 0.0, longitude: 0.0 },
                 status: 'PENDING_OWNER_REVIEW',
@@ -291,12 +481,13 @@
             });
 
             bookingForm.reset();
+            // Try to keep the phone number after reset if it was pre-filled or typed
+            phoneInput.value = phoneVal;
         } catch (error) {
             alert("Error: " + error.message);
             updateFormState(); // Restore button state if error occurred
         } finally {
             // No need to reset button here if success, because subscribeToBookings will handle it
-            // via updateFormState when the new booking appears in the snapshot.
         }
     };
 </script>
