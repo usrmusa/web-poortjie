@@ -127,6 +127,18 @@
             </div>
         </div>
 
+        <!-- Action Section for User Confirmation -->
+        <div id="modal-actions" class="p-8 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 hidden">
+            <div class="flex gap-4">
+                <button onclick="declinePrice()" class="flex-1 py-4 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 border border-red-100 dark:border-red-800">
+                    Decline
+                </button>
+                <button onclick="acceptPrice()" class="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 shadow-xl shadow-green-500/20">
+                    Accept Price
+                </button>
+            </div>
+        </div>
+
         <div class="p-8 bg-slate-50 dark:bg-slate-900/50">
             <button onclick="closeModal()" class="w-full py-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-2xl font-black uppercase text-xs tracking-widest transition">
                 Close
@@ -252,9 +264,11 @@
     const loader = document.getElementById('loader-overlay');
     const submitBtn = document.getElementById('submit-btn');
     const detailsModal = document.getElementById('details-modal');
+    const modalActions = document.getElementById('modal-actions');
 
     let hasActiveBooking = false;
     let allBookings = [];
+    let currentModalBookingId = null;
 
     const ACTIVE_STATUSES = [
         'PENDING_OWNER_REVIEW',
@@ -323,6 +337,11 @@
 
                 updateFormState();
                 renderBookings();
+
+                // If modal is open, refresh its content
+                if (currentModalBookingId && !detailsModal.classList.contains('hidden')) {
+                    showBookingDetails(currentModalBookingId);
+                }
             }, error => {
                 console.error(error);
                 bookingsList.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold uppercase tracking-widest">Error loading bookings</div>`;
@@ -395,6 +414,8 @@
         const trip = allBookings.find(b => b.id === bookingId);
         if (!trip) return;
 
+        currentModalBookingId = bookingId;
+
         document.getElementById('modal-booking-id').textContent = `ID: ${trip.id}`;
         document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
         document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
@@ -407,6 +428,13 @@
         const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
         document.getElementById('modal-time').textContent = bookedAt;
         document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
+
+        // Show/Hide Accept/Decline buttons
+        if (trip.status === 'PENDING_USER_CONFIRMATION') {
+            modalActions.classList.remove('hidden');
+        } else {
+            modalActions.classList.add('hidden');
+        }
 
         // Timing Info
         const timingSection = document.getElementById('modal-timing-section');
@@ -438,6 +466,34 @@
 
     window.closeModal = () => {
         detailsModal.classList.add('hidden');
+        currentModalBookingId = null;
+    };
+
+    window.acceptPrice = async () => {
+        if (!currentModalBookingId) return;
+        try {
+            await getBookingsRef().doc(currentModalBookingId).update({
+                status: 'READY_FOR_ASSIGNMENT',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal();
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    };
+
+    window.declinePrice = async () => {
+        if (!currentModalBookingId) return;
+        if (!confirm("Are you sure you want to decline this price and cancel the request?")) return;
+        try {
+            await getBookingsRef().doc(currentModalBookingId).update({
+                status: 'REJECTED_BY_USER',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal();
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
     };
 
     bookingForm.onsubmit = async (e) => {
