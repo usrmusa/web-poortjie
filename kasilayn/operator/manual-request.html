@@ -28,6 +28,97 @@
         <p class="text-xs font-black uppercase tracking-widest animate-pulse">Initializing Panel...</p>
     </div>
 
+    <!-- Details Modal -->
+    <div id="details-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-2xl font-black tracking-tight">Trip Details</h3>
+                    <p id="modal-booking-id" class="text-[9px] font-black uppercase tracking-widest opacity-30 mt-1"></p>
+                </div>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-8 overflow-y-auto custom-scrollbar space-y-8">
+                <!-- Status & Price Badge -->
+                <div class="flex justify-between items-center">
+                    <span id="modal-status" class="px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white"></span>
+                    <span id="modal-price" class="text-2xl font-black text-green-600"></span>
+                </div>
+
+                <!-- Requester Info -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Requester</h4>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xl">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <p id="modal-name" class="font-black text-lg"></p>
+                            <p id="modal-phone" class="text-sm font-bold opacity-50"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Info -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Route</h4>
+                    <div class="space-y-3">
+                        <div class="flex gap-4">
+                            <i class="fas fa-location-dot text-red-500 mt-1"></i>
+                            <div>
+                                <p class="text-[10px] font-black uppercase opacity-40">Pickup</p>
+                                <p id="modal-pickup" class="font-bold"></p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <i class="fas fa-flag-checkered text-green-500 mt-1"></i>
+                            <div>
+                                <p class="text-[10px] font-black uppercase opacity-40">Destination</p>
+                                <p id="modal-destination" class="font-bold"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment Info -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Assignment</h4>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xl">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <div>
+                            <p id="modal-driver" class="font-black"></p>
+                            <p id="modal-driver-id" class="text-[10px] font-bold opacity-30"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metadata Info -->
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <div>
+                        <p class="text-[10px] font-black uppercase opacity-40">Booked At</p>
+                        <p id="modal-time" class="text-sm font-bold"></p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase opacity-40">Reason</p>
+                        <p id="modal-reason" class="text-sm font-bold"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 bg-slate-50 dark:bg-slate-900/50 flex gap-4">
+                <a id="modal-call-btn" href="#" class="flex-grow py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition shadow-xl shadow-blue-500/20">
+                    <i class="fas fa-phone"></i>
+                    Call Requester
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
         <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -183,6 +274,9 @@
         const filterDriver = document.getElementById('filter-driver');
         const filterDate = document.getElementById('filter-date');
 
+        // Modal elements
+        const detailsModal = document.getElementById('details-modal');
+
         let drivers = [];
         let allBookings = [];
 
@@ -241,6 +335,9 @@
                     filterOpt.textContent = driver.displayName || 'Unnamed Driver';
                     filterDriver.appendChild(filterOpt);
                 });
+
+                // Re-render history if drivers load late to populate any assignment selects
+                if (allBookings.length > 0) renderHistory();
             } catch (e) {
                 console.error("Error loading drivers:", e);
             }
@@ -256,14 +353,37 @@
                 });
         }
 
+        // Global assign driver function
+        window.assignDriver = async (e, bookingId, driverId) => {
+            e.stopPropagation(); // Prevent modal from opening
+            if (!driverId) return;
+            const driver = drivers.find(d => d.id === driverId);
+            if (!driver) return;
+
+            if (!confirm(`Assign ${driver.displayName || 'this driver'} to this trip?`)) return;
+
+            try {
+                await getBookingsRef().doc(bookingId).update({
+                    assignedDriverId: driverId,
+                    assignedDriverName: driver.displayName || "Driver",
+                    status: 'ASSIGNED_TO_DRIVER',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showStatus("Driver assigned successfully!", "success");
+            } catch (e) {
+                console.error("Error assigning driver:", e);
+                showStatus("Error: " + e.message, "error");
+            }
+        };
+
         function renderHistory() {
-            const driverId = filterDriver.value;
+            const driverIdFilter = filterDriver.value;
             const dateStr = filterDate.value;
 
             let filtered = allBookings;
 
-            if (driverId !== 'ALL') {
-                filtered = filtered.filter(b => b.assignedDriverId === driverId);
+            if (driverIdFilter !== 'ALL') {
+                filtered = filtered.filter(b => b.assignedDriverId === driverIdFilter);
             }
 
             if (dateStr) {
@@ -286,13 +406,29 @@
 
             filtered.forEach(trip => {
                 const isCompleted = trip.status === 'COMPLETED';
+                const isFinal = ['COMPLETED', 'CANCELLED', 'REJECTED_BY_USER'].includes(trip.status);
                 const fare = trip.price || 0;
                 if (isCompleted) totalMoney += fare;
 
                 const date = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleDateString() : 'Pending';
 
                 const div = document.createElement('div');
-                div.className = "p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2";
+                div.className = "p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2 cursor-pointer hover:border-green-500/50 transition-all";
+                div.onclick = () => showBookingDetails(trip.id);
+
+                // Logic for assignment UI
+                let driverInfo = '';
+                if (!trip.assignedDriverId && !isFinal) {
+                    driverInfo = `
+                        <select onchange="window.assignDriver(event, '${trip.id}', this.value)"
+                                class="text-[9px] font-black uppercase bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-green-500 transition-all appearance-none">
+                            <option value="">Quick Assign</option>
+                            ${drivers.map(d => `<option value="${d.id}">${d.displayName || 'Driver'}</option>`).join('')}
+                        </select>
+                    `;
+                } else {
+                    driverInfo = `<span class="text-slate-900 dark:text-white">${trip.assignedDriverName || 'Unassigned'}</span>`;
+                }
 
                 div.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -310,7 +446,9 @@
                         <span class="text-green-600">${trip.destinationLocation?.name || "Unknown"}</span>
                     </div>
                     <div class="flex justify-between items-center pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
-                        <p class="text-[9px] font-black uppercase opacity-40">Driver: <span class="text-slate-900 dark:text-white">${trip.assignedDriverName || 'Unassigned'}</span></p>
+                        <p class="text-[9px] font-black uppercase opacity-40 flex items-center gap-2">
+                            Driver: ${driverInfo}
+                        </p>
                         <p class="text-sm font-black text-green-600">R ${fare.toFixed(2)}</p>
                     </div>
                 `;
@@ -342,6 +480,42 @@
         filterDriver.onchange = renderHistory;
         filterDate.onchange = renderHistory;
 
+        // Modal functions
+        window.showBookingDetails = (bookingId) => {
+            const trip = allBookings.find(b => b.id === bookingId);
+            if (!trip) return;
+
+            document.getElementById('modal-booking-id').textContent = `ID: ${trip.id}`;
+            document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
+            document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
+            document.getElementById('modal-price').textContent = `R ${(trip.price || 0).toFixed(2)}`;
+            document.getElementById('modal-name').textContent = trip.userName || 'Anonymous';
+            document.getElementById('modal-phone').textContent = trip.userPhone || 'No phone recorded';
+            document.getElementById('modal-pickup').textContent = trip.pickupLocation?.name || 'Unknown';
+            document.getElementById('modal-destination').textContent = trip.destinationLocation?.name || 'Unknown';
+            document.getElementById('modal-driver').textContent = trip.assignedDriverName || 'Unassigned';
+            document.getElementById('modal-driver-id').textContent = trip.assignedDriverId ? `UID: ${trip.assignedDriverId}` : '';
+
+            const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
+            document.getElementById('modal-time').textContent = bookedAt;
+            document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
+
+            const callBtn = document.getElementById('modal-call-btn');
+            if (trip.userPhone) {
+                callBtn.href = `tel:${trip.userPhone}`;
+                callBtn.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                callBtn.href = "#";
+                callBtn.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            detailsModal.classList.remove('hidden');
+        };
+
+        window.closeModal = () => {
+            detailsModal.classList.add('hidden');
+        };
+
         bookingForm.onsubmit = async (e) => {
             e.preventDefault();
 
@@ -369,6 +543,8 @@
                 const bookingData = {
                     userId: "MANUAL_" + phone.replace(/\s+/g, ''),
                     userName: name,
+                    userPhone: phone, // Added phone field as requested
+                    reason: reason,   // Added reason field as requested
                     pickupLocation: {
                         name: pickup,
                         latitude: 0.0,
