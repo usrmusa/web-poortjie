@@ -184,6 +184,37 @@
     </div>
 </div>
 
+<!-- Stats Breakdown Modal -->
+<div id="stats-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-xl font-black tracking-tight">Trip Breakdown</h3>
+            <button onclick="closeStatsModal()" class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-8 space-y-4">
+            <div class="flex justify-between items-center p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+                <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Completed</span>
+                <span id="breakdown-completed" class="text-xl font-black text-emerald-600">0</span>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl border border-yellow-100 dark:border-yellow-800">
+                <span class="text-xs font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">Pending</span>
+                <span id="breakdown-pending" class="text-xl font-black text-yellow-600">0</span>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800">
+                <span class="text-xs font-black uppercase tracking-widest text-red-600 dark:text-red-400">Cancelled/Rejected</span>
+                <span id="breakdown-cancelled" class="text-xl font-black text-red-600">0</span>
+            </div>
+        </div>
+        <div class="p-6 bg-slate-50 dark:bg-slate-900/50">
+            <button onclick="closeStatsModal()" class="w-full py-4 bg-slate-200 dark:bg-slate-700 rounded-2xl font-black uppercase text-xs tracking-widest transition">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Header -->
 <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
     <div class="max-w-xl mx-auto px-4 h-16 flex items-center">
@@ -223,7 +254,7 @@
 
     <!-- Stats Card -->
     <div class="grid grid-cols-2 gap-4">
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 text-center">
+        <div onclick="showStatsBreakdown()" class="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all active:scale-95">
             <p class="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total
                 Trips</p>
             <h3 id="stat-total-trips" class="text-xl sm:text-2xl font-black">0</h3>
@@ -655,7 +686,7 @@
                         <p class="text-[10px] font-bold opacity-50">${date}</p>
                     </div>
                     <span class="px-2 sm:px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}">
-                        ${trip.status.replace(/_/g, ' ')}
+                        ${trip.status.replace(/_/, ' ')}
                     </span>
                 </div>
                 <div class="text-xs font-bold opacity-70">
@@ -697,6 +728,36 @@
     filterDriver.onchange = renderHistory;
     filterDate.onchange = renderHistory;
 
+    window.showStatsBreakdown = () => {
+        const driverIdFilter = filterDriver.value;
+        const dateStr = filterDate.value;
+
+        let filtered = allBookings;
+        if (driverIdFilter !== 'ALL') {
+            filtered = filtered.filter(b => b.assignedDriverId === driverIdFilter);
+        }
+        if (dateStr) {
+            filtered = filtered.filter(b => {
+                if (!b.createdAt) return false;
+                const d = new Date(b.createdAt.seconds * 1000);
+                return d.toISOString().split('T')[0] === dateStr;
+            });
+        }
+
+        const completed = filtered.filter(b => b.status === 'COMPLETED').length;
+        const cancelled = filtered.filter(b => b.status === 'CANCELLED' || b.status === 'REJECTED_BY_USER').length;
+        const pending = filtered.filter(b => ['PENDING_OWNER_REVIEW', 'PENDING_USER_CONFIRMATION', 'READY_FOR_ASSIGNMENT', 'ASSIGNED_TO_DRIVER'].includes(b.status)).length;
+
+        document.getElementById('breakdown-completed').textContent = completed;
+        document.getElementById('breakdown-pending').textContent = pending;
+        document.getElementById('breakdown-cancelled').textContent = cancelled;
+        document.getElementById('stats-modal').classList.remove('hidden');
+    };
+
+    window.closeStatsModal = () => {
+        document.getElementById('stats-modal').classList.add('hidden');
+    };
+
     window.showBookingDetails = async (bookingId) => {
         const trip = allBookings.find(b => b.id === bookingId);
         if (!trip) return;
@@ -704,7 +765,7 @@
         currentModalBookingId = bookingId;
 
         document.getElementById('modal-booking-id').textContent = `ID: ${trip.id}`;
-        document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
+        document.getElementById('modal-status').textContent = trip.status.replace(/_/, ' ');
         document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
         document.getElementById('modal-price').textContent = `R ${(trip.price || 0).toFixed(2)}`;
         document.getElementById('modal-name').textContent = trip.userName || 'Anonymous';
