@@ -149,15 +149,20 @@
 
 <!-- Header -->
 <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
-    <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="max-w-xl mx-auto px-4 h-16 flex items-center">
 
         <button onclick="window.history.back()" class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition">
             <i class="fas fa-arrow-left"></i>
         </button>
 
-        <div id="user-avatar" class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-700 dark:text-green-400 font-bold overflow-hidden">
+        <a href="../../authentication/profile.html" class="flex-grow flex flex-col items-center justify-center hover:opacity-70 transition">
+            <p id="header-user-name" class="text-[10px] font-black uppercase tracking-widest leading-none text-slate-900 dark:text-white"></p>
+            <p id="header-user-bio" class="text-[8px] font-bold opacity-40 mt-1 leading-none text-slate-500 dark:text-slate-400"></p>
+        </a>
+
+        <a href="../../authentication/profile.html" id="user-avatar" class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-700 dark:text-green-400 font-bold overflow-hidden">
             <span id="user-initial">?</span>
-        </div>
+        </a>
     </div>
 </header>
 
@@ -269,6 +274,7 @@
     let hasActiveBooking = false;
     let allBookings = [];
     let currentModalBookingId = null;
+    let currentUserData = null;
 
     const ACTIVE_STATUSES = [
         'PENDING_OWNER_REVIEW',
@@ -294,20 +300,38 @@
             return;
         }
 
-        const name = user.displayName || user.email.split('@')[0];
+        // Default from Auth
+        let name = user.displayName || user.email.split('@')[0];
         userInitial.textContent = name.charAt(0).toUpperCase();
+        document.getElementById('header-user-name').textContent = name;
 
         if (user.photoURL) {
             userAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
         }
 
-        // Try to pre-fill phone if available in user doc
+        // Fetch additional details from Firestore
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
-            if (userDoc.exists && userDoc.data().phoneNumber) {
-                document.getElementById('phone-input').value = userDoc.data().phoneNumber;
+            if (userDoc.exists) {
+                currentUserData = userDoc.data();
+                if (currentUserData.displayName) {
+                    name = currentUserData.displayName;
+                    userInitial.textContent = name.charAt(0).toUpperCase();
+                    document.getElementById('header-user-name').textContent = name;
+                }
+                if (currentUserData.photoUrl) {
+                    userAvatar.innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover">`;
+                }
+                if (currentUserData.phone) {
+                    document.getElementById('phone-input').value = currentUserData.phone;
+                }
+                if (currentUserData.bio) {
+                    document.getElementById('header-user-bio').textContent = currentUserData.bio;
+                }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Error fetching user data:", e);
+        }
 
         subscribeToBookings(user.uid);
     });
@@ -517,12 +541,8 @@
         submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
 
         try {
-            // Consistent name retrieval
-            let userName = user.displayName || user.email.split('@')[0];
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            if (userDoc.exists && userDoc.data().displayName) {
-                userName = userDoc.data().displayName;
-            }
+            // Use name from fetched currentUserData or Auth
+            let userName = (currentUserData && currentUserData.displayName) || user.displayName || user.email.split('@')[0];
 
             await getBookingsRef().add({
                 userId: user.uid,
