@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manual Request Panel - Poortjie Services</title>
-    <!-- Favicon -->
+
     <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
     <link rel="apple-touch-icon" href="./favicon/apple-touch-icon.png">
@@ -23,14 +23,14 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased">
 
-<!-- Loader -->
+
 <div id="loader-overlay"
      class="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
     <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
     <p class="text-xs font-black uppercase tracking-widest animate-pulse">Initializing Panel...</p>
 </div>
 
-<!-- Details Modal -->
+
 <div id="details-modal"
      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
     <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -47,14 +47,14 @@
         </div>
 
         <div class="p-6 sm:p-8 overflow-y-auto custom-scrollbar space-y-6 sm:space-y-8">
-            <!-- Status & Price Badge -->
+
             <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                 <span id="modal-status"
                       class="px-4 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white text-center leading-tight"></span>
                 <span id="modal-price" class="text-xl sm:text-2xl font-black text-green-600"></span>
             </div>
 
-            <!-- Requester Info -->
+
             <div class="space-y-3 sm:space-y-4">
                 <h4 class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     Requester</h4>
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            <!-- Route Info -->
+
             <div class="space-y-3 sm:space-y-4">
                 <h4 class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     Route</h4>
@@ -91,7 +91,7 @@
                 </div>
             </div>
 
-            <!-- Assignment Info -->
+
             <div class="space-y-3 sm:space-y-4">
                 <h4 class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     Assignment</h4>
@@ -106,7 +106,7 @@
                 </div>
             </div>
 
-            <!-- Metadata Info -->
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <div>
                     <p class="text-[9px] sm:text-[10px] font-black uppercase opacity-40">Booked At</p>
@@ -123,7 +123,7 @@
             </div>
         </div>
 
-        <!-- Operator Action Section (Set Price) -->
+
         <div id="modal-operator-actions"
              class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 hidden">
             <div class="space-y-4">
@@ -143,7 +143,7 @@
             </div>
         </div>
 
-        <!-- Operator Action Section (Assign Driver) -->
+
         <div id="modal-assign-actions"
              class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 hidden">
             <div class="space-y-4">
@@ -155,7 +155,7 @@
                         <select id="modal-driver-select"
                                 class="w-full pl-12 pr-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm appearance-none">
                             <option value="">Select Driver</option>
-                            <!-- Populated in JS -->
+
                         </select>
                     </div>
                     <button onclick="modalAssignDriver()"
@@ -184,7 +184,7 @@
     </div>
 </div>
 
-<!-- Stats Breakdown Modal -->
+
 <div id="stats-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
     <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
         <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
@@ -215,7 +215,7 @@
     </div>
 </div>
 
-<!-- Header -->
+
 <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
     <div class="max-w-xl mx-auto px-4 h-16 flex items-center">
         <button onclick="window.history.back()"
@@ -238,7 +238,7 @@
 
 <main class="max-w-xl mx-auto p-4 pb-24 space-y-6 sm:space-y-8">
 
-    <!-- Large Logo Section -->
+
     <div class="pt-6 sm:pt-10 pb-4 text-center">
         <div class="flex justify-center mb-4 sm:mb-6">
             <img src="./logo/tuktuk.png"
@@ -252,7 +252,7 @@
         </div>
     </div>
 
-    <!-- Stats Card -->
+
     <div class="grid grid-cols-2 gap-4">
         <div onclick="showStatsBreakdown()" class="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all active:scale-95">
             <p class="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total
@@ -274,7 +274,7 @@
         </div>
 
         <form id="manual-booking-form" class="space-y-4 sm:space-y-6" novalidate>
-            <!-- Requester Info -->
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="form-group">
                     <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Requester
@@ -292,7 +292,7 @@
                 </div>
             </div>
 
-            <!-- Locations -->
+
             <div class="space-y-4">
                 <div class="form-group">
                     <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Pickup</label>
@@ -314,7 +314,7 @@
                 </div>
             </div>
 
-            <!-- Driver & Price -->
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2 form-group">
                     <label class="block text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Assign
@@ -324,7 +324,7 @@
                         <select id="driver-select"
                                 class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm appearance-none">
                             <option value="">Select Driver</option>
-                            <!-- Drivers will be loaded here -->
+
                         </select>
                     </div>
                 </div>
@@ -366,7 +366,7 @@
     <div id="status-message"
          class="hidden p-5 rounded-[2rem] text-center font-black text-xs uppercase tracking-widest shadow-lg border-2"></div>
 
-    <!-- History Section -->
+
     <div class="bg-white dark:bg-slate-800 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 space-y-6">
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
             <h2 class="text-xl sm:text-2xl font-black uppercase tracking-tight">Booking History</h2>
@@ -391,7 +391,7 @@
 
 </main>
 
-<!-- Address Selection Modal -->
+
 <div id="address-selection-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-800">
         <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
@@ -425,7 +425,7 @@
     &copy; 2026 Poortjie Services. Empowering poortjie economies.
 </footer>
 
-<!-- Firebase -->
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -455,14 +455,13 @@
     const confirmSelectionBtn = document.getElementById('confirm-selection');
     const addressModalTitle = document.getElementById('address-modal-title');
 
-    // Modal elements
     const detailsModal = document.getElementById('details-modal');
 
     let drivers = [];
     let allBookings = [];
     let currentUserData = null;
     let currentModalBookingId = null;
-    let map, marker, secondaryMarker, routePolyline;
+    let map, marker, secondaryMarker, directionsService, directionsRenderer;
     let currentTargetInput = null; // 'pickup' or 'destination'
 
     const locations = {
@@ -470,7 +469,6 @@
         destination: { name: '', lat: null, lng: null }
     };
 
-    // Constants matching Android App's FirebasePaths
     const PATHS = {
         USERS: "users",
         ROOT_COLLECTION: "kasilayn",
@@ -490,18 +488,15 @@
             return;
         }
 
-        // Default from Auth
         let name = user.displayName || user.email.split('@')[0];
         document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
         document.getElementById('header-user-name').textContent = name;
 
-        // Fetch additional details from Firestore
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
 
-                // Security Check: Only owners can access this page
                 const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
                 if (!isOwner) {
                     alert("Unauthorized access. Owners only.");
@@ -521,7 +516,6 @@
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
                 }
             } else {
-                // If user doc doesn't exist, they can't be an owner
                  window.location.href = 'request.html';
                  return;
             }
@@ -540,14 +534,12 @@
 
     async function loadDrivers() {
         try {
-            // Matching logic from UserRepositoryImpl.kt: roles.tuktuk.isDriver == true
             const snap = await getUsersRef()
                 .where('roles.tuktuk.isDriver', '==', true)
                 .get();
 
             drivers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Clear and add default
             driverSelect.innerHTML = '<option value="">Select Driver</option>';
             const modalDriverSelect = document.getElementById('modal-driver-select');
             modalDriverSelect.innerHTML = '<option value="">Select Driver</option>';
@@ -569,7 +561,6 @@
                 filterDriver.appendChild(filterOpt);
             });
 
-            // Re-render history if drivers load late to populate any assignment selects
             if (allBookings.length > 0) renderHistory();
         } catch (e) {
             console.error("Error loading drivers:", e);
@@ -584,14 +575,12 @@
                 allBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderHistory();
 
-                // Refresh modal if open
                 if (currentModalBookingId) {
                     showBookingDetails(currentModalBookingId);
                 }
             });
     }
 
-    // Global assign driver function
     window.assignDriver = async (e, bookingId, driverId) => {
         if (e) e.stopPropagation(); // Prevent modal from opening
         if (!driverId) return;
@@ -808,7 +797,6 @@
             callBtn.classList.add('opacity-50', 'pointer-events-none');
         }
 
-        // Call Driver Button Logic (Owners Only)
         const callDriverBtn = document.getElementById('modal-call-driver-btn');
         if (trip.status === 'ASSIGNED_TO_DRIVER' && trip.assignedDriverId) {
              callDriverBtn.classList.remove('hidden');
@@ -859,7 +847,6 @@
         currentModalBookingId = null;
     };
 
-    // Address selection logic
     function openAddressModal(target) {
         currentTargetInput = target;
         addressModalTitle.textContent = target === 'pickup' ? 'Select Pickup Location' : 'Select Destination';
@@ -893,7 +880,6 @@
             const inputEl = target === 'pickup' ? pickupInput : destinationInput;
             inputEl.value = addr;
 
-            // Hide error if it was showing
             document.getElementById(target + '-error').classList.add('hidden');
         }
         addressSelectionModal.classList.add('hidden');
@@ -936,12 +922,16 @@
             icon: { url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png" }
         });
 
-        routePolyline = new google.maps.Polyline({
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
             map: map,
-            strokeColor: "#22c55e",
-            strokeOpacity: 0.8,
-            strokeWeight: 4,
-            visible: false
+            suppressMarkers: true,
+            preserveViewport: false,
+            polylineOptions: {
+                strokeColor: "#22c55e",
+                strokeOpacity: 0.9,
+                strokeWeight: 5
+            }
         });
 
         marker.addListener("dragend", () => {
@@ -977,22 +967,33 @@
         const other = target === 'pickup' ? 'destination' : 'pickup';
 
         if (locations[other].lat && locations[other].lng) {
-            const otherPos = { lat: locations[other].lat, lng: locations[other].lng };
+            const currentPos = marker.getPosition();
+            const otherPos = new google.maps.LatLng(locations[other].lat, locations[other].lng);
             secondaryMarker.setPosition(otherPos);
             secondaryMarker.setVisible(true);
 
-            const currentPos = marker.getPosition();
-            routePolyline.setPath([currentPos, otherPos]);
-            routePolyline.setVisible(true);
+            if (directionsService && directionsRenderer) {
+                const request = target === 'pickup'
+                    ? { origin: currentPos, destination: otherPos, travelMode: google.maps.TravelMode.DRIVING }
+                    : { origin: otherPos, destination: currentPos, travelMode: google.maps.TravelMode.DRIVING };
 
-            // Adjust bounds to show both
-            const bounds = new google.maps.LatLngBounds();
-            bounds.extend(currentPos);
-            bounds.extend(otherPos);
-            map.fitBounds(bounds, 50);
+                directionsService.route(request, (result, status) => {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        directionsRenderer.setDirections(result);
+                    } else {
+                        directionsRenderer.setDirections({ routes: [] });
+                        const bounds = new google.maps.LatLngBounds();
+                        bounds.extend(currentPos);
+                        bounds.extend(otherPos);
+                        map.fitBounds(bounds, 50);
+                    }
+                });
+            }
         } else {
             secondaryMarker.setVisible(false);
-            routePolyline.setVisible(false);
+            if (directionsRenderer) {
+                directionsRenderer.setDirections({ routes: [] });
+            }
         }
     }
 
@@ -1011,22 +1012,28 @@
             bounds: circle.getBounds(),
             strictBounds: true,
             componentRestrictions: {country: "za"},
-            fields: ["formatted_address", "geometry"],
-            types: ["address"],
+            fields: ["name", "formatted_address", "geometry"]
         });
 
         autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                modalAddressInput.value = place.formatted_address;
-                if (place.geometry && place.geometry.location) {
-                    locations[currentTargetInput].lat = place.geometry.location.lat();
-                    locations[currentTargetInput].lng = place.geometry.location.lng();
-                    if (map && marker) {
-                        marker.setPosition(place.geometry.location);
-                        map.setCenter(place.geometry.location);
-                        updateRouteDisplay();
-                    }
+            const placeName = place.name || "";
+            const placeAddress = place.formatted_address || "";
+            const displayName = placeName && placeAddress && placeName !== placeAddress ? `${placeName}, ${placeAddress}` : (placeAddress || placeName);
+
+            if (displayName) {
+                modalAddressInput.value = displayName;
+                locations[currentTargetInput].name = displayName;
+            }
+
+            if (place.geometry && place.geometry.location) {
+                locations[currentTargetInput].lat = place.geometry.location.lat();
+                locations[currentTargetInput].lng = place.geometry.location.lng();
+                if (map && marker) {
+                    marker.setPosition(place.geometry.location);
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(16);
+                    updateRouteDisplay();
                 }
             }
         });
