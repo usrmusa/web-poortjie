@@ -462,7 +462,7 @@
     let allBookings = [];
     let currentUserData = null;
     let currentModalBookingId = null;
-    let map, marker;
+    let map, marker, secondaryMarker, routePolyline;
     let currentTargetInput = null; // 'pickup' or 'destination'
 
     const locations = {
@@ -638,6 +638,20 @@
         }
     };
 
+    window.cancelTrip = async (e, bookingId) => {
+        if (e) e.stopPropagation();
+        if (!confirm("Are you sure you want to cancel this trip?")) return;
+        try {
+            await getBookingsRef().doc(bookingId).update({
+                status: 'CANCELLED',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showStatus("Trip cancelled successfully", "success");
+        } catch (e) {
+            showStatus("Error: " + e.message, "error");
+        }
+    };
+
     function renderHistory() {
         const driverIdFilter = filterDriver.value;
         const dateStr = filterDate.value;
@@ -674,8 +688,10 @@
             const date = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleDateString() : 'Pending';
 
             const div = document.createElement('div');
-            div.className = "p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2 cursor-pointer hover:border-green-500/50 transition-all";
+            div.className = "p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-green-500/50 transition-all";
             div.onclick = () => showBookingDetails(trip.id);
+
+            const isPending = ['PENDING_OWNER_REVIEW', 'PENDING_USER_CONFIRMATION', 'READY_FOR_ASSIGNMENT', 'ASSIGNED_TO_DRIVER'].includes(trip.status);
 
             const driverInfo = `<span class="text-slate-900 dark:text-white">${trip.assignedDriverName || 'Unassigned'}</span>`;
 
@@ -685,9 +701,12 @@
                         <h4 class="text-sm font-black uppercase tracking-tight truncate max-w-[120px] sm:max-w-none">${trip.userName || 'Anonymous'}</h4>
                         <p class="text-[10px] font-bold opacity-50">${date}</p>
                     </div>
-                    <span class="px-2 sm:px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}">
-                        ${trip.status.replace(/_/, ' ')}
-                    </span>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="px-2 sm:px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}">
+                            ${trip.status.replace(/_/g, ' ')}
+                        </span>
+                        ${isPending ? `<button onclick="cancelTrip(event, '${trip.id}')" class="text-[9px] font-black uppercase text-red-500 hover:text-red-700 transition">Cancel</button>` : ''}
+                    </div>
                 </div>
                 <div class="text-xs font-bold opacity-70">
                     <span class="text-red-500">${trip.pickupLocation?.name || "Unknown"}</span>
@@ -765,7 +784,7 @@
         currentModalBookingId = bookingId;
 
         document.getElementById('modal-booking-id').textContent = `ID: ${trip.id}`;
-        document.getElementById('modal-status').textContent = trip.status.replace(/_/, ' ');
+        document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
         document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
         document.getElementById('modal-price').textContent = `R ${(trip.price || 0).toFixed(2)}`;
         document.getElementById('modal-name').textContent = trip.userName || 'Anonymous';
@@ -857,6 +876,7 @@
             };
             map.setCenter(pos);
             marker.setPosition(pos);
+            updateRouteDisplay();
         }
     }
 
@@ -910,6 +930,20 @@
             icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
         });
 
+        secondaryMarker = new google.maps.Marker({
+            map: map,
+            visible: false,
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png" }
+        });
+
+        routePolyline = new google.maps.Polyline({
+            map: map,
+            strokeColor: "#22c55e",
+            strokeOpacity: 0.8,
+            strokeWeight: 4,
+            visible: false
+        });
+
         marker.addListener("dragend", () => {
             const pos = marker.getPosition();
             const distance = google.maps.geometry.spherical.computeDistanceBetween(pos, poortjieCenter);
@@ -921,6 +955,7 @@
             } else {
                 updateSelectedLocation(pos);
             }
+            updateRouteDisplay();
         });
 
         map.addListener("click", (e) => {
@@ -928,8 +963,37 @@
             if (distance <= 5000) {
                 marker.setPosition(e.latLng);
                 updateSelectedLocation(e.latLng);
+                updateRouteDisplay();
             }
         });
+
+        updateRouteDisplay();
+    }
+
+    function updateRouteDisplay() {
+        if (!map || !marker) return;
+
+        const target = currentTargetInput;
+        const other = target === 'pickup' ? 'destination' : 'pickup';
+
+        if (locations[other].lat && locations[other].lng) {
+            const otherPos = { lat: locations[other].lat, lng: locations[other].lng };
+            secondaryMarker.setPosition(otherPos);
+            secondaryMarker.setVisible(true);
+
+            const currentPos = marker.getPosition();
+            routePolyline.setPath([currentPos, otherPos]);
+            routePolyline.setVisible(true);
+
+            // Adjust bounds to show both
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(currentPos);
+            bounds.extend(otherPos);
+            map.fitBounds(bounds, 50);
+        } else {
+            secondaryMarker.setVisible(false);
+            routePolyline.setVisible(false);
+        }
     }
 
     function updateSelectedLocation(pos) {
@@ -961,6 +1025,7 @@
                     if (map && marker) {
                         marker.setPosition(place.geometry.location);
                         map.setCenter(place.geometry.location);
+                        updateRouteDisplay();
                     }
                 }
             }
