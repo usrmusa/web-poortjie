@@ -360,7 +360,7 @@
     let allBookings = [];
     let currentModalBookingId = null;
     let currentUserData = null;
-    let map, marker;
+    let map, marker, secondaryMarker, routePolyline;
     let currentTargetInput = null; // 'pickup' or 'destination'
 
     const locations = {
@@ -651,6 +651,7 @@
             };
             map.setCenter(pos);
             marker.setPosition(pos);
+            updateRouteDisplay();
         }
     }
 
@@ -704,6 +705,20 @@
             icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
         });
 
+        secondaryMarker = new google.maps.Marker({
+            map: map,
+            visible: false,
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png" }
+        });
+
+        routePolyline = new google.maps.Polyline({
+            map: map,
+            strokeColor: "#22c55e",
+            strokeOpacity: 0.8,
+            strokeWeight: 4,
+            visible: false
+        });
+
         marker.addListener("dragend", () => {
             const pos = marker.getPosition();
             const distance = google.maps.geometry.spherical.computeDistanceBetween(pos, poortjieCenter);
@@ -715,6 +730,7 @@
             } else {
                 updateSelectedLocation(pos);
             }
+            updateRouteDisplay();
         });
 
         map.addListener("click", (e) => {
@@ -722,8 +738,37 @@
             if (distance <= 5000) {
                 marker.setPosition(e.latLng);
                 updateSelectedLocation(e.latLng);
+                updateRouteDisplay();
             }
         });
+
+        updateRouteDisplay();
+    }
+
+    function updateRouteDisplay() {
+        if (!map || !marker) return;
+
+        const target = currentTargetInput;
+        const other = target === 'pickup' ? 'destination' : 'pickup';
+
+        if (locations[other].lat && locations[other].lng) {
+            const otherPos = { lat: locations[other].lat, lng: locations[other].lng };
+            secondaryMarker.setPosition(otherPos);
+            secondaryMarker.setVisible(true);
+
+            const currentPos = marker.getPosition();
+            routePolyline.setPath([currentPos, otherPos]);
+            routePolyline.setVisible(true);
+
+            // Adjust bounds to show both
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(currentPos);
+            bounds.extend(otherPos);
+            map.fitBounds(bounds, 50);
+        } else {
+            secondaryMarker.setVisible(false);
+            routePolyline.setVisible(false);
+        }
     }
 
     function updateSelectedLocation(pos) {
@@ -755,6 +800,7 @@
                     if (map && marker) {
                         marker.setPosition(place.geometry.location);
                         map.setCenter(place.geometry.location);
+                        updateRouteDisplay();
                     }
                 }
             }
