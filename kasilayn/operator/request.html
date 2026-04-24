@@ -27,7 +27,9 @@
     <style>
         .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-        .booking-card { transition: all 0.3s ease; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 10px; }
     </style>
 </head>
 
@@ -85,7 +87,7 @@
                 </label>
                 <div class="relative">
                     <i class="fas fa-location-dot absolute left-5 top-1/2 -translate-y-1/2 text-red-500"></i>
-                    <input type="text" id="pickup" required placeholder="Where are you?"
+                    <input type="text" id="pickup-input" required placeholder="Where are you?"
                            class="w-full pl-12 pr-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
                 </div>
             </div>
@@ -96,7 +98,7 @@
                 </label>
                 <div class="relative">
                     <i class="fas fa-flag-checkered absolute left-5 top-1/2 -translate-y-1/2 text-green-500"></i>
-                    <input type="text" id="destination" required placeholder="Where are you going?"
+                    <input type="text" id="destination-input" required placeholder="Where are you going?"
                            class="w-full pl-12 pr-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition font-bold text-sm">
                 </div>
             </div>
@@ -116,7 +118,7 @@
         <div class="h-[1px] flex-grow bg-slate-200 dark:bg-slate-700"></div>
     </div>
 
-    <div id="bookings-list" class="space-y-4 text-center py-10 opacity-50">
+    <div id="bookings-list" class="space-y-4 text-center py-10 opacity-50 custom-scrollbar max-h-[400px] overflow-y-auto pr-1">
         <div class="animate-spin h-6 w-6 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-2"></div>
         <p class="text-xs font-bold uppercase tracking-widest">Loading history...</p>
     </div>
@@ -146,7 +148,7 @@
                                   .doc(PATHS.ROOT_DOCUMENT)
                                   .collection(PATHS.BOOKINGS);
 
-    firebase.auth().onAuthStateChanged(user => {
+    firebase.auth().onAuthStateChanged(async user => {
         if (!user) {
             sessionStorage.setItem('redirectUrl', window.location.href);
             window.location.href = '../../authentication/login.html';
@@ -176,6 +178,7 @@
 
                 renderBookings(snapshot);
             }, error => {
+                console.error(error);
                 bookingsList.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold uppercase tracking-widest">Error loading bookings</div>`;
                 if (loader) loader.remove();
             });
@@ -194,17 +197,20 @@
 
         bookingsList.innerHTML = '';
         snapshot.forEach(doc => {
-            const booking = doc.data();
+            const b = doc.data();
             const div = document.createElement('div');
-            div.className = "p-5 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between";
+            div.className = "p-5 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between text-left";
+
+            const status = b.status || 'PENDING_OWNER_REVIEW';
+
             div.innerHTML = `
                 <div class="flex flex-col gap-1">
                     <p class="text-sm font-black uppercase tracking-tight">
-                        <span class="text-red-500">${booking.pickupLocation.name}</span>
+                        <span class="text-red-500">${b.pickupLocation?.name || 'Unknown'}</span>
                         <span class="opacity-20 mx-1">→</span>
-                        <span class="text-green-600">${booking.destinationLocation.name}</span>
+                        <span class="text-green-600">${b.destinationLocation?.name || 'Unknown'}</span>
                     </p>
-                    <p class="text-[9px] font-black uppercase tracking-widest opacity-40">${booking.status.replace(/_/g, ' ')}</p>
+                    <p class="text-[9px] font-black uppercase tracking-widest opacity-40">${status.replace(/_/g, ' ')}</p>
                 </div>
                 <div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
                     <i class="fas fa-chevron-right text-[10px]"></i>
@@ -219,22 +225,34 @@
         const user = firebase.auth().currentUser;
         if (!user) return;
 
-        const pickup = document.getElementById('pickup').value.trim();
-        const destination = document.getElementById('destination').value.trim();
+        const pickupInput = document.getElementById('pickup-input');
+        const destinationInput = document.getElementById('destination-input');
 
-        if (!pickup || !destination) return;
+        const pickupVal = pickupInput.value.trim();
+        const destinationVal = destinationInput.value.trim();
+
+        if (!pickupVal || !destinationVal) return;
 
         const btn = document.getElementById('submit-btn');
         btn.disabled = true;
         btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
 
         try {
+            // Consistent name retrieval
+            let userName = user.displayName || user.email.split('@')[0];
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().displayName) {
+                userName = userDoc.data().displayName;
+            }
+
             await getBookingsRef().add({
                 userId: user.uid,
-                pickupLocation: { name: pickup },
-                destinationLocation: { name: destination },
+                userName: userName,
+                pickupLocation: { name: pickupVal, latitude: 0.0, longitude: 0.0 },
+                destinationLocation: { name: destinationVal, latitude: 0.0, longitude: 0.0 },
                 status: 'PENDING_OWNER_REVIEW',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             bookingForm.reset();
