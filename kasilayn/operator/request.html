@@ -3,34 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request a Ride - Poortjie Services</title>
+
+    <!-- Title + Description -->
+    <title>Poortjie Requests | Tuktuk</title>
+    <meta name="description" content="Request a tuktuk ride or delivery in Poortjie. Enter your pickup and destination, and the operator will review your request, set a price, and assign a driver.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="./favicon/apple-touch-icon.png">
+    <link rel="manifest" href="./favicon/site.webmanifest">
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
+
     <style>
         .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
         .booking-card { transition: all 0.3s ease; }
     </style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased">
 
 <!-- Loader -->
 <div id="loader-overlay" class="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
     <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
-    <p class="text-xs font-black uppercase tracking-widest animate-pulse">Connecting to Poortjie...</p>
+    <p class="text-xs font-black uppercase tracking-widest animate-pulse">Connecting to Kasilayn...</p>
 </div>
 
 <!-- Header -->
 <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
     <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
+
         <button onclick="window.history.back()" class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <i class="fas fa-arrow-left"></i>
         </button>
-        <h1 class="text-lg font-bold">My Bookings</h1>
+
+        <div class="flex items-center gap-2">
+            <img src="./favicon/favicon-96x96.png" class="w-6 h-6" alt="logo">
+            <h1 class="text-lg font-bold">Poortjie Requests</h1>
+        </div>
+
         <div id="user-avatar" class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-700 dark:text-green-400 font-bold overflow-hidden">
             <span id="user-initial">?</span>
         </div>
@@ -39,24 +60,36 @@
 
 <main class="max-w-xl mx-auto p-4 space-y-6 pb-24">
 
+    <!-- Description -->
+    <div class="text-center px-2">
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+            Request a ride or delivery. Enter your pickup and destination, and we’ll connect you with a driver.
+        </p>
+    </div>
+
     <!-- Booking Form -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
         <h2 class="text-2xl font-black mb-4">Request a Ride</h2>
 
         <form id="booking-form" class="space-y-4">
+
             <div>
-                <label for="pickup" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 ml-1">Pickup Location</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 ml-1">
+                    Pickup Location
+                </label>
                 <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-red-500">📍</span>
+                    <i class="fas fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-red-500"></i>
                     <input type="text" id="pickup" required placeholder="Where are you?"
                            class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition">
                 </div>
             </div>
 
             <div>
-                <label for="destination" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 ml-1">Destination</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 ml-1">
+                    Destination
+                </label>
                 <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-green-500">🏁</span>
+                    <i class="fas fa-flag-checkered absolute left-4 top-1/2 -translate-y-1/2 text-green-500"></i>
                     <input type="text" id="destination" required placeholder="Where are you going?"
                            class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-green-500 outline-none transition">
                 </div>
@@ -64,8 +97,10 @@
 
             <button type="submit" id="submit-btn"
                     class="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-2xl shadow-lg shadow-green-500/20 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i>
                 <span>Book Now</span>
             </button>
+
         </form>
     </div>
 
@@ -75,15 +110,14 @@
         <div class="h-px flex-grow bg-slate-200 dark:bg-slate-700"></div>
     </div>
 
-    <!-- Bookings List -->
     <div id="bookings-list" class="space-y-4 text-center py-10 opacity-50">
-        <div class="text-4xl mb-2">🚖</div>
+        <i class="fas fa-taxi text-3xl mb-2"></i>
         <p>Loading your ride history...</p>
     </div>
 
 </main>
 
-<!-- Firebase SDKs (Compat SDKs for consistency with scripts/firebase.js) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -96,66 +130,47 @@
     const userAvatar = document.getElementById('user-avatar');
     const loader = document.getElementById('loader-overlay');
 
-    // Firestore Path Constants matching Android FirebasePaths.kt
     const PATHS = {
         ROOT_COLLECTION: "kasilayn",
         ROOT_DOCUMENT: "poortjieOperator",
         BOOKINGS: "bookings"
     };
 
-    /**
-     * Returns reference to the bookings sub-collection.
-     * Structure: kasilayn/poortjieOperator/bookings
-     */
     const getBookingsRef = () => db.collection(PATHS.ROOT_COLLECTION)
                                   .doc(PATHS.ROOT_DOCUMENT)
                                   .collection(PATHS.BOOKINGS);
 
-    // Auth state listener
     firebase.auth().onAuthStateChanged(user => {
         if (!user) {
-            console.log("No user found, redirecting to login.");
             sessionStorage.setItem('redirectUrl', window.location.href);
             window.location.href = '../../authentication/login.html';
             return;
         }
 
-        console.log("Rider Authenticated:", user.uid);
-
-        // Update Header UI
         const name = user.displayName || user.email.split('@')[0];
         userInitial.textContent = name.charAt(0).toUpperCase();
+
         if (user.photoURL) {
-            userAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover" alt="Profile">`;
+            userAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
         }
 
-        // Sync with Firestore
         subscribeToBookings(user.uid);
     });
 
-    /**
-     * Listens to the user's bookings in real-time.
-     */
     function subscribeToBookings(userId) {
-        console.log("Subscribing to bookings for user:", userId);
-
         getBookingsRef()
             .where('userId', '==', userId)
             .orderBy('createdAt', 'desc')
             .onSnapshot(snapshot => {
-                console.log(`Received ${snapshot.size} bookings from Firestore.`);
+
                 if (loader) {
                     loader.classList.add('opacity-0');
                     setTimeout(() => loader.remove(), 300);
                 }
+
                 renderBookings(snapshot);
             }, error => {
-                console.error("Firestore Subscription Error:", error);
-                // Check for missing index error
-                if (error.message && error.message.includes('index')) {
-                    console.warn("Missing composite index! Check your Firebase Console for the generated link.");
-                }
-                bookingsList.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold">Error loading bookings. Check console.</div>`;
+                bookingsList.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold">Error loading bookings</div>`;
                 if (loader) loader.remove();
             });
     }
@@ -164,8 +179,7 @@
         if (snapshot.empty) {
             bookingsList.innerHTML = `
                 <div class="py-10 text-center opacity-50">
-                    <div class="text-5xl mb-4">✨</div>
-                    <p class="font-medium">No rides yet. Request your first one above!</p>
+                    <p>No rides yet. Request your first one above!</p>
                 </div>
             `;
             return;
@@ -174,156 +188,37 @@
         bookingsList.innerHTML = '';
         snapshot.forEach(doc => {
             const booking = doc.data();
-            const id = doc.id;
-            bookingsList.appendChild(createBookingCard(id, booking));
+            const div = document.createElement('div');
+            div.className = "p-4 bg-white rounded-xl shadow text-left";
+            div.innerHTML = `
+                <p><b>${booking.pickupLocation.name}</b> → ${booking.destinationLocation.name}</p>
+                <p class="text-xs text-slate-400">${booking.status}</p>
+            `;
+            bookingsList.appendChild(div);
         });
-        bookingsList.classList.remove('opacity-50');
     }
 
-    function createBookingCard(id, booking) {
-        const card = document.createElement('div');
-        card.className = "booking-card bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 text-left";
-
-        const statusInfo = getStatusInfo(booking.status);
-
-        let driverInfo = '';
-        if (booking.status === 'ASSIGNED_TO_DRIVER') {
-            const driverName = booking.assignedDriverName || 'Your driver';
-            driverInfo = `
-                <div class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center gap-3 border border-green-100 dark:border-green-800">
-                    <div class="w-10 h-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center text-green-700 dark:text-green-300">🚖</div>
-                    <div>
-                        <p class="text-sm font-bold text-green-700 dark:text-green-400">${driverName} will be your driver</p>
-                        <p class="text-[10px] opacity-60 uppercase font-black tracking-widest">En route to pickup</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        let actions = '';
-        if (booking.status === 'PENDING_USER_CONFIRMATION') {
-            actions = `
-                <div class="flex gap-3 mt-4">
-                    <button onclick="updateStatus('${id}', 'REJECTED_BY_USER')" class="flex-grow py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700 transition">Reject</button>
-                    <button onclick="updateStatus('${id}', 'READY_FOR_ASSIGNMENT')" class="flex-grow py-3 bg-green-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-green-700 transition shadow-lg shadow-green-500/20">Accept Price</button>
-                </div>
-            `;
-        }
-
-        card.innerHTML = `
-            <div class="flex justify-between items-start">
-                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusInfo.bg} ${statusInfo.text}">
-                    ${statusInfo.label}
-                </span>
-                ${booking.price ? `<span class="font-black text-lg text-green-600 dark:text-green-400">R${booking.price.toFixed(2)}</span>` : ''}
-            </div>
-
-            <div class="space-y-3 pt-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                    <p class="text-sm font-bold truncate">${booking.pickupLocation.name}</p>
-                </div>
-                <div class="ml-1 w-0.5 h-4 bg-slate-200 dark:bg-slate-700"></div>
-                <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                    <p class="text-sm font-bold truncate">${booking.destinationLocation.name}</p>
-                </div>
-            </div>
-
-            ${driverInfo}
-            ${actions}
-        `;
-        return card;
-    }
-
-    /**
-     * Status mapping logic (Parity with StatusBadge in Android)
-     */
-    function getStatusInfo(status) {
-        switch(status) {
-            case 'PENDING_OWNER_REVIEW':
-                return { label: 'Waiting for Owner', bg: 'bg-slate-100 dark:bg-slate-700', text: 'text-slate-600 dark:text-slate-300' };
-            case 'PENDING_USER_CONFIRMATION':
-                return { label: 'Confirmation Needed', bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' };
-            case 'READY_FOR_ASSIGNMENT':
-                return { label: 'Finding Driver', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' };
-            case 'ASSIGNED_TO_DRIVER':
-                return { label: 'Driver Assigned', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' };
-            case 'COMPLETED':
-                return { label: 'Trip Completed', bg: 'bg-slate-100 dark:bg-slate-700', text: 'text-slate-500 dark:text-slate-400' };
-            case 'REJECTED_BY_USER':
-                return { label: 'Price Rejected', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' };
-            case 'CANCELLED':
-                return { label: 'Cancelled', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' };
-            default:
-                return { label: status, bg: 'bg-slate-100 dark:bg-slate-700', text: 'text-slate-600 dark:text-slate-300' };
-        }
-    }
-
-    /**
-     * Updates the status of a specific booking document.
-     */
-    async function updateStatus(id, status) {
-        console.log(`Updating Booking[${id}] to: ${status}`);
-        try {
-            await getBookingsRef().doc(id).update({
-                status: status,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log("Update successful.");
-        } catch (error) {
-            console.error("Update failed:", error);
-            alert("Failed to update status. Please try again.");
-        }
-    }
-
-    // Form submission logic
     bookingForm.onsubmit = async (e) => {
         e.preventDefault();
         const user = firebase.auth().currentUser;
         if (!user) return;
 
-        const submitBtn = document.getElementById('submit-btn');
         const pickup = document.getElementById('pickup').value.trim();
         const destination = document.getElementById('destination').value.trim();
 
         if (!pickup || !destination) return;
 
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>`;
-
-        const bookingData = {
+        await getBookingsRef().add({
             userId: user.uid,
-            userName: user.displayName || user.email.split('@')[0],
-            pickupLocation: {
-                name: pickup,
-                latitude: 0.0,
-                longitude: 0.0
-            },
-            destinationLocation: {
-                name: destination,
-                latitude: 0.0,
-                longitude: 0.0
-            },
+            pickupLocation: { name: pickup },
+            destinationLocation: { name: destination },
             status: 'PENDING_OWNER_REVIEW',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-        console.log("Submitting booking request:", bookingData);
-
-        try {
-            const docRef = await getBookingsRef().add(bookingData);
-            console.log("Booking created. ID:", docRef.id);
-            bookingForm.reset();
-        } catch (error) {
-            console.error("Booking Creation Error:", error);
-            alert("Failed to send request: " + error.message);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = 'Book Now';
-        }
+        bookingForm.reset();
     };
 </script>
+
 </body>
 </html>
