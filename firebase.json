@@ -9,6 +9,16 @@
     "cleanUrls": true,
     "trailingSlash": false
   },
+  "functions": {
+    "source": "poortjie_operator",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "*.local"
+    ]
+  },
   "emulators": {
     "auth": {
       "port": 9099
@@ -21,6 +31,9 @@
     },
     "storage": {
       "port": 9199
+    },
+    "functions": {
+      "port": 5001
     },
     "ui": {
       "enabled": true
