@@ -270,7 +270,7 @@
                     </div>
                     <div class="mt-6 flex flex-col gap-2">
                         <a href="${service.url}" class="block text-center py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition">${service.btnText}</a>
-                        ${service.category.toLowerCase() === 'transport' ? `<a href="kasilayn/laynrider/dashboard.html" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition mt-2">Book a Ride</a>` : ''}
+                        ${service.category.toLowerCase() === 'transport' ? `<a href="kasilayn/operator/request.html" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition mt-2">Book a Ride</a>` : ''}
                         ${service.extraBtn ? `<a href="${service.extraBtn.url}" onclick="window.top.location.replace('${service.extraBtn.url}'); return false;" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition">${service.extraBtn.text}</a>` : ''}
                     </div>
                 </div>
