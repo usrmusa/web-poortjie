@@ -50,7 +50,7 @@
                 <h3 class="text-xl sm:text-2xl font-black tracking-tight">Booking Details</h3>
                 <p id="modal-booking-id" class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest opacity-30 mt-1"></p>
             </div>
-            <button onclick="closeModal()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition text-sm sm:text-base">
+            <button onclick="closeModal()" class="w-8 h-8 sm:w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition text-sm sm:text-base">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -186,6 +186,19 @@
 
 
     <div class="pt-6 sm:pt-10 pb-4 text-center">
+
+        <div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 mb-6 rounded-r-2xl text-left">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-flask text-amber-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">Experimental / Alpha Mode</p>
+                    <p class="text-[10px] text-amber-600 dark:text-amber-300 font-medium leading-relaxed">We are currently in testing. You might experience some bugs as we improve the service for Poortjie.</p>
+                </div>
+            </div>
+        </div>
+
         <div class="flex justify-center mb-4 sm:mb-6">
             <img src="./logo/tuktuk.png"
                  alt="Tuktuk Logo"
@@ -208,6 +221,19 @@
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
             Request a ride or delivery. Enter your pickup and destination, and we’ll connect you with a driver.
         </p>
+    </div>
+
+
+    <div class="bg-blue-600 rounded-[2rem] p-6 text-white shadow-xl shadow-blue-500/20 mb-6 transition transform active:scale-[0.98] cursor-pointer" onclick="openAppModal()">
+        <div class="flex items-center justify-between">
+            <div class="space-y-1">
+                <h3 class="text-lg font-black uppercase tracking-tight">Better on Android</h3>
+                <p class="text-[10px] font-medium opacity-90">Get notifications & faster results with our official app.</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md">
+                <i class="fab fa-android text-2xl"></i>
+            </div>
+        </div>
     </div>
 
 
@@ -293,6 +319,55 @@
 </main>
 
 
+<div id="app-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <div>
+                <h3 class="text-xl sm:text-2xl font-black tracking-tight">Install Android App</h3>
+                <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mt-1">Direct APK Download</p>
+            </div>
+            <button onclick="closeAppModal()" class="w-8 h-8 sm:w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-6 sm:p-8 overflow-y-auto custom-scrollbar space-y-6">
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 flex-shrink-0 font-black text-xs">1</div>
+                    <p class="text-sm font-medium">Download the APK file using the button below.</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 flex-shrink-0 font-black text-xs">2</div>
+                    <p class="text-sm font-medium">Open the file. Your phone might say <span class="font-bold text-red-500">"Install blocked"</span> or <span class="font-bold text-red-500">"Harmful app detected"</span> because we are not yet on the Play Store.</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 flex-shrink-0 font-black text-xs">3</div>
+                    <p class="text-sm font-medium">Click <span class="font-bold">"Install anyway"</span> or <span class="font-bold">"Settings"</span> to allow installations from your browser.</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-800">
+                <p class="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 mb-2 tracking-widest">Why these warnings?</p>
+                <p class="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed font-medium">
+                    Google Play Protect warns about any app downloaded outside the Play Store. This app is safe and developed by Poortjie Services for our local community.
+                </p>
+            </div>
+        </div>
+
+        <div class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-3">
+            <a href="./Poortjie_Operator.apk" class="w-full py-4 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 rounded-2xl font-black uppercase text-xs tracking-widest transition shadow-lg shadow-green-500/20">
+                <i class="fas fa-download"></i>
+                Download APK
+            </a>
+            <button onclick="closeAppModal()" class="w-full py-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-2xl font-black uppercase text-xs tracking-widest transition">
+                Maybe Later
+            </button>
+        </div>
+    </div>
+</div>
+
+
 <div id="address-selection-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-800">
         <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
@@ -340,6 +415,7 @@
     const loader = document.getElementById('loader-overlay');
     const submitBtn = document.getElementById('submit-btn');
     const detailsModal = document.getElementById('details-modal');
+    const appModal = document.getElementById('app-modal');
     const modalActions = document.getElementById('modal-actions');
     const navManualBooking = document.getElementById('nav-manual-booking');
     const ownerManageContainer = document.getElementById('owner-manage-container');
@@ -528,7 +604,7 @@
                     </p>
                     <p class="text-[9px] font-black uppercase tracking-widest opacity-70">${statusText}</p>
                 </div>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
+                <div class="w-8 h-8 sm:w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
                     <i class="fas fa-chevron-right text-[10px]"></i>
                 </div>
             `;
@@ -597,6 +673,14 @@
     window.closeModal = () => {
         detailsModal.classList.add('hidden');
         currentModalBookingId = null;
+    };
+
+    window.openAppModal = () => {
+        appModal.classList.remove('hidden');
+    };
+
+    window.closeAppModal = () => {
+        appModal.classList.add('hidden');
     };
 
     window.acceptPrice = async () => {
