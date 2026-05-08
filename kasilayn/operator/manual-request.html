@@ -16,7 +16,7 @@
         tailwind.config = { darkMode: 'class' }
     </script>
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 10px; }
     </style>
@@ -41,7 +41,7 @@
                    class="text-[8px] sm:text-[9px] font-black uppercase tracking-widest opacity-30 mt-1"></p>
             </div>
             <button onclick="closeModal()"
-                    class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition text-sm sm:text-base">
+                    class="w-8 h-8 sm:w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition text-sm sm:text-base">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -159,7 +159,7 @@
                         </select>
                     </div>
                     <button onclick="modalAssignDriver()"
-                            class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 shadow-xl shadow-blue-500/20">
+                            class="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 shadow-xl shadow-green-500/20">
                         Assign
                     </button>
                 </div>
@@ -173,7 +173,7 @@
                 Call Driver
             </a>
             <a id="modal-call-btn" href="#"
-               class="flex-grow py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition shadow-xl shadow-blue-500/20">
+               class="flex-grow py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition shadow-xl shadow-green-500/20">
                 <i class="fas fa-phone"></i>
                 Call Requester
             </a>
@@ -188,7 +188,7 @@
 <div id="stats-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
     <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
         <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="text-xl font-black tracking-tight">Trip Breakdown</h3>
+            h3 class="text-xl font-black tracking-tight">Trip Breakdown</h3>
             <button onclick="closeStatsModal()" class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition">
                 <i class="fas fa-times"></i>
             </button>
@@ -229,10 +229,15 @@
             <p id="header-user-bio"
                class="text-[7px] sm:text-[8px] font-bold opacity-40 mt-1 leading-none text-slate-500 dark:text-slate-400 truncate max-w-[150px] sm:max-w-none"></p>
         </a>
-        <a href="../../authentication/profile.html" id="user-avatar"
-           class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold overflow-hidden border border-slate-200 dark:border-slate-700 text-[10px] uppercase">
-            <span id="user-initial" class="text-xs sm:text-sm">?</span>
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="suggested-places.html" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 transition hover:bg-slate-200 dark:hover:bg-slate-700">
+                <i class="fas fa-map-marker-alt text-xs"></i>
+            </a>
+            <a href="../../authentication/profile.html" id="user-avatar"
+               class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold overflow-hidden border border-slate-200 dark:border-slate-700 text-[10px] uppercase">
+                <span id="user-initial" class="text-xs sm:text-sm">?</span>
+            </a>
+        </div>
     </div>
 </header>
 
@@ -271,6 +276,14 @@
             <h2 class="text-xl sm:text-2xl font-black">Trip Details</h2>
             <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-40 mt-1">Create a booking
                 for a caller manually.</p>
+        </div>
+
+        <!-- Quick Suggestions -->
+        <div id="quick-suggestions-container" class="mb-4 hidden">
+            <h3 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Quick Places</h3>
+            <div id="quick-suggestions-list" class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+                <!-- Chips added via JS -->
+            </div>
         </div>
 
         <form id="manual-booking-form" class="space-y-4 sm:space-y-6" novalidate>
@@ -322,7 +335,7 @@
                     <div class="relative">
                         <i class="fas fa-id-card absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <select id="driver-select"
-                                class="w-full pl-12 pr-5 py-4 rounded-2xl border-2 border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm appearance-none">
+                                class="w-full pl-12 pr-5 py-4 rounded-2xl border border-transparent bg-slate-50 dark:bg-slate-900 focus:border-green-500 outline-none transition font-bold text-sm appearance-none">
                             <option value="">Select Driver</option>
 
                         </select>
@@ -474,13 +487,17 @@
         USERS: "users",
         ROOT_COLLECTION: "kasilayn",
         ROOT_DOCUMENT: "poortjieOperator",
-        BOOKINGS: "bookings"
+        BOOKINGS: "bookings",
+        SUGGESTIONS: "suggested_places"
     };
 
     const getUsersRef = () => db.collection(PATHS.USERS);
     const getBookingsRef = () => db.collection(PATHS.ROOT_COLLECTION)
                                   .doc(PATHS.ROOT_DOCUMENT)
                                   .collection(PATHS.BOOKINGS);
+    const getSuggestionsRef = () => db.collection(PATHS.ROOT_COLLECTION)
+                                      .doc(PATHS.ROOT_DOCUMENT)
+                                      .collection(PATHS.SUGGESTIONS);
 
     firebase.auth().onAuthStateChanged(async user => {
         if (!user) {
@@ -498,8 +515,9 @@
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
 
+                const isSuperUser = currentUserData?.roles?.tuktuk?.isSuperUser || false;
                 const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
-                if (!isOwner) {
+                if (!(isSuperUser || isOwner)) {
                     alert("Unauthorized access. Owners only.");
                     window.location.href = 'request.html';
                     return;
@@ -526,12 +544,58 @@
 
         loadDrivers();
         observeHistory();
+        loadQuickSuggestions();
 
         if (loader) {
             loader.classList.add('opacity-0');
             setTimeout(() => loader.remove(), 300);
         }
     });
+
+    function loadQuickSuggestions() {
+        getSuggestionsRef().orderBy('order', 'asc').onSnapshot(snapshot => {
+            const container = document.getElementById('quick-suggestions-container');
+            const list = document.getElementById('quick-suggestions-list');
+
+            if (snapshot.empty) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            list.innerHTML = '';
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const chip = document.createElement('button');
+                chip.type = "button";
+                chip.className = "flex-shrink-0 px-4 py-2 bg-slate-100 dark:bg-slate-900 hover:bg-green-500 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all border border-slate-200 dark:border-slate-800 whitespace-nowrap";
+                chip.textContent = data.name;
+                chip.onclick = () => selectQuickPlace(data);
+                list.appendChild(chip);
+            });
+        });
+    }
+
+    function selectQuickPlace(place) {
+        let target = 'pickup';
+        if (pickupInput.value && !destinationInput.value) {
+            target = 'destination';
+        }
+
+        locations[target].name = place.name + (place.address ? ", " + place.address : "");
+        locations[target].lat = place.lat;
+        locations[target].lng = place.lng;
+
+        const inputEl = target === 'pickup' ? pickupInput : destinationInput;
+        inputEl.value = locations[target].name;
+
+        document.getElementById(target + '-error').classList.add('hidden');
+        validateForm();
+
+        inputEl.classList.add('ring-2', 'ring-green-500');
+        setTimeout(() => inputEl.classList.remove('ring-2', 'ring-green-500'), 1000);
+    }
 
     async function loadDrivers() {
         try {

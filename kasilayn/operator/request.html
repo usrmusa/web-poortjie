@@ -4,19 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
     <title>Tuktuk</title>
     <meta name="description" content="Request a tuktuk ride or delivery in Poortjie. Enter your pickup and destination, and the operator will review your request, set a price, and assign a driver.">
-
 
     <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
     <link rel="apple-touch-icon" href="./favicon/apple-touch-icon.png">
     <link rel="manifest" href="./favicon/site.webmanifest">
 
-
     <script src="https://cdn.tailwindcss.com"></script>
-
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
@@ -27,7 +23,7 @@
     <style>
         .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 10px; }
         .pac-container { z-index: 9999 !important; border-radius: 1rem; border: none; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); margin-top: 5px; }
@@ -208,10 +204,14 @@
         <div class="mt-3 sm:mt-4 inline-block bg-green-500/10 text-green-600 dark:text-green-400 px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em]">
             TukTuk Operator
         </div>
-        <div id="owner-manage-container" class="mt-6 hidden">
+        <div id="owner-manage-container" class="mt-6 hidden flex flex-wrap justify-center gap-3">
              <a href="manual-request.html" class="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] rounded-2xl border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
                 <i class="fas fa-tasks"></i>
-                Manage Requests
+                Requests
+            </a>
+            <a href="suggested-places.html" class="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] rounded-2xl border border-slate-200 dark:border-slate-700 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
+                <i class="fas fa-map-marker-alt"></i>
+                Suggestions
             </a>
         </div>
     </div>
@@ -239,6 +239,14 @@
 
     <div class="bg-white dark:bg-slate-800 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
         <h2 class="text-xl sm:text-2xl font-black mb-6">Request a Ride</h2>
+
+        <!-- Suggestions Chips -->
+        <div id="quick-suggestions-container" class="mb-8 hidden">
+            <h3 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Quick Places</h3>
+            <div id="quick-suggestions-list" class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+                <!-- Chips added here via JS -->
+            </div>
+        </div>
 
         <form id="booking-form" class="space-y-4 sm:space-y-5" novalidate>
 
@@ -356,7 +364,7 @@
         </div>
 
         <div class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-3">
-            <a href="./Poortjie_Operator.apk" class="w-full py-4 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 rounded-2xl font-black uppercase text-xs tracking-widest transition shadow-lg shadow-green-500/20">
+            <a href="android/Poortjie_Operator.apk" class="w-full py-4 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 rounded-2xl font-black uppercase text-xs tracking-widest transition shadow-lg shadow-green-500/20">
                 <i class="fas fa-download"></i>
                 Download APK
             </a>
@@ -455,12 +463,17 @@
     const PATHS = {
         ROOT_COLLECTION: "kasilayn",
         ROOT_DOCUMENT: "poortjieOperator",
-        BOOKINGS: "bookings"
+        BOOKINGS: "bookings",
+        SUGGESTIONS: "suggested_places"
     };
 
     const getBookingsRef = () => db.collection(PATHS.ROOT_COLLECTION)
                                   .doc(PATHS.ROOT_DOCUMENT)
                                   .collection(PATHS.BOOKINGS);
+
+    const getSuggestionsRef = () => db.collection(PATHS.ROOT_COLLECTION)
+                                      .doc(PATHS.ROOT_DOCUMENT)
+                                      .collection(PATHS.SUGGESTIONS);
 
     firebase.auth().onAuthStateChanged(async user => {
         if (!user) {
@@ -487,7 +500,7 @@
                     document.getElementById('header-user-name').textContent = name;
                 }
                 if (currentUserData.photoUrl) {
-                    userAvatar.innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover">`;
+                    userAvatar.innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover" alt="">`;
                 }
                 if (currentUserData.phone) {
                     phoneInput.value = currentUserData.phone;
@@ -496,8 +509,9 @@
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
                 }
 
+                const isSuperUser = currentUserData?.roles?.tuktuk?.isSuperUser || false;
                 const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
-                if (isOwner) {
+                if (isSuperUser || isOwner) {
                     navManualBooking.classList.remove('hidden');
                     ownerManageContainer.classList.remove('hidden');
                 }
@@ -507,7 +521,55 @@
         }
 
         subscribeToBookings(user.uid);
+        loadQuickSuggestions();
     });
+
+    function loadQuickSuggestions() {
+        getSuggestionsRef().orderBy('order', 'asc').onSnapshot(snapshot => {
+            const container = document.getElementById('quick-suggestions-container');
+            const list = document.getElementById('quick-suggestions-list');
+
+            if (snapshot.empty) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            list.innerHTML = '';
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const chip = document.createElement('button');
+                chip.type = "button";
+                chip.className = "flex-shrink-0 px-4 py-2 bg-slate-100 dark:bg-slate-900 hover:bg-green-500 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all border border-slate-200 dark:border-slate-800 whitespace-nowrap";
+                chip.textContent = data.name;
+                chip.onclick = () => selectQuickPlace(data);
+                list.appendChild(chip);
+            });
+        });
+    }
+
+    function selectQuickPlace(place) {
+        // Find which field is empty or focused. If both empty, pick pickup.
+        let target = 'pickup';
+        if (pickupInput.value && !destinationInput.value) {
+            target = 'destination';
+        }
+
+        locations[target].name = place.name + (place.address ? ", " + place.address : "");
+        locations[target].lat = place.lat;
+        locations[target].lng = place.lng;
+
+        const inputEl = target === 'pickup' ? pickupInput : destinationInput;
+        inputEl.value = locations[target].name;
+
+        document.getElementById(target + '-error').classList.add('hidden');
+        validateForm();
+
+        // Visual feedback
+        inputEl.classList.add('ring-2', 'ring-green-500');
+        setTimeout(() => inputEl.classList.remove('ring-2', 'ring-green-500'), 1000);
+    }
 
     function getFormattedStatus(status, driverName) {
         if (status === 'ASSIGNED_TO_DRIVER') {
@@ -629,13 +691,13 @@
         document.getElementById('modal-destination').textContent = trip.destinationLocation?.name || 'Unknown';
         document.getElementById('modal-driver').textContent = trip.assignedDriverName || 'Awaiting Driver';
 
+        const isSuperUser = currentUserData?.roles?.tuktuk?.isSuperUser || false;
         const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
-        document.getElementById('modal-driver-id').textContent = (isOwner && trip.assignedDriverId) ? `UID: ${trip.assignedDriverId}` : '';
+        document.getElementById('modal-driver-id').textContent = ((isSuperUser || isOwner) && trip.assignedDriverId) ? `UID: ${trip.assignedDriverId}` : '';
 
         document.getElementById('modal-passengers').textContent = trip.passengers || '1';
 
-        const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
-        document.getElementById('modal-time').textContent = bookedAt;
+        document.getElementById('modal-time').textContent = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
         document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
 
         if (trip.status === 'PENDING_USER_CONFIRMATION') {
