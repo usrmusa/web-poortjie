@@ -243,7 +243,7 @@
         <!-- Suggestions Chips -->
         <div id="quick-suggestions-container" class="mb-8 hidden">
             <h3 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Quick Places</h3>
-            <div id="quick-suggestions-list" class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+            <div id="quick-suggestions-list" class="flex flex-wrap gap-2 pb-4">
                 <!-- Chips added here via JS -->
             </div>
         </div>
@@ -550,17 +550,14 @@
     }
 
     function selectQuickPlace(place) {
-        // Find which field is empty or focused. If both empty, pick pickup.
-        let target = 'pickup';
-        if (pickupInput.value && !destinationInput.value) {
-            target = 'destination';
-        }
+        // Always make it a destination as per requirement
+        const target = 'destination';
 
         locations[target].name = place.name + (place.address ? ", " + place.address : "");
         locations[target].lat = place.lat;
         locations[target].lng = place.lng;
 
-        const inputEl = target === 'pickup' ? pickupInput : destinationInput;
+        const inputEl = destinationInput;
         inputEl.value = locations[target].name;
 
         document.getElementById(target + '-error').classList.add('hidden');

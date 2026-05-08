@@ -188,7 +188,7 @@
 <div id="stats-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
     <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
         <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            h3 class="text-xl font-black tracking-tight">Trip Breakdown</h3>
+            <h3 class="text-xl font-black tracking-tight">Trip Breakdown</h3>
             <button onclick="closeStatsModal()" class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-red-500 transition">
                 <i class="fas fa-times"></i>
             </button>
@@ -281,7 +281,7 @@
         <!-- Quick Suggestions -->
         <div id="quick-suggestions-container" class="mb-4 hidden">
             <h3 class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Quick Places</h3>
-            <div id="quick-suggestions-list" class="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+            <div id="quick-suggestions-list" class="flex flex-wrap gap-2 pb-4">
                 <!-- Chips added via JS -->
             </div>
         </div>
@@ -578,16 +578,14 @@
     }
 
     function selectQuickPlace(place) {
-        let target = 'pickup';
-        if (pickupInput.value && !destinationInput.value) {
-            target = 'destination';
-        }
+        // Always make it a destination as per requirement
+        const target = 'destination';
 
         locations[target].name = place.name + (place.address ? ", " + place.address : "");
         locations[target].lat = place.lat;
         locations[target].lng = place.lng;
 
-        const inputEl = target === 'pickup' ? pickupInput : destinationInput;
+        const inputEl = destinationInput;
         inputEl.value = locations[target].name;
 
         document.getElementById(target + '-error').classList.add('hidden');
