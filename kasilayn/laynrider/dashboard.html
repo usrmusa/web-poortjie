@@ -514,21 +514,21 @@
                     // Copied Data (Denormalization)
                     username: userData.username || "",
                     email: userData.email || "",
-                    displayName: userData.displayName || user.displayName || "",
+                    display_name: userData.display_name || userData.displayName || user.displayName || "",
                     phone: userData.phone || userData.phoneNumber || "",
-                    photoUrl: userData.photoUrl || user.photoURL || "",
+                    photo_url: userData.photo_url || userData.photoUrl || user.photoURL || "",
                     bio: userData.bio || "",
                     
                     // New, Default Data
                     status: "OFFLINE",
-                    suspended: false,
+                    is_suspended: false,
                     
                     // References & Metadata
                     userRef: userRef,
                     userUid: uid,
                     selfCreate: true,
-                    createdAt: now,
-                    updatedAt: now
+                    created_at: now,
+                    updated_at: now
                 };
 
                 // 4. WRITE 1: Create New Driver Document
@@ -538,8 +538,8 @@
                 transaction.set(userRef, {
                     roles: {
                         kasilayn: {
-                            isDriver: true,
-                            driverRef: `kasilayn/fleet/drivers/${uid}`
+                            is_driver: true,
+                            driver_ref: `kasilayn/fleet/drivers/${uid}`
                         }
                     }
                 }, { merge: true });

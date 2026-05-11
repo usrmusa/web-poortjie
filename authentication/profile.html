@@ -213,11 +213,11 @@
         };
 
         const hasChanged =
-            currentData.displayName !== initialData.displayName ||
+            currentData.displayName !== initialData.display_name ||
             currentData.phone !== initialData.phone ||
             currentData.bio !== initialData.bio ||
-            currentData.photoUrl !== initialData.photoUrl ||
-            currentData.listForSupport !== initialData.listForSupport;
+            currentData.photoUrl !== initialData.photo_url ||
+            currentData.listForSupport !== initialData.list_for_support;
 
         if (hasChanged) {
             saveBtn.disabled = false;
@@ -330,23 +330,23 @@
                 if (doc.exists) {
                     const userData = doc.data();
                     usernameInput.value = userData.username || '';
-                    displayNameInput.value = userData.displayName || '';
+                    displayNameInput.value = userData.display_name || '';
                     phoneNumberInput.value = userData.phone || '';
                     bioInput.value = userData.bio || '';
-                    photoUrlInput.value = userData.photoUrl || '';
-                    profilePicture.src = userData.photoUrl || DEFAULT_AVATAR;
+                    photoUrlInput.value = userData.photo_url || '';
+                    profilePicture.src = userData.photo_url || DEFAULT_AVATAR;
 
-                    if (userData.roles?.poortjie?.isAdmin === true) {
+                    if (userData.roles?.poortjie?.is_admin === true) {
                         adminToggleSection.classList.remove('hidden');
-                        listForSupportToggle.checked = userData.roles?.poortjie?.listForSupport === true;
+                        listForSupportToggle.checked = userData.roles?.poortjie?.list_for_support === true;
                     }
 
                     initialData = {
-                        displayName: displayNameInput.value.trim(),
+                        display_name: displayNameInput.value.trim(),
                         phone: phoneNumberInput.value.trim(),
                         bio: bioInput.value.trim(),
-                        photoUrl: photoUrlInput.value,
-                        listForSupport: listForSupportToggle.checked
+                        photo_url: photoUrlInput.value,
+                        list_for_support: listForSupportToggle.checked
                     };
                     bioCounter.textContent = `${bioInput.value.length}/100`;
                     checkChanges();
@@ -465,20 +465,20 @@
         const newListForSupport = listForSupportToggle.checked;
 
         firebase.firestore().collection('users').doc(user.uid).update({
-            displayName: newDisplayName,
+            display_name: newDisplayName,
             phone: newPhoneNumber,
             bio: newBio,
-            photoUrl: newPhotoUrl,
-            "roles.poortjie.listForSupport": newListForSupport,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            photo_url: newPhotoUrl,
+            "roles.poortjie.list_for_support": newListForSupport,
+            updated_at: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             showStatus("Profile updated successfully!");
             initialData = {
-                displayName: newDisplayName,
+                display_name: newDisplayName,
                 phone: newPhoneNumber,
                 bio: newBio,
-                photoUrl: newPhotoUrl,
-                listForSupport: newListForSupport
+                photo_url: newPhotoUrl,
+                list_for_support: newListForSupport
             };
             checkChanges();
 

@@ -795,17 +795,17 @@
                     userUid: uid,
                     username: userData.username || "",
                     email: userData.email || "",
-                    displayName: userData.displayName || document.getElementById('display-name').value,
+                    display_name: userData.display_name || userData.displayName || document.getElementById('display-name').value,
                     phone: userData.phone || userData.phoneNumber || "",
-                    photoUrl: driverPhotoUrl || userData.photoUrl || "",
+                    photo_url: driverPhotoUrl || userData.photo_url || userData.photoUrl || "",
                     bio: userData.bio || "",
                     status: driverDoc.exists ? (driverDoc.data().status || "OFFLINE") : "OFFLINE",
-                    suspended: driverDoc.exists ? (driverDoc.data().suspended || false) : false,
-                    addedByUid: uid, 
-                    createdAt: driverDoc.exists ? (driverDoc.data().createdAt || now) : now,
-                    updatedAt: now,
+                    is_suspended: driverDoc.exists ? (driverDoc.data().is_suspended || driverDoc.data().suspended || false) : false,
+                    added_by_uid: uid, 
+                    created_at: driverDoc.exists ? (driverDoc.data().created_at || driverDoc.data().createdAt || now) : now,
+                    updated_at: now,
                     carRegistration: carReg,
-                    carRef: carRef
+                    car_ref: carRef
                 };
                 transaction.set(driverRef, driverPayload, { merge: true });
 
@@ -813,8 +813,8 @@
                 transaction.set(userRef, {
                     roles: {
                         kasilayn: {
-                            isDriver: true,
-                            driverRef: `kasilayn/fleet/drivers/${uid}`
+                            is_driver: true,
+                            driver_ref: `kasilayn/fleet/drivers/${uid}`
                         }
                     }
                 }, { merge: true });
@@ -841,7 +841,7 @@
                     carPayload.year = carYear;
                     carPayload.bodyType = carBodyType;
                     carPayload.photoUrls = carPhotoUrls;
-                    carPayload.createdAt = driverDoc.exists ? (driverDoc.data().carCreatedAt || now) : now;
+                    carPayload.created_at = driverDoc.exists ? (driverDoc.data().carCreatedAt || driverDoc.data().car_created_at || now) : now;
                 } else {
                     // If car is locked, we still might have added NEW photos if some were empty
                     carPayload.photoUrls = carPhotoUrls;

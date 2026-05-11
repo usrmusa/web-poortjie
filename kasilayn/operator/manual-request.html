@@ -506,7 +506,7 @@
             return;
         }
 
-        let name = user.displayName || user.email.split('@')[0];
+        let name = user.display_name || user.displayName || user.email.split('@')[0];
         document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
         document.getElementById('header-user-name').textContent = name;
 
@@ -515,21 +515,21 @@
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
 
-                const isSuperUser = currentUserData?.roles?.tuktuk?.isSuperUser || false;
-                const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
+                const isSuperUser = currentUserData?.roles?.tuktuk?.is_super_user || false;
+                const isOwner = currentUserData?.roles?.tuktuk?.is_owner || false;
                 if (!(isSuperUser || isOwner)) {
                     alert("Unauthorized access. Owners only.");
                     window.location.href = 'request.html';
                     return;
                 }
 
-                if (currentUserData.displayName) {
-                    name = currentUserData.displayName;
+                if (currentUserData.display_name || currentUserData.displayName) {
+                    name = currentUserData.display_name || currentUserData.displayName;
                     document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
                     document.getElementById('header-user-name').textContent = name;
                 }
-                if (currentUserData.photoUrl) {
-                    document.getElementById('user-avatar').innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover">`;
+                if (currentUserData.photo_url || currentUserData.photoUrl) {
+                    document.getElementById('user-avatar').innerHTML = `<img src="${currentUserData.photo_url || currentUserData.photoUrl}" class="w-full h-full object-cover">`;
                 }
                 if (currentUserData.phone) {
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
@@ -598,7 +598,7 @@
     async function loadDrivers() {
         try {
             const snap = await getUsersRef()
-                .where('roles.tuktuk.isDriver', '==', true)
+                .where('roles.tuktuk.is_driver', '==', true)
                 .get();
 
             drivers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -610,17 +610,17 @@
             drivers.forEach(driver => {
                 const opt = document.createElement('option');
                 opt.value = driver.id;
-                opt.textContent = `${driver.displayName || 'Unnamed Driver'}`;
+                opt.textContent = `${driver.display_name || driver.displayName || 'Unnamed Driver'}`;
                 driverSelect.appendChild(opt);
 
                 const modalOpt = document.createElement('option');
                 modalOpt.value = driver.id;
-                modalOpt.textContent = driver.displayName || 'Unnamed Driver';
+                modalOpt.textContent = driver.display_name || driver.displayName || 'Unnamed Driver';
                 modalDriverSelect.appendChild(modalOpt);
 
                 const filterOpt = document.createElement('option');
                 filterOpt.value = driver.id;
-                filterOpt.textContent = driver.displayName || 'Unnamed Driver';
+                filterOpt.textContent = driver.display_name || driver.displayName || 'Unnamed Driver';
                 filterDriver.appendChild(filterOpt);
             });
 
@@ -650,14 +650,14 @@
         const driver = drivers.find(d => d.id === driverId);
         if (!driver) return;
 
-        if (!confirm(`Assign ${driver.displayName || 'this driver'} to this trip?`)) return;
+        if (!confirm(`Assign ${driver.display_name || driver.displayName || 'this driver'} to this trip?`)) return;
 
         try {
             await getBookingsRef().doc(bookingId).update({
                 assignedDriverId: driverId,
-                assignedDriverName: driver.displayName || "Driver",
+                assignedDriverName: driver.display_name || driver.displayName || "Driver",
                 status: 'ASSIGNED_TO_DRIVER',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Driver assigned successfully!", "success");
         } catch (e) {
@@ -681,7 +681,7 @@
             await getBookingsRef().doc(currentModalBookingId).update({
                 price: price,
                 status: 'PENDING_USER_CONFIRMATION',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Price updated and sent to user!", "success");
         } catch (e) {
@@ -696,7 +696,7 @@
         try {
             await getBookingsRef().doc(bookingId).update({
                 status: 'CANCELLED',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Trip cancelled successfully", "success");
         } catch (e) {
@@ -1181,9 +1181,9 @@
                 price: price,
                 status: selectedDriverId ? 'ASSIGNED_TO_DRIVER' : 'READY_FOR_ASSIGNMENT',
                 assignedDriverId: selectedDriverId || null,
-                assignedDriverName: selectedDriver ? (selectedDriver.displayName || "Driver") : null,
-                createdAt: now,
-                updatedAt: now
+                assignedDriverName: selectedDriver ? (selectedDriver.display_name || selectedDriver.displayName || "Driver") : null,
+                created_at: now,
+                updated_at: now
             };
 
             await getBookingsRef().add(bookingData);
