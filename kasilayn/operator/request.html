@@ -482,7 +482,7 @@
             return;
         }
 
-        let name = user.displayName || user.email.split('@')[0];
+        let name = user.display_name || user.displayName || user.email.split('@')[0];
         userInitial.textContent = name.charAt(0).toUpperCase();
         document.getElementById('header-user-name').textContent = name;
 
@@ -494,13 +494,13 @@
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
-                if (currentUserData.displayName) {
-                    name = currentUserData.displayName;
+                if (currentUserData.display_name || currentUserData.displayName) {
+                    name = currentUserData.display_name || currentUserData.displayName;
                     userInitial.textContent = name.charAt(0).toUpperCase();
                     document.getElementById('header-user-name').textContent = name;
                 }
-                if (currentUserData.photoUrl) {
-                    userAvatar.innerHTML = `<img src="${currentUserData.photoUrl}" class="w-full h-full object-cover" alt="">`;
+                if (currentUserData.photo_url || currentUserData.photoUrl) {
+                    userAvatar.innerHTML = `<img src="${currentUserData.photo_url || currentUserData.photoUrl}" class="w-full h-full object-cover" alt="">`;
                 }
                 if (currentUserData.phone) {
                     phoneInput.value = currentUserData.phone;
@@ -509,8 +509,8 @@
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
                 }
 
-                const isSuperUser = currentUserData?.roles?.tuktuk?.isSuperUser || false;
-                const isOwner = currentUserData?.roles?.tuktuk?.isOwner || false;
+                const isSuperUser = currentUserData?.roles?.tuktuk?.is_super_user || currentUserData?.roles?.tuktuk?.isSuperUser || false;
+                const isOwner = currentUserData?.roles?.tuktuk?.is_owner || currentUserData?.roles?.tuktuk?.isOwner || false;
                 if (isSuperUser || isOwner) {
                     navManualBooking.classList.remove('hidden');
                     ownerManageContainer.classList.remove('hidden');

@@ -444,10 +444,11 @@
 
                         transaction.set(userRef, {
                             username: username,
-                            displayName: displayName,
+                            display_name: displayName,
                             email: email,
                             phone: phone,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                            updated_at: firebase.firestore.FieldValue.serverTimestamp()
                         });
                     });
 

@@ -792,21 +792,21 @@
                 firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
                     if (doc.exists) {
                         const userData = doc.data();
-                        if (userData.displayName && profileLink) {
-                            profileLink.textContent = userData.displayName;
+                        if ((userData.display_name || userData.displayName) && profileLink) {
+                            profileLink.textContent = userData.display_name || userData.displayName;
                         }
-                        if (userData.photoUrl && profileLink) {
+                        if ((userData.photo_url || userData.photoUrl) && profileLink) {
                             // Optionally show user avatar in the menu
                             const existingImg = profileLink.querySelector('img');
                             if (existingImg) {
-                                existingImg.src = userData.photoUrl;
+                                existingImg.src = userData.photo_url || userData.photoUrl;
                             } else {
-                                profileLink.innerHTML = `<img src="${userData.photoUrl}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt=""> ${userData.displayName || 'Profile'}`;
+                                profileLink.innerHTML = `<img src="${userData.photo_url || userData.photoUrl}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt=""> ${(userData.display_name || userData.displayName) || 'Profile'}`;
                             }
                         }
-                        const isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
-                        const isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
-                        const isTaxiRankAdmin = userData.roles?.poortjie?.isTaxiRankAdmin === true;
+                        const isSuperUser = (userData.roles?.tuktuk?.is_super_user || userData.roles?.digilayn?.isSuperUser) === true;
+                        const isPoortjieAdmin = (userData.roles?.poortjie?.is_admin || userData.roles?.poortjie?.isAdmin) === true;
+                        const isTaxiRankAdmin = (userData.roles?.poortjie?.is_taxi_rank_admin || userData.roles?.poortjie?.isTaxiRankAdmin) === true;
 
                         if (isSuperUser || isPoortjieAdmin) {
                             if (adminLink) adminLink.classList.remove('hidden');

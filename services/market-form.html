@@ -557,9 +557,9 @@
 
         const data = {
             userId: user.uid,
-            sellerName: user.displayName || 'Anonymous',
+            sellerName: user.display_name || user.displayName || 'Anonymous',
             sellerPhone: '',
-            sellerPhoto: user.photoURL || '',
+            sellerPhoto: user.photo_url || user.photoURL || '',
             title: document.getElementById('item-title').value.trim(),
             price: document.getElementById('item-price').value,
             category: document.getElementById('item-category').value,

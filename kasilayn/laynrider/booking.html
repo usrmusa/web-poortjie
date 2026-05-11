@@ -528,8 +528,8 @@
     function renderDriverUI() {
         if (!driverData) return;
         document.getElementById('driver-summary').classList.remove('hidden');
-        document.getElementById('driver-photo').src = driverData.photoUrl || 'https://placehold.co/100x100';
-        document.getElementById('driver-name').textContent = driverData.displayName || 'Driver';
+        document.getElementById('driver-photo').src = driverData.photo_url || driverData.photoUrl || 'https://placehold.co/100x100';
+        document.getElementById('driver-name').textContent = driverData.display_name || driverData.displayName || 'Driver';
         document.getElementById('driver-car').textContent = `${carData?.make || ''} ${carData?.model || ''} • ${carData?.registration || ''}`;
     }
 
