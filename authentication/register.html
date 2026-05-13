@@ -439,7 +439,7 @@
 
                         transaction.set(usernameRef, {
                             uid: user.uid,
-                            claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            claimed_at: firebase.firestore.FieldValue.serverTimestamp()
                         });
 
                         transaction.set(userRef, {

@@ -118,7 +118,7 @@
                 return;
             }
 
-            const name = userData?.display_name || userData?.displayName || user.displayName || user.email.split('@')[0];
+            const name = userData?.display_name || user.displayName || user.email.split('@')[0];
             document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
             if (userData?.photo_url || userData?.photoUrl) {
                 document.getElementById('user-avatar').innerHTML = `<img src="${userData?.photo_url || userData.photoUrl}" class="w-full h-full object-cover">`;
@@ -246,8 +246,8 @@
             await getSuggestionsRef().add({
                 ...selectedPlace,
                 order: suggestions.length,
-                addedByUid: currentUserId,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                added_by_uid: currentUserId,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             document.getElementById('place-search').value = '';
             marker.setVisible(false);
