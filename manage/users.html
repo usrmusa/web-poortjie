@@ -147,10 +147,6 @@
                 let joinedDate = new Date(0);
                 if (data.created_at && data.created_at.seconds) {
                     joinedDate = new Date(data.created_at.seconds * 1000);
-                } else if (data.createdAt && data.createdAt.seconds) {
-                    joinedDate = new Date(data.createdAt.seconds * 1000);
-                } else if (data.joinedAt && data.joinedAt.seconds) {
-                    joinedDate = new Date(data.joinedAt.seconds * 1000);
                 } else if (data.metadata?.creationTime) {
                     joinedDate = new Date(data.metadata.creationTime);
                 }
@@ -175,7 +171,7 @@
 
         // Filter
         let filtered = allUsers.filter(user => {
-            const name = (user.displayName || '').toLowerCase();
+            const name = (user.display_name || '').toLowerCase();
             const email = (user.email || '').toLowerCase();
             return name.includes(searchTerm) || email.includes(searchTerm);
         });
@@ -183,9 +179,9 @@
         // Sort
         filtered.sort((a, b) => {
             if (sortValue === 'name_asc') {
-                return (a.displayName || '').localeCompare(b.displayName || '');
+                return (a.display_name || '').localeCompare(b.display_name || '');
             } else if (sortValue === 'name_desc') {
-                return (b.displayName || '').localeCompare(a.displayName || '');
+                return (b.display_name || '').localeCompare(a.display_name || '');
             } else if (sortValue === 'joined_asc') {
                 return a._joinedDate - b._joinedDate;
             } else { // joined_desc (default)
@@ -219,8 +215,8 @@
     function renderUsers(users) {
         usersList.innerHTML = users.map(user => {
             const joinedDisplay = user._joinedDate.getTime() > 0 ? user._joinedDate.toLocaleDateString() : 'N/A';
-            const photoUrl = user.photo_url || user.photoUrl || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.display_name || user.displayName || 'User')}&background=random`;
-            const name = user.display_name || user.displayName || 'Anonymous';
+            const photoUrl = user.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.display_name || 'User')}&background=random`;
+            const name = user.display_name || 'Anonymous';
             const email = user.email || 'No email';
             const rolesHtml = getRolesBadges(user);
 

@@ -487,7 +487,7 @@
         USERS: "users",
         ROOT_COLLECTION: "kasilayn",
         ROOT_DOCUMENT: "poortjieOperator",
-        BOOKINGS: "bookings",
+        BOOKINGS: "prod_bookings",
         SUGGESTIONS: "suggested_places"
     };
 
@@ -506,7 +506,7 @@
             return;
         }
 
-        let name = user.display_name || user.displayName || user.email.split('@')[0];
+        let name = user.display_name || user.email.split('@')[0];
         document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
         document.getElementById('header-user-name').textContent = name;
 
@@ -523,13 +523,13 @@
                     return;
                 }
 
-                if (currentUserData.display_name || currentUserData.displayName) {
-                    name = currentUserData.display_name || currentUserData.displayName;
+                if (currentUserData.display_name) {
+                    name = currentUserData.display_name;
                     document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
                     document.getElementById('header-user-name').textContent = name;
                 }
-                if (currentUserData.photo_url || currentUserData.photoUrl) {
-                    document.getElementById('user-avatar').innerHTML = `<img src="${currentUserData.photo_url || currentUserData.photoUrl}" class="w-full h-full object-cover">`;
+                if (currentUserData.photo_url) {
+                    document.getElementById('user-avatar').innerHTML = `<img src="${currentUserData.photo_url}" class="w-full h-full object-cover">`;
                 }
                 if (currentUserData.phone) {
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
@@ -610,17 +610,17 @@
             drivers.forEach(driver => {
                 const opt = document.createElement('option');
                 opt.value = driver.id;
-                opt.textContent = `${driver.display_name || driver.displayName || 'Unnamed Driver'}`;
+                opt.textContent = `${driver.display_name || 'Unnamed Driver'}`;
                 driverSelect.appendChild(opt);
 
                 const modalOpt = document.createElement('option');
                 modalOpt.value = driver.id;
-                modalOpt.textContent = driver.display_name || driver.displayName || 'Unnamed Driver';
+                modalOpt.textContent = driver.display_name || 'Unnamed Driver';
                 modalDriverSelect.appendChild(modalOpt);
 
                 const filterOpt = document.createElement('option');
                 filterOpt.value = driver.id;
-                filterOpt.textContent = driver.display_name || driver.displayName || 'Unnamed Driver';
+                filterOpt.textContent = driver.display_name || 'Unnamed Driver';
                 filterDriver.appendChild(filterOpt);
             });
 
@@ -632,7 +632,7 @@
 
     function observeHistory() {
         getBookingsRef()
-            .orderBy('createdAt', 'desc')
+            .orderBy('created_at', 'desc')
             .limit(100)
             .onSnapshot(snapshot => {
                 allBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -650,12 +650,12 @@
         const driver = drivers.find(d => d.id === driverId);
         if (!driver) return;
 
-        if (!confirm(`Assign ${driver.display_name || driver.displayName || 'this driver'} to this trip?`)) return;
+        if (!confirm(`Assign ${driver.display_name || 'this driver'} to this trip?`)) return;
 
         try {
             await getBookingsRef().doc(bookingId).update({
-                assignedDriverId: driverId,
-                assignedDriverName: driver.display_name || driver.displayName || "Driver",
+                assigned_driver_id: driverId,
+                assigned_driver_name: driver.display_name || "Driver",
                 status: 'ASSIGNED_TO_DRIVER',
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -711,13 +711,13 @@
         let filtered = allBookings;
 
         if (driverIdFilter !== 'ALL') {
-            filtered = filtered.filter(b => b.assignedDriverId === driverIdFilter);
+            filtered = filtered.filter(b => b.assigned_driver_id === driverIdFilter);
         }
 
         if (dateStr) {
             filtered = filtered.filter(b => {
-                if (!b.createdAt) return false;
-                const d = new Date(b.createdAt.seconds * 1000);
+                if (!b.created_at) return false;
+                const d = new Date(b.created_at.seconds * 1000);
                 const iso = d.toISOString().split('T')[0];
                 return iso === dateStr;
             });
@@ -737,7 +737,7 @@
             const fare = trip.price || 0;
             if (isCompleted) totalMoney += fare;
 
-            const date = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleDateString() : 'Pending';
+            const date = trip.created_at ? new Date(trip.created_at.seconds * 1000).toLocaleDateString() : 'Pending';
 
             const div = document.createElement('div');
             div.className = "p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-green-500/50 transition-all";
@@ -805,12 +805,12 @@
 
         let filtered = allBookings;
         if (driverIdFilter !== 'ALL') {
-            filtered = filtered.filter(b => b.assignedDriverId === driverIdFilter);
+            filtered = filtered.filter(b => b.assigned_driver_id === driverIdFilter);
         }
         if (dateStr) {
             filtered = filtered.filter(b => {
-                if (!b.createdAt) return false;
-                const d = new Date(b.createdAt.seconds * 1000);
+                if (!b.created_at) return false;
+                const d = new Date(b.created_at.seconds * 1000);
                 return d.toISOString().split('T')[0] === dateStr;
             });
         }
@@ -839,36 +839,35 @@
         document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
         document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
         document.getElementById('modal-price').textContent = `R ${(trip.price || 0).toFixed(2)}`;
-        document.getElementById('modal-name').textContent = trip.userName || 'Anonymous';
-        document.getElementById('modal-phone').textContent = trip.userPhone || 'No phone recorded';
-        document.getElementById('modal-pickup').textContent = trip.pickupLocation?.name || 'Unknown';
-        document.getElementById('modal-destination').textContent = trip.destinationLocation?.name || 'Unknown';
-        document.getElementById('modal-driver').textContent = trip.assignedDriverName || 'Unassigned';
-        document.getElementById('modal-driver-id').textContent = trip.assignedDriverId ? `UID: ${trip.assignedDriverId}` : '';
+        document.getElementById('modal-name').textContent = trip.user_name || 'Anonymous';
+        document.getElementById('modal-phone').textContent = trip.user_phone || 'No phone recorded';
+        document.getElementById('modal-pickup').textContent = trip.pickup_location?.name || 'Unknown';
+        document.getElementById('modal-destination').textContent = trip.destination_location?.name || 'Unknown';
+        document.getElementById('modal-driver').textContent = trip.assigned_driver_name || 'Unassigned';
+        document.getElementById('modal-driver-id').textContent = trip.assigned_driver_id ? `UID: ${trip.assigned_driver_id}` : '';
 
-        const bookedAt = trip.createdAt ? new Date(trip.createdAt.seconds * 1000).toLocaleString() : 'Pending';
+        const bookedAt = trip.created_at ? new Date(trip.created_at.seconds * 1000).toLocaleString() : 'Pending';
         document.getElementById('modal-time').textContent = bookedAt;
         document.getElementById('modal-passengers').textContent = trip.passengers || '1';
         document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
 
         const callBtn = document.getElementById('modal-call-btn');
-        if (trip.userPhone) {
-            callBtn.href = `tel:${trip.userPhone}`;
-            callBtn.classList.remove('opacity-50', 'pointer-events-none');
+        if (trip.user_phone) {
+            callBtn.href = `tel:${trip.user_phone}`;
         } else {
             callBtn.href = "#";
             callBtn.classList.add('opacity-50', 'pointer-events-none');
         }
 
         const callDriverBtn = document.getElementById('modal-call-driver-btn');
-        if (trip.status === 'ASSIGNED_TO_DRIVER' && trip.assignedDriverId) {
+        if (trip.status === 'ASSIGNED_TO_DRIVER' && trip.assigned_driver_id) {
              callDriverBtn.classList.remove('hidden');
              callDriverBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Fetching...</span>`;
              callDriverBtn.href = "#";
              callDriverBtn.classList.add('opacity-50', 'pointer-events-none');
 
              try {
-                 const driverDoc = await db.collection('users').doc(trip.assignedDriverId).get();
+                 const driverDoc = await db.collection('users').doc(trip.assigned_driver_id).get();
                  if (driverDoc.exists && driverDoc.data().phone) {
                      const phone = driverDoc.data().phone;
                      callDriverBtn.href = `tel:${phone}`;
@@ -1163,25 +1162,25 @@
             const selectedDriver = drivers.find(d => d.id === selectedDriverId);
 
             const bookingData = {
-                userId: "MANUAL_" + phone.replace(/\s+/g, ''),
-                userName: name,
-                userPhone: phone,
+                user_id: "MANUAL_" + phone.replace(/\s+/g, ''),
+                user_name: name,
+                user_phone: phone,
                 reason: reason,
                 passengers: passengers,
-                pickupLocation: {
+                pickup_location: {
                     name: pickup,
                     latitude: locations.pickup.lat || 0.0,
                     longitude: locations.pickup.lng || 0.0
                 },
-                destinationLocation: {
+                destination_location: {
                     name: destination,
                     latitude: locations.destination.lat || 0.0,
                     longitude: locations.destination.lng || 0.0
                 },
                 price: price,
                 status: selectedDriverId ? 'ASSIGNED_TO_DRIVER' : 'READY_FOR_ASSIGNMENT',
-                assignedDriverId: selectedDriverId || null,
-                assignedDriverName: selectedDriver ? (selectedDriver.display_name || selectedDriver.displayName || "Driver") : null,
+                assigned_driver_id: selectedDriverId || null,
+                assigned_driver_name: selectedDriver ? (selectedDriver.display_name || "Driver") : null,
                 created_at: now,
                 updated_at: now
             };
