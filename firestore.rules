@@ -50,5 +50,18 @@ service cloud.firestore {
     match /user_traces/{uid} {
       allow create, update: if request.auth != null && request.auth.uid == uid;
     }
+
+    // --- Business Applications ---
+    match /poortjie/applications/listings/{listingId} {
+      allow create: if request.auth != null
+        && request.resource.data.user_id == request.auth.uid;
+
+      allow read, delete: if request.auth != null
+        && resource.data.user_id == request.auth.uid;
+
+      allow update: if request.auth != null
+        && resource.data.user_id == request.auth.uid
+        && request.resource.data.user_id == resource.data.user_id;
+    }
   }
 }
