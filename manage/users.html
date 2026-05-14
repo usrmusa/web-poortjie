@@ -121,9 +121,17 @@
         if (user) {
             // Check if user is superuser
             db.collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists && (doc.data().roles?.tuktuk?.is_super_user || doc.data().roles?.poortjie?.is_admin)) {
-                    document.getElementById('admin-content').classList.remove('hidden');
-                    loadUsers();
+                if (doc.exists) {
+                    const roles = doc.data().roles || {};
+                    const isSuperUser = roles.digilayn?.is_super_user === true;
+                    const isPoortjieAdmin = roles.poortjie?.is_admin === true;
+
+                    if (isSuperUser || isPoortjieAdmin) {
+                        document.getElementById('admin-content').classList.remove('hidden');
+                        loadUsers();
+                    } else {
+                        window.top.location.replace('../index.html');
+                    }
                 } else {
                     window.top.location.replace('../index.html');
                 }
@@ -197,7 +205,7 @@
         const roles = [];
         const r = user.roles || {};
 
-        if (r.tuktuk?.is_super_user) roles.push({name: 'Super User', color: 'bg-purple-100 text-purple-700 border-purple-200'});
+        if (r.digilayn?.is_super_user) roles.push({name: 'Super User', color: 'bg-purple-100 text-purple-700 border-purple-200'});
 
         if (r.kasilayn?.is_admin) roles.push({name: 'Kasilayn Admin', color: 'bg-blue-100 text-blue-700 border-blue-200'});
         if (r.kasilayn?.is_driver) roles.push({name: 'Driver', color: 'bg-yellow-100 text-yellow-700 border-yellow-200'});
