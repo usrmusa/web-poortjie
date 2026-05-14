@@ -35,5 +35,6 @@
     <orderEntry type="library" name="firebase-auth-compat" level="application" />
     <orderEntry type="library" name="firebase-storage-compat" level="application" />
     <orderEntry type="library" name="cropperjs" level="application" />
+    <orderEntry type="library" name="dexie" level="application" />
   </component>
 </module>

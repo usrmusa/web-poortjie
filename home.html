@@ -161,42 +161,7 @@
 
 <main class="max-w-6xl mx-auto px-6 pb-24" id="services">
 
-    <div class="mb-12 flex flex-col md:flex-row gap-4">
-        <div class="relative flex-grow">
-            <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
-                 stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <label for="search-bar"></label><input type="text" id="search-bar" placeholder="Search categories..."
-                                                   class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
-        </div>
-        <label for="sort-list"></label><select id="sort-list"
-                                               class="px-4 py-3 rounded-lg border border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
-        <option value="asc">Name (A-Z)</option>
-        <option value="desc">Name (Z-A)</option>
-    </select>
-    </div>
-
     <div id="services-grid" class="grid md:grid-cols-3 gap-8">
-    </div>
-
-    <div id="no-results-container" class="hidden mt-12 text-center p-12 bg-gray-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-        <div class="mb-4 text-5xl">🔍</div>
-        <h3 class="text-xl font-bold mb-2">No categories match your search</h3>
-        <p class="text-slate-500 dark:text-slate-400 mb-6">Can't find what you're looking for? We can search through all individual businesses.</p>
-        <button id="global-search-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
-            Search All Services
-        </button>
-        <div id="global-search-loading" class="hidden mt-4">
-            <div class="flex flex-col items-center">
-                <div class="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-2"></div>
-                <p class="text-sm">Searching every corner...</p>
-            </div>
-        </div>
-        <div id="global-results" class="mt-8 grid md:grid-cols-2 gap-4 text-left">
-            <!-- Global search results will appear here -->
-        </div>
     </div>
 
     <section class="mt-24 card p-10 rounded-3xl bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/10">
@@ -238,14 +203,14 @@
     </div>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="scripts/firebase.js" defer></script>
 <script src="scripts/theme.js" defer></script>
 <script src="https://unpkg.com/dexie/dist/dexie.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
-<script src="scripts/firebase.js" defer></script>
 <script src="scripts/card-renderer.js" defer></script>
 <script src="scripts/rating.js" defer></script>
 
@@ -278,46 +243,13 @@
         `).join('');
     }
 
-    function filterAndSort() {
-        const searchTerm = document.getElementById('search-bar').value.toLowerCase();
-        const sortValue = document.getElementById('sort-list').value;
-        const noResultsContainer = document.getElementById('no-results-container');
-        const servicesGrid = document.getElementById('services-grid');
-        const globalResults = document.getElementById('global-results');
-
-        let filtered = allServices.filter(service =>
-            service.category.toLowerCase().includes(searchTerm) ||
-            service.title.toLowerCase().includes(searchTerm) ||
-            service.description.toLowerCase().includes(searchTerm) ||
-            (service.tags && Array.isArray(service.tags) ? service.tags.join(" ").toLowerCase().includes(searchTerm) : (service.tags || "").toLowerCase().includes(searchTerm)) ||
-            service.list.some(item => item.toLowerCase().includes(searchTerm))
-        );
-
-        if (sortValue === 'asc') {
-            filtered.sort((a, b) => a.category.localeCompare(b.category));
-        } else if (sortValue === 'desc') {
-            filtered.sort((a, b) => b.category.localeCompare(a.category));
-        }
-
-        renderCards(filtered);
-
-        if (filtered.length === 0 && searchTerm.trim() !== '') {
-            noResultsContainer.classList.remove('hidden');
-            servicesGrid.classList.add('hidden');
-        } else {
-            noResultsContainer.classList.add('hidden');
-            servicesGrid.classList.remove('hidden');
-            globalResults.innerHTML = ''; // Clear old global results when searching something else
-        }
-    }
-
     function fetchAndRenderServices() {
         // 1. Try to load from cache first
         try {
             const cachedData = sessionStorage.getItem('homeServicesCache');
             if (cachedData) {
                 allServices = JSON.parse(cachedData);
-                filterAndSort();
+                renderCards(allServices);
             }
         } catch (e) {
             console.error("Could not read from sessionStorage:", e);
@@ -329,7 +261,8 @@
         // Use a helper to process data
         const processData = (doc) => {
             if (doc.exists) {
-                const homeScreenData = doc.data().homeScreen;
+                const data = doc.data();
+                const homeScreenData = data.homeScreen;
                 if (homeScreenData && typeof homeScreenData === 'object') {
                     const newServices = Object.keys(homeScreenData)
                         .filter(key => homeScreenData[key].status !== 'inactive' && homeScreenData[key].status !== 'disabled')
@@ -349,7 +282,7 @@
                     // Only update and re-render if data has changed
                     if (JSON.stringify(newServices) !== JSON.stringify(allServices)) {
                         allServices = newServices;
-                        filterAndSort();
+                        renderCards(allServices);
                         
                         // 3. Update cache
                         try {
@@ -359,6 +292,8 @@
                         }
                     }
                 }
+            } else {
+                console.warn("Services document does not exist at poortjie/services");
             }
         };
 
@@ -369,118 +304,6 @@
     }
 
     window.onload = () => {
-        // Handle Global Search button
-        const globalSearchBtn = document.getElementById('global-search-btn');
-        if (globalSearchBtn) {
-            globalSearchBtn.onclick = async () => {
-                const user = firebase.auth().currentUser;
-                if (!user) {
-                    const currentSearch = document.getElementById('search-bar').value;
-                    sessionStorage.setItem('pendingSearch', currentSearch);
-                    sessionStorage.setItem('redirectUrl', window.location.href);
-                    window.location.href = 'authentication/login.html';
-                    return;
-                }
-                
-                // Perform global search
-                const searchTerm = document.getElementById('search-bar').value.toLowerCase();
-                const loading = document.getElementById('global-search-loading');
-                const resultsArea = document.getElementById('global-results');
-                
-                loading.classList.remove('hidden');
-                globalSearchBtn.classList.add('hidden');
-                resultsArea.innerHTML = '';
-
-                try {
-                    // Optimized Global Search: Search across all categories
-                    // Since we want to find WHICH category contains the item, 
-                    // we'll use a Collection Group query if they share a common field 
-                    // or a consolidated search approach.
-                    
-                    const matches = [];
-                    const categories = allServices.map(s => s.category);
-                    
-                    // Fetch from all active categories in parallel
-                    const searchPromises = categories.map(async (cat) => {
-                        const snapshot = await firebase.firestore()
-                            .collection('poortjie')
-                            .doc('services')
-                            .collection(cat)
-                            .where('status', '==', 'active')
-                            .get();
-                        
-                        snapshot.forEach(doc => {
-                            const data = doc.data();
-                            const name = (data.businessName || "").toLowerCase();
-                            const sub = (data.subHeading || "").toLowerCase();
-                            const desc = (data.description || "").toLowerCase();
-                            const tags = Array.isArray(data.tags) ? data.tags.join(" ").toLowerCase() : (data.tags || "").toLowerCase();
-                            const services = Array.isArray(data.services) 
-                                ? data.services.map(s => `${s.name || ""} ${s.description || ""}`).join(" ").toLowerCase()
-                                : "";
-
-                            if (name.includes(searchTerm) || sub.includes(searchTerm) || desc.includes(searchTerm) || tags.includes(searchTerm) || services.includes(searchTerm)) {
-                                matches.push({
-                                    businessName: data.businessName,
-                                    category: cat,
-                                    url: `services/${cat.toLowerCase()}.html`
-                                });
-                            }
-                        });
-                    });
-
-                    await Promise.all(searchPromises);
-
-                    loading.classList.add('hidden');
-                    globalSearchBtn.classList.remove('hidden');
-
-                    if (matches.length === 0) {
-                        resultsArea.innerHTML = '<p class="text-center col-span-full opacity-50">Still nothing found. Try a different keyword?</p>';
-                    } else {
-                        // Group by category to show "X is inside Y"
-                        const grouped = matches.reduce((acc, match) => {
-                            if (!acc[match.category]) acc[match.category] = [];
-                            acc[match.category].push(match.businessName);
-                            return acc;
-                        }, {});
-
-                        resultsArea.innerHTML = Object.keys(grouped).map(cat => `
-                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-green-100 dark:border-green-900/30">
-                                <p class="text-sm font-bold text-green-600 dark:text-green-400 mb-1">Results found inside:</p>
-                                <h4 class="text-lg font-bold mb-2">${cat}</h4>
-                                <p class="text-xs opacity-70 mb-3">Businesses like: ${grouped[cat].slice(0, 3).join(', ')}${grouped[cat].length > 3 ? '...' : ''}</p>
-                                <a href="services/${cat.toLowerCase()}.html?search=${encodeURIComponent(searchTerm)}" class="inline-block text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-3 py-1 rounded-full font-bold hover:bg-green-600 hover:text-white transition">Go to ${cat}</a>
-                            </div>
-                        `).join('');
-                    }
-
-                } catch (error) {
-                    console.error("Global search failed:", error);
-                    loading.classList.add('hidden');
-                    globalSearchBtn.classList.remove('hidden');
-                    resultsArea.innerHTML = '<p class="text-red-500 text-center col-span-full">Something went wrong. Please try again.</p>';
-                }
-            };
-        }
-
-        // Check for pending search after login
-        const pendingSearch = sessionStorage.getItem('pendingSearch');
-        if (pendingSearch) {
-            document.getElementById('search-bar').value = pendingSearch;
-            sessionStorage.removeItem('pendingSearch');
-            // Wait for allServices to load then filter
-            const interval = setInterval(() => {
-                if (allServices.length > 0) {
-                    filterAndSort();
-                    // Auto-trigger global search if user just came back from login
-                    if (firebase.auth().currentUser) {
-                        globalSearchBtn.click();
-                    }
-                    clearInterval(interval);
-                }
-            }, 500);
-        }
-
         // Hide loader once everything is ready
         const loader = document.getElementById('loader-overlay');
         if (loader) {
@@ -701,7 +524,8 @@
             // 2. Fetch from Firestore
             db.collection('poortjie').doc('news').collection('updates')
                 .where('status', '==', 'active')
-                .onSnapshot(snapshot => {
+                .get()
+                .then(snapshot => {
                     const newNewsUpdates = [];
                     const newAlertUpdates = [];
                     snapshot.forEach(doc => {
@@ -746,7 +570,7 @@
 
                         startNewsSlider();
                     }
-                }, error => {
+                }).catch(error => {
                     console.error("Error fetching news:", error);
                     // If it's an index error, Firestore provides a link in the console
                     if (error.message && error.message.includes('index')) {
@@ -760,9 +584,6 @@
         fetchAndRenderServices();
         fetchNews();
 
-        document.getElementById('search-bar').addEventListener('input', filterAndSort);
-        document.getElementById('sort-list').addEventListener('change', filterAndSort);
-
         // AUTH & UI SCRIPTS
         const hamburgerMenu = document.getElementById('hamburger-menu');
         const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -771,7 +592,7 @@
         const adminLink = document.getElementById('admin-link');
         const homeAdminLink = document.getElementById('home-admin-link');
         const taxiAdminLink = document.getElementById('taxi-admin-link');
-        const addBusinessLink = document.getElementById('add-business-link');
+        const addBusinessBtn = document.getElementById('add-business-btn');
         const newsAdminLink = document.getElementById('news-admin-link');
         const authDivider = document.getElementById('auth-divider');
         const loginLink = document.getElementById('login-link');
@@ -785,26 +606,23 @@
         firebase.auth().onAuthStateChanged(user => {
             if (authDivider) authDivider.classList.remove('hidden');
             if (user) {
-                if (addBusinessLink) addBusinessLink.classList.remove('hidden');
-                if (profileLink) profileLink.classList.remove('hidden');
+                if (addBusinessBtn) addBusinessBtn.classList.remove('hidden');
+                if (profileLink) {
+                    profileLink.classList.remove('hidden');
+                    if (user.displayName) {
+                        profileLink.textContent = user.displayName;
+                    }
+                    if (user.photoURL) {
+                        profileLink.innerHTML = `<img src="${user.photoURL}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt=""> ${user.displayName || 'Profile'}`;
+                    }
+                }
                 if (loginLink) loginLink.classList.add('hidden');
-                if (logoutBtn) logoutBtn.classList.add('hidden'); // Replaced by profile
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                
                 firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
                     if (doc.exists) {
                         const userData = doc.data();
-                        if (userData.display_name && profileLink) {
-                            profileLink.textContent = userData.display_name;
-                        }
-                        if (userData.photo_url && profileLink) {
-                            // Optionally show user avatar in the menu
-                            const existingImg = profileLink.querySelector('img');
-                            if (existingImg) {
-                                existingImg.src = userData.photo_url;
-                            } else {
-                                profileLink.innerHTML = `<img src="${userData.photo_url}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt=""> ${userData.display_name || 'Profile'}`;
-                            }
-                        }
-                        const isSuperUser = (userData.roles?.tuktuk?.is_super_user || userData.roles?.digilayn?.is_super_user) === true;
+                        const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
                         const isPoortjieAdmin = userData.roles?.poortjie?.is_admin === true;
                         const isTaxiRankAdmin = userData.roles?.poortjie?.is_taxi_rank_admin === true;
 
@@ -822,14 +640,13 @@
                 });
             } else {
                 if (profileLink) {
-                    profileLink.classList.add('hidden'); // Logout replaced by Profile, so Profile is only for logged in
-                    profileLink.innerHTML = 'Profile'; // Reset content
+                    profileLink.classList.add('hidden');
+                    profileLink.innerHTML = 'Profile';
                 }
                 if (loginLink) loginLink.classList.remove('hidden');
                 if (adminLink) adminLink.classList.add('hidden');
                 if (homeAdminLink) homeAdminLink.classList.add('hidden');
                 if (taxiAdminLink) taxiAdminLink.classList.add('hidden');
-                if (addBusinessLink) addBusinessLink.classList.add('hidden');
                 if (newsAdminLink) newsAdminLink.classList.add('hidden');
                 if (logoutBtn) logoutBtn.classList.add('hidden');
             }
