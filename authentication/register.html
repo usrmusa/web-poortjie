@@ -8,7 +8,6 @@
     <meta name="description" content="Create a new Poortjie Services account.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Disable Tailwind production warning
         if (window.console && window.console.log) {
             const originalLog = window.console.log;
             window.console.log = function() {
@@ -443,6 +442,7 @@
                         });
 
                         transaction.set(userRef, {
+                            user_id: user.uid,
                             username: username,
                             display_name: displayName,
                             email: email,
