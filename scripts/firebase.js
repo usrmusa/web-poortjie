@@ -23,18 +23,20 @@ try {
 
 // Enable offline persistence with multi-tab support
 if (location.protocol !== 'file:') {
-// For Firebase JS SDK v9 compat, multi-tab persistence is enabled by default if available.
-  // Using the newer settings object to avoid deprecation warnings.
-  db.enablePersistence({synchronizeTabs: true})
-    .catch((err) => {
-      if (err.code === 'failed-precondition') {
-        // This can still happen if multiple tabs are open with different persistence settings.
-        console.warn('Firebase persistence failed: multiple tabs open with different settings.');
-      } else if (err.code === 'unimplemented') {
-        // The current browser does not support all of the features required to enable persistence.
-        console.warn('Firebase persistence failed: browser does not support it.');
-      }
-    });
+  // Use a more robust check for Firestore before calling methods
+  if (typeof firebase.firestore === 'function') {
+    // Newer settings object to avoid deprecation warnings.
+    // In SDK v9 compat, we use the older method but with settings if needed.
+    // Actually, v9 compat STILL uses enablePersistence.
+    db.enablePersistence({synchronizeTabs: true})
+      .catch((err) => {
+        if (err.code === 'failed-precondition') {
+          console.warn('Firebase persistence failed: multiple tabs open.');
+        } else if (err.code === 'unimplemented') {
+          console.warn('Firebase persistence failed: browser does not support it.');
+        }
+      });
+  }
 }
 
 /**

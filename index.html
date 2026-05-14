@@ -33,9 +33,6 @@
             height: 100%;
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-    <script src="scripts/firebase.js"></script>
 </head>
 <body>
 <iframe src="home.html" id="main-frame" title="Poortjie Services Main Content"></iframe>
@@ -43,20 +40,19 @@
     const iframe = document.getElementById('main-frame');
     iframe.onload = function () {
         try {
-            // Check if we can access the iframe document (same-origin check)
-            if (iframe.contentWindow.location.origin === 'null' || iframe.contentWindow.location.origin === window.location.origin) {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                
-                const iframeTitle = iframeDoc.title;
-                if (iframeTitle) {
-                    document.title = iframeTitle;
+            const iframeWindow = iframe.contentWindow;
+            if (!iframeWindow) return;
+
+            const isSameOrigin = (iframeWindow.location.origin === window.location.origin) ||
+                               (iframeWindow.location.origin === 'null');
+
+            if (isSameOrigin) {
+                const iframeDoc = iframe.contentDocument || iframeWindow.document;
+                if (iframeDoc && iframeDoc.title) {
+                    document.title = iframeDoc.title;
                 }
             }
         } catch (e) {
-            // If it's a security error (cross-origin), we just skip the protection
-            // instead of spamming the console with a warning if possible, 
-            // but the browser might still log the SecurityError itself.
-            console.log("Iframe protection skipped (cross-origin or file protocol)");
         }
     };
 </script>
