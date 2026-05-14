@@ -12,20 +12,31 @@
     <meta name="copyright" content="© 2026 Poortjie Services. All rights reserved.">
     <meta name="robots" content="index,follow">
     <meta name="theme-color" content="#22c55e">
-
     <link rel="icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
     <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
     <link rel="shortcut icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="manifest" href="favicon/site.webmanifest">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        console.log(
+            "%cDigilayn",
+            "color: #22c55e; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 0 #0f172a;"
+        );
+        console.log(
+            "%cWebsite developed by Musa Mgijima",
+            "color: #64748b; font-size: 16px; font-style: italic;"
+        );
         if (window.console && window.console.log) {
             const originalLog = window.console.log;
             window.console.log = function() {
-                if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('cdn.tailwindcss.com should not be used in production') || arguments[0].includes('Tailwind CSS: You should not use the CDN'))) return;
+                const msg = arguments[0];
+                if (msg && typeof msg === 'string') {
+                    if (msg.includes('cdn.tailwindcss.com should not be used in production')) return;
+                    if (msg.includes('Tailwind CSS: You should not use the CDN')) return;
+                    if (msg.includes('enableMultiTabIndexedDbPersistence() will be deprecated')) return;
+                }
                 originalLog.apply(window.console, arguments);
             };
         }
@@ -36,7 +47,6 @@
         }
     </script>
     <style>
-        /* Critical CSS to prevent FOUC when using Tailwind CDN */
         #loader-overlay { background-color: #ffffff; }
         .dark #loader-overlay { background-color: #0f172a; }
         .animate-spin { animation: spin 1s linear infinite; }
@@ -45,7 +55,6 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-
 <div class="fixed top-5 left-5 z-50" id="business-form-control">
     <a href="services/business-form.html" id="add-business-btn"
        class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition flex items-center justify-center"
@@ -55,10 +64,7 @@
         </svg>
     </a>
 </div>
-
 <div class="fixed top-5 right-5 z-50 flex gap-3" id="user-controls">
-    <!-- Theme Toggle removed from here and moved to hamburger menu -->
-
     <div id="hamburger-menu" class="relative">
         <button id="hamburger-btn"
                 class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition">
@@ -87,10 +93,8 @@
                 News/Alert</a>
             <a id="taxi-admin-link" href="manage/public transport.html"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Public Transport Admin</a>
-
             <a href="support.html"
                class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Support</a>
-
             <a id="profile-link" href="authentication/profile.html"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Profile</a>
             <div id="auth-divider" class="hidden border-t border-gray-100 dark:border-slate-700 my-1"></div>
@@ -104,7 +108,6 @@
         </div>
     </div>
 </div>
-
 <header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center">
     <div id="loader-overlay" class="fixed inset-0 bg-white dark:bg-slate-900 z-[60] flex items-center justify-center transition-opacity duration-500">
         <div class="flex flex-col items-center">
@@ -119,27 +122,22 @@
     </div>
     <h1 class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</h1>
     <div id="alert-container" class="max-w-2xl mx-auto mb-4 hidden">
-        <!-- Alerts will be injected here -->
     </div>
     <div id="news-slider-container" class="max-w-2xl mx-auto mb-8 hidden">
         <div id="news-slider"
              class="bg-green-50 dark:bg-slate-800/50 border border-green-100 dark:border-slate-700 rounded-2xl p-6 relative group overflow-hidden">
             <div id="news-content-area" class="transition-opacity duration-500">
-                <!-- News content will be injected here -->
                 <div class="animate-pulse flex flex-col items-center">
                     <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
                     <div class="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/2"></div>
                 </div>
             </div>
-
-            <!-- Navigation Arrows -->
             <button id="prev-news" class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/40 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none" aria-label="Previous news">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             </button>
             <button id="next-news" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/40 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none" aria-label="Next news">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             </button>
-
             <div class="flex justify-center gap-2 mt-4" id="slider-dots"></div>
         </div>
     </div>
@@ -147,7 +145,6 @@
         The digital heartbeat of the township. Access reliable transport, professional designers, and expert
         developers—all in one place.
     </p>
-
     <div class="flex flex-wrap justify-center gap-4 mt-8">
         <a href="#services"
            class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">Explore
@@ -158,12 +155,9 @@
            class="px-8 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition">Public Transport Info</a>
     </div>
 </header>
-
 <main class="max-w-6xl mx-auto px-6 pb-24" id="services">
-
     <div id="services-grid" class="grid md:grid-cols-3 gap-8">
     </div>
-
     <section class="mt-24 card p-10 rounded-3xl bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/10">
         <div class="max-w-3xl">
             <h2 class="text-3xl font-bold mb-4">Built for the community, by the community.</h2>
@@ -176,24 +170,17 @@
             </div>
         </div>
     </section>
-
-    <!-- Business Modal -->
     <div id="business-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <button onclick="closeBusinessModal()" class="sticky top-4 float-right mr-4 z-10 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-full shadow-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
             <div id="business-modal-content" class="p-1">
-                <!-- Business card will be injected here -->
             </div>
         </div>
     </div>
-
-    <!-- Rating Modal Container -->
     <div id="rating-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"></div>
-
 </main>
-
 <footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
     &copy; 2026 <a href="index.html" onclick="window.top.location.replace('index.html'); return false;"
                    class="hover:underline">Poortjie Services</a>. Empowering poortjie economies.
@@ -202,7 +189,6 @@
         <a href="support.html" class="hover:underline">Data Policy</a>
     </div>
 </footer>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -213,10 +199,12 @@
 <script src="https://unpkg.com/dexie/dist/dexie.js" defer></script>
 <script src="scripts/card-renderer.js" defer></script>
 <script src="scripts/rating.js" defer></script>
-
 <script>
     let allServices = [];
-
+    let newsUpdates = [];
+    let alertUpdates = [];
+    let currentNewsIndex = 0;
+    let sliderInterval;
     function renderCards(servicesData) {
         if (!servicesData) return;
         const grid = document.getElementById('services-grid');
@@ -242,9 +230,7 @@
             </section>
         `).join('');
     }
-
     function fetchAndRenderServices() {
-        // 1. Try to load from cache first
         try {
             const cachedData = sessionStorage.getItem('homeServicesCache');
             if (cachedData) {
@@ -254,11 +240,7 @@
         } catch (e) {
             console.error("Could not read from sessionStorage:", e);
         }
-
-        // 2. Fetch from Firestore
         const servicesDocRef = firebase.firestore().collection('poortjie').doc('services');
-        
-        // Use a helper to process data
         const processData = (doc) => {
             if (doc.exists) {
                 const data = doc.data();
@@ -266,6 +248,7 @@
                 if (homeScreenData && typeof homeScreenData === 'object') {
                     const newServices = Object.keys(homeScreenData)
                         .filter(key => homeScreenData[key].status !== 'inactive' && homeScreenData[key].status !== 'disabled')
+                        .sort((a, b) => a.localeCompare(b))
                         .map(key => {
                             const service = homeScreenData[key];
                             return {
@@ -278,13 +261,9 @@
                                 btnText: `Explore ${key}`
                             };
                         });
-
-                    // Only update and re-render if data has changed
                     if (JSON.stringify(newServices) !== JSON.stringify(allServices)) {
                         allServices = newServices;
                         renderCards(allServices);
-                        
-                        // 3. Update cache
                         try {
                             sessionStorage.setItem('homeServicesCache', JSON.stringify(allServices));
                         } catch (e) {
@@ -296,27 +275,16 @@
                 console.warn("Services document does not exist at poortjie/services");
             }
         };
-
-        // Get from server
         servicesDocRef.get().then(processData).catch((error) => {
             console.error("Error fetching services:", error);
         });
     }
-
     window.onload = () => {
-        // Hide loader once everything is ready
         const loader = document.getElementById('loader-overlay');
         if (loader) {
             loader.style.opacity = '0';
             setTimeout(() => loader.remove(), 500);
         }
-
-        // --- News Slider Logic ---
-        let newsUpdates = [];
-        let alertUpdates = [];
-        let currentNewsIndex = 0;
-        let sliderInterval;
-
         function startNewsSlider() {
             if (newsUpdates.length === 0 && alertUpdates.length === 0) {
                 document.getElementById('news-slider-container').classList.add('hidden');
@@ -324,15 +292,12 @@
                 document.getElementById('hero-static-text').classList.remove('hidden');
                 return;
             }
-
             document.getElementById('hero-static-text').classList.add('hidden');
-
             if (alertUpdates.length > 0) {
                 renderAlerts();
             } else {
                 document.getElementById('alert-container').classList.add('hidden');
             }
-
             if (newsUpdates.length > 0) {
                 document.getElementById('news-slider-container').classList.remove('hidden');
                 renderNewsSlide();
@@ -343,7 +308,6 @@
                 document.getElementById('news-slider-container').classList.add('hidden');
             }
         }
-
         function renderAlerts() {
             const container = document.getElementById('alert-container');
             container.innerHTML = alertUpdates.map(alert => `
@@ -360,59 +324,48 @@
             `).join('');
             container.classList.remove('hidden');
         }
-
         const newsSlider = document.getElementById('news-slider');
         newsSlider.addEventListener('mouseenter', () => {
             if (newsUpdates.length > 1) {
                 clearInterval(sliderInterval);
             }
         });
-
         newsSlider.addEventListener('mouseleave', () => {
             if (newsUpdates.length > 1) {
                 resetSliderTimer();
             }
         });
-
         function resetSliderTimer() {
             clearInterval(sliderInterval);
             sliderInterval = setInterval(() => {
                 showNextNews();
             }, 10000);
         }
-
         function showNextNews() {
             currentNewsIndex = (currentNewsIndex + 1) % newsUpdates.length;
             renderNewsSlide();
         }
-
         function showPrevNews() {
             currentNewsIndex = (currentNewsIndex - 1 + newsUpdates.length) % newsUpdates.length;
             renderNewsSlide();
         }
-
         document.getElementById('next-news').addEventListener('click', () => {
             showNextNews();
             resetSliderTimer();
         });
-
         document.getElementById('prev-news').addEventListener('click', () => {
             showPrevNews();
             resetSliderTimer();
         });
-
         function renderNewsSlide() {
             const news = newsUpdates[currentNewsIndex];
             const contentArea = document.getElementById('news-content-area');
             const dotsArea = document.getElementById('slider-dots');
-
             contentArea.style.opacity = '0';
-
             setTimeout(() => {
                 let typeLabel = '';
                 let typeColor = 'bg-green-500';
                 let actionButton = '';
-
                 if (news.type === 'event') {
                     typeLabel = '📅 EVENT';
                     typeColor = 'bg-blue-500';
@@ -427,7 +380,6 @@
                             </button>`;
                     }
                 }
-
                 if (news.externalLink && news.externalLink.url) {
                     const btnName = news.externalLink.name || 'View More';
                     actionButton = `
@@ -436,7 +388,6 @@
                             ${btnName}
                         </button>`;
                 }
-
                 contentArea.innerHTML = `
                     <div class="flex flex-col items-center">
                         ${typeLabel ? `<span class="${typeColor} text-[10px] text-white font-black px-2 py-0.5 rounded mb-2">${typeLabel}</span>` : ''}
@@ -446,8 +397,6 @@
                     </div>
                 `;
                 contentArea.style.opacity = '1';
-
-                // Render Dots
                 if (newsUpdates.length > 1) {
                     dotsArea.innerHTML = newsUpdates.map((_, i) => `
                         <div onclick="goToNews(${i})" class="cursor-pointer w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentNewsIndex ? 'bg-green-600 w-4' : 'bg-gray-300 dark:bg-slate-600'}"></div>
@@ -457,17 +406,14 @@
                 }
             }, 300);
         }
-
         window.goToNews = (index) => {
             currentNewsIndex = index;
             renderNewsSlide();
             resetSliderTimer();
         };
-
         window.showPromoBusiness = async (id, collection) => {
             const modal = document.getElementById('business-modal');
             const content = document.getElementById('business-modal-content');
-            
             content.innerHTML = `
                 <div class="p-12 text-center">
                     <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
@@ -476,7 +422,6 @@
             `;
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-
             try {
                 const doc = await db.collection('poortjie').doc('services').collection(collection).doc(id).get();
                 if (doc.exists) {
@@ -492,23 +437,17 @@
                 content.innerHTML = '<p class="p-8 text-center text-red-500">Error loading business profile.</p>';
             }
         };
-
         window.closeBusinessModal = () => {
             document.getElementById('business-modal').classList.add('hidden');
             document.body.style.overflow = '';
         };
-
-        // Close modal on click outside
         document.getElementById('business-modal').addEventListener('click', (e) => {
             if (e.target.id === 'business-modal') {
                 closeBusinessModal();
             }
         });
-
         function fetchNews() {
             const now = new Date();
-            
-            // 1. Try to load from cache
             try {
                 const cachedNews = sessionStorage.getItem('newsUpdatesCache');
                 const cachedAlerts = sessionStorage.getItem('alertUpdatesCache');
@@ -520,8 +459,6 @@
             } catch (e) {
                 console.error("Error reading news cache:", e);
             }
-
-            // 2. Fetch from Firestore
             db.collection('poortjie').doc('news').collection('updates')
                 .where('status', '==', 'active')
                 .get()
@@ -540,39 +477,29 @@
                             }
                         }
                     });
-
                     const sortFn = (a, b) => {
                         const dateA = a.createdAt?.toDate() || new Date(0);
                         const dateB = b.createdAt?.toDate() || new Date(0);
                         return dateB - dateA;
                     };
-
                     newNewsUpdates.sort(sortFn);
                     newAlertUpdates.sort(sortFn);
-
                     const finalNews = newNewsUpdates.slice(0, 5);
                     const finalAlerts = newAlertUpdates.slice(0, 2);
-
-                    // 3. Compare and Update
                     if (JSON.stringify(finalNews) !== JSON.stringify(newsUpdates) || 
                         JSON.stringify(finalAlerts) !== JSON.stringify(alertUpdates)) {
-                        
                         newsUpdates = finalNews;
                         alertUpdates = finalAlerts;
-                        
-                        // Update Cache
                         try {
                             sessionStorage.setItem('newsUpdatesCache', JSON.stringify(newsUpdates));
                             sessionStorage.setItem('alertUpdatesCache', JSON.stringify(alertUpdates));
                         } catch (e) {
                             console.error("Error saving news cache:", e);
                         }
-
                         startNewsSlider();
                     }
                 }).catch(error => {
                     console.error("Error fetching news:", error);
-                    // If it's an index error, Firestore provides a link in the console
                     if (error.message && error.message.includes('index')) {
                         console.warn("Firestore Index Required: " + error.message);
                     }
@@ -580,11 +507,8 @@
                     document.getElementById('hero-static-text').classList.remove('hidden');
                 });
         }
-
         fetchAndRenderServices();
         fetchNews();
-
-        // AUTH & UI SCRIPTS
         const hamburgerMenu = document.getElementById('hamburger-menu');
         const hamburgerBtn = document.getElementById('hamburger-btn');
         const menuItems = document.getElementById('menu-items');
@@ -592,17 +516,15 @@
         const adminLink = document.getElementById('admin-link');
         const homeAdminLink = document.getElementById('home-admin-link');
         const taxiAdminLink = document.getElementById('taxi-admin-link');
-        const addBusinessBtn = document.getElementById('add-business-btn');
         const newsAdminLink = document.getElementById('news-admin-link');
+        const addBusinessBtn = document.getElementById('add-business-btn');
         const authDivider = document.getElementById('auth-divider');
         const loginLink = document.getElementById('login-link');
         const logoutBtn = document.getElementById('logout-btn');
-
         hamburgerBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             menuItems.classList.toggle('hidden');
         });
-
         firebase.auth().onAuthStateChanged(user => {
             if (authDivider) authDivider.classList.remove('hidden');
             if (user) {
@@ -612,20 +534,18 @@
                     if (user.displayName) {
                         profileLink.textContent = user.displayName;
                     }
-                    if (user.photoURL) {
-                        profileLink.innerHTML = `<img src="${user.photoURL}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt=""> ${user.displayName || 'Profile'}`;
-                    }
+                        if (user.photoURL) {
+                            profileLink.innerHTML = `<img src="${user.photoURL}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt="" onerror="this.src='favicon/favicon-48x48.png'"> ${user.displayName || 'Profile'}`;
+                        }
                 }
                 if (loginLink) loginLink.classList.add('hidden');
                 if (logoutBtn) logoutBtn.classList.remove('hidden');
-                
                 firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
                     if (doc.exists) {
                         const userData = doc.data();
                         const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
                         const isPoortjieAdmin = userData.roles?.poortjie?.is_admin === true;
                         const isTaxiRankAdmin = userData.roles?.poortjie?.is_taxi_rank_admin === true;
-
                         if (isSuperUser || isPoortjieAdmin) {
                             if (adminLink) adminLink.classList.remove('hidden');
                             if (newsAdminLink) newsAdminLink.classList.remove('hidden');
@@ -651,16 +571,13 @@
                 if (logoutBtn) logoutBtn.classList.add('hidden');
             }
         });
-
         logoutBtn.addEventListener('click', () => {
             firebase.auth().signOut();
         });
-
         window.onclick = (e) => {
             if (hamburgerMenu && !hamburgerMenu.contains(e.target)) menuItems.classList.add('hidden');
         };
     };
-
     console.log("website developed by Musa Mgijima");
 </script>
 </body>
