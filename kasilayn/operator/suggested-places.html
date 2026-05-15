@@ -163,8 +163,8 @@
             selectedPlace = {
                 name: place.name,
                 address: place.formatted_address,
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng()
+                latitude: place.geometry.location.lat(),
+                longitude: place.geometry.location.lng()
             };
 
             marker.setPosition(place.geometry.location);
@@ -243,11 +243,11 @@
         btn.textContent = "Adding...";
 
         try {
-            await getSuggestionsRef().add({
+            const newDocRef = getSuggestionsRef().doc();
+            await newDocRef.set({
+                id: newDocRef.id,
                 ...selectedPlace,
-                order: suggestions.length,
-                added_by_uid: currentUserId,
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
+                order: suggestions.length
             });
             document.getElementById('place-search').value = '';
             marker.setVisible(false);
