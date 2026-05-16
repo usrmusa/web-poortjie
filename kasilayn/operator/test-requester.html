@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Requests - Poortjie Services</title>
+
+    <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="./favicon/apple-touch-icon.png">
+    <link rel="manifest" href="./favicon/site.webmanifest">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 10px; }
+
+        .route-line {
+            position: relative;
+        }
+        .route-line::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 12px;
+            bottom: 12px;
+            width: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+        .dark .route-line::before {
+            background: #334155;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased">
+
+<div id="loader-overlay"
+     class="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+    <p class="text-xs font-black uppercase tracking-widest animate-pulse">Connecting...</p>
+</div>
+
+    <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
+        <div class="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
+            <button onclick="window.history.back()"
+                    class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <a href="../../authentication/profile.html" id="user-avatar" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold overflow-hidden border border-slate-200 dark:border-slate-700">
+                <span id="user-initial">?</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-xl mx-auto p-4 space-y-6 pb-24">
+
+        <div class="pt-6 sm:pt-10 pb-4 text-center">
+            <div class="flex justify-center mb-4 sm:mb-6">
+                <img src="./logo/tuktuk.png"
+                     alt="Tuktuk Logo"
+                     class="w-1/4 sm:w-1/3 max-w-[180px] min-w-[100px] object-contain">
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl font-black tracking-tight">
+                Poortjie<br>
+                <span class="text-green-600">Requests</span>
+            </h1>
+
+            <div class="mt-3 sm:mt-4 inline-block bg-green-500/10 text-green-600 dark:text-green-400 px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em]">
+                TukTuk Operator
+            </div>
+        </div>
+
+        <!-- Active Request Check -->
+    <div id="active-request-banner" class="hidden">
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-3xl p-5 flex items-start gap-4">
+            <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+            <div>
+                <p class="text-sm font-bold text-blue-800 dark:text-blue-300">Active Request Found</p>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">You have an active request. Please complete or cancel it before making a new one.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Form Section -->
+    <section id="booking-form-section" class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-700 p-8 space-y-6">
+        <h2 class="text-2xl font-black uppercase tracking-tight">New Request</h2>
+        
+        <div class="space-y-5">
+            <!-- Pickup -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Location</label>
+                <div class="relative">
+                    <i class="fas fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-red-500"></i>
+                    <input type="text" id="pickup-input" readonly
+                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
+                </div>
+                <p id="pickup-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Pickup location is required</p>
+            </div>
+
+            <!-- Destination -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Destination</label>
+                <div class="relative">
+                    <i class="fas fa-navigation absolute left-4 top-1/2 -translate-y-1/2 text-green-500"></i>
+                    <input type="text" id="destination-input" readonly
+                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
+                </div>
+                <p id="destination-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Destination is required</p>
+            </div>
+
+            <!-- Suggestions chips -->
+            <div class="space-y-3">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Suggested Destinations</label>
+                <div id="suggestions-chips" class="flex flex-wrap gap-2">
+                    <!-- Chips will be injected here -->
+                </div>
+            </div>
+
+            <!-- Service & Details -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Service Type</label>
+                    <select id="booking-type" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
+                        <option value="passenger">Passenger</option>
+                        <option value="item_fetch">Item Fetch</option>
+                        <option value="delivery">Delivery</option>
+                    </select>
+                </div>
+                <div class="space-y-2" id="passenger-container">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Passengers</label>
+                    <select id="passenger-count" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
+                        <option value="1">1 Passenger</option>
+                        <option value="2">2 Passengers</option>
+                        <option value="3">3 Passengers</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="space-y-2">
+                <label id="reason-label" class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Reason (Optional)</label>
+                <div class="relative">
+                    <i id="reason-icon" class="fas fa-users absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="booking-reason"
+                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
+                </div>
+                <p id="reason-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please specify details</p>
+            </div>
+
+            <button id="book-btn" class="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-green-500/20 mt-2">
+                Request Now
+            </button>
+        </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="space-y-4">
+        <h2 class="text-xl font-black uppercase tracking-tight px-2">Recent Activity</h2>
+        <div id="bookings-list" class="space-y-4">
+            <div class="text-center py-12 opacity-30 italic text-sm">Connecting to services...</div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Address Selection Modal (from business-form.html style) -->
+<div id="address-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-800">
+        <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
+            <h3 id="modal-title" class="text-xl font-bold">Select Location</h3>
+            <button type="button" id="close-address-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="form-group">
+                <label for="modal-address" class="block mb-1 font-bold text-xs uppercase tracking-wider opacity-70">Type location</label>
+                <input type="text" id="modal-address"
+                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition font-bold">
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-sm uppercase tracking-wider opacity-70">Is the location correct?</h4>
+                <div id="map" class="w-full h-64 rounded-xl border-2 border-gray-100 dark:border-slate-800"></div>
+                <p class="text-[10px] text-gray-500 italic text-center">You can type to search or use the map</p>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50 dark:bg-slate-800/50">
+            <button type="button" id="confirm-address" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
+                Confirm Location
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../../scripts/firebase.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANCpYHeLyWkgVtWL06xpI7XsP08xu9GPA&loading=async&libraries=places&callback=initMap"></script>
+
+<script>
+    const PATHS = {
+        ROOT_COLLECTION: "kasilayn",
+        ROOT_DOCUMENT: "poortjieOperator",
+        BOOKINGS: "dev_bookings",
+        SUGGESTED_PLACES: "suggested_places"
+    };
+
+    let currentUser = null;
+    let suggestedPlaces = [];
+    let hasActiveRequest = false;
+
+    let map, marker, autocomplete;
+    let selectedLocation = null; // {name, lat, lng}
+    let activeInputType = null; // 'pickup' or 'destination'
+    let locations = {
+        pickup: null,
+        destination: null
+    };
+
+    const getRootDoc = () => db.collection(PATHS.ROOT_COLLECTION).doc(PATHS.ROOT_DOCUMENT);
+    const getBookingsRef = () => getRootDoc().collection(PATHS.BOOKINGS);
+    const getSuggestedPlacesRef = () => getRootDoc().collection(PATHS.SUGGESTED_PLACES);
+
+    function initMap() {
+        const defaultPos = { lat: -26.5056, lng: 27.8546 }; // Poortjie area
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: defaultPos,
+            zoom: 15,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
+        });
+
+        marker = new google.maps.Marker({
+            map: map,
+            draggable: true,
+            position: defaultPos
+        });
+
+        const modalInput = document.getElementById('modal-address');
+        autocomplete = new google.maps.places.Autocomplete(modalInput, {
+            componentRestrictions: { country: "za" },
+            fields: ["formatted_address", "geometry", "name"],
+            types: ["geocode", "establishment"]
+        });
+
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) return;
+
+            map.setCenter(place.geometry.location);
+            marker.setPosition(place.geometry.location);
+            selectedLocation = {
+                name: place.formatted_address || place.name,
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+            };
+        });
+
+        marker.addListener("dragend", () => {
+            const pos = marker.getPosition();
+            updateLocationFromPos(pos);
+        });
+
+        map.addListener("click", (e) => {
+            marker.setPosition(e.latLng);
+            updateLocationFromPos(e.latLng);
+        });
+    }
+
+    async function updateLocationFromPos(pos) {
+        const geocoder = new google.maps.Geocoder();
+        try {
+            const response = await geocoder.geocode({ location: pos });
+            if (response.results[0]) {
+                const name = response.results[0].formatted_address;
+                document.getElementById('modal-address').value = name;
+                selectedLocation = {
+                    name: name,
+                    lat: pos.lat(),
+                    lng: pos.lng()
+                };
+            }
+        } catch (e) {
+            console.error("Geocoder failed:", e);
+        }
+    }
+
+    // Modal logic
+    const addressModal = document.getElementById('address-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const pickupInput = document.getElementById('pickup-input');
+    const destinationInput = document.getElementById('destination-input');
+
+    function openLocationModal(type) {
+        activeInputType = type;
+        modalTitle.textContent = type === 'pickup' ? 'Select Pickup Point' : 'Select Destination';
+        const currentLoc = locations[type];
+        
+        const modalInput = document.getElementById('modal-address');
+        if (currentLoc) {
+            modalInput.value = currentLoc.name;
+            const pos = { lat: currentLoc.latitude, lng: currentLoc.longitude };
+            map.setCenter(pos);
+            marker.setPosition(pos);
+            selectedLocation = { name: currentLoc.name, lat: currentLoc.latitude, lng: currentLoc.longitude };
+        } else {
+            modalInput.value = '';
+            selectedLocation = null;
+        }
+        
+        addressModal.classList.remove('hidden');
+        google.maps.event.trigger(map, 'resize');
+        if (currentLoc) {
+             map.setCenter({ lat: currentLoc.latitude, lng: currentLoc.longitude });
+        }
+    }
+
+    pickupInput.onclick = () => openLocationModal('pickup');
+    destinationInput.onclick = () => openLocationModal('destination');
+
+    document.getElementById('close-address-modal').onclick = () => addressModal.classList.add('hidden');
+    document.getElementById('confirm-address').onclick = () => {
+        if (!selectedLocation) {
+            alert("Please select a location on the map or type to search");
+            return;
+        }
+        
+        locations[activeInputType] = {
+            name: selectedLocation.name,
+            latitude: selectedLocation.lat,
+            longitude: selectedLocation.lng
+        };
+        
+        document.getElementById(`${activeInputType}-input`).value = selectedLocation.name;
+        document.getElementById(`${activeInputType}-error`).classList.add('hidden');
+        addressModal.classList.add('hidden');
+    };
+
+    firebase.auth().onAuthStateChanged(async user => {
+        if (!user) {
+            sessionStorage.setItem('redirectUrl', window.location.href);
+            window.location.href = '../../authentication/login.html';
+            return;
+        }
+        currentUser = user;
+        
+        document.getElementById('user-initial').textContent = (user.displayName || user.email || "?").charAt(0).toUpperCase();
+        
+        loadSuggestedPlaces();
+        observeMyBookings();
+
+        // Type change UI logic
+        document.getElementById('booking-type').onchange = (e) => {
+            const label = document.getElementById('reason-label');
+            const icon = document.getElementById('reason-icon');
+            const pContainer = document.getElementById('passenger-container');
+            const input = document.getElementById('booking-reason');
+            const type = e.target.value;
+
+            if (type === 'passenger') {
+                label.textContent = "Reason (Optional)";
+                icon.className = "fas fa-users absolute left-4 top-1/2 -translate-y-1/2 text-slate-400";
+                pContainer.classList.remove('hidden');
+                input.placeholder = "e.g. Shopping at the mall";
+            } else {
+                label.textContent = "What are we " + (type === 'item_fetch' ? 'fetching' : 'delivering') + "? (Required)";
+                icon.className = "fas fa-shopping-bag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400";
+                pContainer.classList.add('hidden');
+                input.placeholder = type === 'item_fetch' ? "e.g. 2L Milk from Shoprite" : "e.g. Parcel for Mrs. Zulu";
+            }
+        };
+        
+        const loader = document.getElementById('loader-overlay');
+        if (loader) {
+            loader.classList.add('opacity-0');
+            setTimeout(() => loader.remove(), 300);
+        }
+    });
+
+    async function loadSuggestedPlaces() {
+        try {
+            const snapshot = await getSuggestedPlacesRef().orderBy('order', 'asc').get();
+            suggestedPlaces = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            const chipsContainer = document.getElementById('suggestions-chips');
+            chipsContainer.innerHTML = suggestedPlaces.map(place => `
+                <button type="button" 
+                        onclick="selectSuggestedDestination('${place.id}')"
+                        class="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-green-100 dark:hover:bg-green-900/30 border border-slate-200 dark:border-slate-600 transition text-xs font-bold whitespace-nowrap">
+                    ${place.name}
+                </button>
+            `).join('');
+        } catch (e) {
+            console.error("Error loading places:", e);
+        }
+    }
+
+    function selectSuggestedDestination(placeId) {
+        const place = suggestedPlaces.find(p => p.id === placeId);
+        if (!place) return;
+        
+        locations.destination = {
+            name: place.name,
+            latitude: place.latitude,
+            longitude: place.longitude
+        };
+        
+        document.getElementById('destination-input').value = place.name;
+        document.getElementById('destination-error').classList.add('hidden');
+    }
+
+    function observeMyBookings() {
+        getBookingsRef()
+            .where('user_id', '==', currentUser.uid)
+            .orderBy('created_at', 'desc')
+            .onSnapshot(snapshot => {
+                const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Check for active request (App logic)
+                const active = bookings.find(b => {
+                    const s = b.status;
+                    return !['completed', 'cancelled', 'rejected_by_user', 'rejected_by_owner'].includes(s);
+                });
+
+                updateActiveRequestState(!!active);
+                renderBookings(bookings);
+            }, error => {
+                console.error("Error observing bookings:", error);
+                document.getElementById('bookings-list').innerHTML = `<div class="text-center py-12 text-red-500 text-sm font-bold">Failed to load activity</div>`;
+            });
+    }
+
+    function updateActiveRequestState(active) {
+        hasActiveRequest = active;
+        const banner = document.getElementById('active-request-banner');
+        const form = document.getElementById('booking-form-section');
+
+        if (active) {
+            banner.classList.remove('hidden');
+            form.classList.add('opacity-40', 'pointer-events-none');
+        } else {
+            banner.classList.add('hidden');
+            form.classList.remove('opacity-40', 'pointer-events-none');
+        }
+    }
+
+    function renderBookings(bookings) {
+        const list = document.getElementById('bookings-list');
+        if (bookings.length === 0) {
+            list.innerHTML = `<div class="text-center py-24 opacity-20 flex flex-col items-center gap-4">
+                <i class="fas fa-box-open text-4xl"></i>
+                <p class="font-black uppercase tracking-widest text-xs">No activity yet</p>
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = bookings.map(b => {
+            const date = b.created_at?.toDate ? b.created_at.toDate().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Processing...';
+            const statusConfig = getStatusConfig(b.status);
+            const stageMessage = getStageMessage(b);
+            
+            return `
+                <div class="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-6 space-y-5">
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">${date}</p>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${statusConfig.color}"></span>
+                                    <h3 class="font-black text-xs uppercase tracking-widest" style="color: ${statusConfig.color}">${statusConfig.label}</h3>
+                                </div>
+                            </div>
+                            ${b.price ? `
+                                <div class="text-right">
+                                    <p class="text-[8px] font-black uppercase text-slate-400 mb-0.5">Price</p>
+                                    <p class="font-black text-green-600 text-lg">R${b.price.toFixed(2)}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Trip Visualization -->
+                        <div class="route-line space-y-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-[12px] h-[12px] rounded-full bg-red-500 mt-1 border-4 border-red-100 dark:border-red-900/30 z-10"></div>
+                                <div class="flex-grow">
+                                    <p class="text-[9px] font-black uppercase text-slate-400 mb-0.5">Pickup</p>
+                                    <p class="font-bold text-sm">${b.pickup_location.name}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-[12px] h-[12px] rounded-full bg-green-500 mt-1 border-4 border-green-100 dark:border-green-900/30 z-10"></div>
+                                <div class="flex-grow">
+                                    <p class="text-[9px] font-black uppercase text-slate-400 mb-0.5">Destination</p>
+                                    <p class="font-bold text-sm">${b.destination_location.name}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 pt-2">
+                            <i class="fas ${b.booking_type === 'passenger' ? 'fa-users' : 'fa-shopping-bag'} text-green-600 text-xs"></i>
+                            <p class="text-xs font-bold text-slate-500">${b.reason || (b.passenger_count + ' Passenger(s)')}</p>
+                        </div>
+
+                        ${stageMessage ? `
+                            <div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 rounded-2xl p-4 flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <p class="text-[11px] font-black uppercase text-green-700 dark:text-green-400 leading-tight">${stageMessage}</p>
+                            </div>
+                        ` : ''}
+
+                        ${b.status === 'pending_user_confirmation' ? `
+                            <div class="flex gap-3 pt-2">
+                                <button onclick="handleReject('${b.id}')" class="flex-grow py-3 rounded-xl bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition">Decline</button>
+                                <button onclick="handleConfirm('${b.id}')" class="flex-grow py-3 rounded-xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition">Accept Price</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function getStatusConfig(status) {
+        switch(status) {
+            case 'pending_owner_review': return { color: '#94a3b8', label: 'Waiting' };
+            case 'pending_user_confirmation': return { color: '#f59e0b', label: 'Price Ready' };
+            case 'ready_for_assignment': return { color: '#3b82f6', label: 'Finding Driver' };
+            case 'assigned_to_driver': return { color: '#10b981', label: 'Driver Assigned' };
+            case 'in_progress': return { color: '#f59e0b', label: 'In Progress' };
+            case 'completed': return { color: '#22c55e', label: 'Completed' };
+            case 'rejected_by_user': return { color: '#ef4444', label: 'Declined' };
+            case 'rejected_by_owner': return { color: '#ef4444', label: 'Rejected' };
+            case 'cancelled': return { color: '#ef4444', label: 'Cancelled' };
+            default: return { color: '#64748b', label: status.replace(/_/g, ' ') };
+        }
+    }
+
+    function getStageMessage(b) {
+        const stage = b.task_stage;
+        const status = b.status;
+        
+        if (status === 'ready_for_assignment') {
+            return "Finding a driver... Please wait.";
+        }
+
+        if (!stage && status === 'assigned_to_driver') {
+            return "Driver assigned. Preparing for pickup.";
+        }
+
+        switch(stage) {
+            case 'en_route_to_pickup': return "Driver is on their way to pickup.";
+            case 'at_pickup': return "Driver has arrived at pickup point.";
+            case 'passenger_onboard': return "Trip started. Heading to destination.";
+            case 'en_route_to_destination': return "En route to destination.";
+            case 'arrived_at_destination': return "You have arrived.";
+            case 'item_collected': return "Item collected. Moving to requester.";
+            case 'en_route_to_requester': return "Driver bringing item to you.";
+            case 'arrived_at_requester': return "Driver is here with your item.";
+            case 'package_collected': return "Package collected.";
+            case 'en_route_to_delivery': return "On the way to deliver package.";
+            case 'arrived_at_delivery': return "Driver at delivery point.";
+            default: return null;
+        }
+    }
+
+    async function handleConfirm(id) {
+        if (!confirm("Accept this price and proceed?")) return;
+        try {
+            await getBookingsRef().doc(id).update({
+                status: 'ready_for_assignment',
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    async function handleReject(id) {
+        if (!confirm("Decline this request?")) return;
+        try {
+            await getBookingsRef().doc(id).update({
+                status: 'rejected_by_user',
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    document.getElementById('book-btn').onclick = async () => {
+        if (hasActiveRequest) return;
+
+        const pickup = locations.pickup;
+        const dest = locations.destination;
+        const passengers = parseInt(document.getElementById('passenger-count').value);
+        const type = document.getElementById('booking-type').value;
+        const reason = document.getElementById('booking-reason').value.trim();
+
+        let hasError = false;
+        if (!pickup) {
+            document.getElementById('pickup-error').classList.remove('hidden');
+            hasError = true;
+        } else {
+            document.getElementById('pickup-error').classList.add('hidden');
+        }
+
+        if (!dest) {
+            document.getElementById('destination-error').classList.remove('hidden');
+            hasError = true;
+        } else {
+            document.getElementById('destination-error').classList.add('hidden');
+        }
+
+        if ((type === 'item_fetch' || type === 'delivery') && !reason) {
+            document.getElementById('reason-error').classList.remove('hidden');
+            hasError = true;
+        } else {
+            document.getElementById('reason-error').classList.add('hidden');
+        }
+
+        if (hasError) return;
+
+        const btn = document.getElementById('book-btn');
+        btn.disabled = true;
+        btn.textContent = "Processing...";
+
+        try {
+            const docRef = getBookingsRef().doc();
+            const booking = {
+                id: docRef.id,
+                user_id: currentUser.uid,
+                passenger_count: type === 'passenger' ? passengers : 0,
+                reason: reason || null,
+                booking_type: type,
+                pickup_location: {
+                    name: pickup.name,
+                    latitude: pickup.latitude,
+                    longitude: pickup.longitude
+                },
+                destination_location: {
+                    name: dest.name,
+                    latitude: dest.latitude,
+                    longitude: dest.longitude
+                },
+                status: 'pending_owner_review',
+                created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+                
+                price: null,
+                task_stage: null,
+                assigned_driver_id: null,
+                driver_cancel_requested: false
+            };
+
+            await docRef.set(booking);
+            document.getElementById('booking-reason').value = '';
+            // Reset locations
+            locations.pickup = null;
+            locations.destination = null;
+            document.getElementById('pickup-input').value = '';
+            document.getElementById('destination-input').value = '';
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Request Now";
+        }
+    };
+</script>
+
+</body>
+</html>
