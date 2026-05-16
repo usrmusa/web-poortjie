@@ -120,8 +120,8 @@
 
             const name = userData?.display_name || user.displayName || user.email.split('@')[0];
             document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
-            if (userData?.photo_url || userData?.photoUrl) {
-                document.getElementById('user-avatar').innerHTML = `<img src="${userData?.photo_url || userData.photoUrl}" class="w-full h-full object-cover">`;
+            if (userData?.photo_url) {
+                document.getElementById('user-avatar').innerHTML = `<img src="${userData?.photo_url}" class="w-full h-full object-cover">`;
             }
         } catch (e) {
             console.error(e);

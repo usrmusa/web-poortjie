@@ -445,12 +445,18 @@
         }
         currentUser = user;
         
-        document.getElementById('user-initial').textContent = (user.displayName || user.email || "?").charAt(0).toUpperCase();
-        
         // Role-based download visibility
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
                 const userData = doc.data();
+                
+                const name = userData?.display_name || user.displayName || user.email || "?";
+                document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
+                
+                if (userData.photo_url) {
+                    document.getElementById('user-avatar').innerHTML = `<img src="${userData.photo_url}" class="w-full h-full object-cover">`;
+                }
+
                 if (userData.roles?.tuktuk?.is_owner === true) {
                     document.getElementById('download-operator-btn').classList.remove('hidden');
                     document.getElementById('manage-tuktuk-btn').classList.remove('hidden');
