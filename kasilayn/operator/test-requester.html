@@ -95,6 +95,24 @@
         <h2 class="text-2xl font-black uppercase tracking-tight">New Request</h2>
         
         <div class="space-y-5">
+            <!-- Suggestions chips -->
+            <div class="space-y-3">
+                <div class="flex flex-col items-center">
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex-grow"></div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Suggested Destinations</label>
+                        <div class="flex-grow flex justify-end">
+                            <button id="view-points-btn" class="hidden text-[10px] font-black uppercase tracking-widest text-green-600 hover:text-green-700 transition flex items-center gap-1">
+                                <i class="fas fa-map-location-dot"></i> View on Map
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="suggestions-chips" class="flex flex-wrap gap-2 justify-center">
+                    <!-- Chips will be injected here -->
+                </div>
+            </div>
+
             <!-- Pickup -->
             <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Location</label>
@@ -115,14 +133,6 @@
                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
                 </div>
                 <p id="destination-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Destination is required</p>
-            </div>
-
-            <!-- Suggestions chips -->
-            <div class="space-y-3">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Suggested Destinations</label>
-                <div id="suggestions-chips" class="flex flex-wrap gap-2">
-                    <!-- Chips will be injected here -->
-                </div>
             </div>
 
             <!-- Service & Details -->
@@ -233,7 +243,7 @@
     const getSuggestedPlacesRef = () => getRootDoc().collection(PATHS.SUGGESTED_PLACES);
 
     function initMap() {
-        const defaultPos = { lat: -26.5056, lng: 27.8546 }; // Poortjie area
+        const defaultPos = {lat: -26.456323807221267, lng: 27.77044633885547}; // Same as business-form.html
         map = new google.maps.Map(document.getElementById("map"), {
             center: defaultPos,
             zoom: 15,
@@ -331,7 +341,7 @@
     destinationInput.onclick = () => openLocationModal('destination');
 
     document.getElementById('close-address-modal').onclick = () => addressModal.classList.add('hidden');
-    document.getElementById('confirm-address').onclick = () => {
+        document.getElementById('confirm-address').onclick = () => {
         if (!selectedLocation) {
             alert("Please select a location on the map or type to search");
             return;
@@ -346,6 +356,70 @@
         document.getElementById(`${activeInputType}-input`).value = selectedLocation.name;
         document.getElementById(`${activeInputType}-error`).classList.add('hidden');
         addressModal.classList.add('hidden');
+        updateViewPointsButton();
+    };
+
+    function updateViewPointsButton() {
+        const btn = document.getElementById('view-points-btn');
+        if (locations.pickup && locations.destination) {
+            btn.classList.remove('hidden');
+        } else {
+            btn.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('view-points-btn').onclick = () => {
+        if (!locations.pickup || !locations.destination) return;
+        
+        const bounds = new google.maps.LatLngBounds();
+        const p1 = new google.maps.LatLng(locations.pickup.latitude, locations.pickup.longitude);
+        const p2 = new google.maps.LatLng(locations.destination.latitude, locations.destination.longitude);
+        
+        bounds.extend(p1);
+        bounds.extend(p2);
+        
+        // Use the modal to show the points
+        modalTitle.textContent = "Route Overview";
+        addressModal.classList.remove('hidden');
+        google.maps.event.trigger(map, 'resize');
+        
+        map.fitBounds(bounds);
+        
+        // Add markers for both
+        const pickupMarker = new google.maps.Marker({
+            position: p1,
+            map: map,
+            icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            title: 'Pickup'
+        });
+        
+        const destMarker = new google.maps.Marker({
+            position: p2,
+            map: map,
+            icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+            title: 'Destination'
+        });
+
+        // Remove them when modal closes to not mess with single selection logic
+        const oldClose = document.getElementById('close-address-modal').onclick;
+        document.getElementById('close-address-modal').onclick = () => {
+            pickupMarker.setMap(null);
+            destMarker.setMap(null);
+            addressModal.classList.add('hidden');
+            document.getElementById('close-address-modal').onclick = oldClose;
+        };
+
+        const oldConfirm = document.getElementById('confirm-address').onclick;
+        const confirmBtn = document.getElementById('confirm-address');
+        const oldText = confirmBtn.textContent;
+        confirmBtn.textContent = "Close View";
+        confirmBtn.onclick = () => {
+            pickupMarker.setMap(null);
+            destMarker.setMap(null);
+            addressModal.classList.add('hidden');
+            confirmBtn.onclick = oldConfirm;
+            confirmBtn.textContent = oldText;
+        };
     };
 
     firebase.auth().onAuthStateChanged(async user => {
@@ -378,7 +452,11 @@
                 label.textContent = "What are we " + (type === 'item_fetch' ? 'fetching' : 'delivering') + "? (Required)";
                 icon.className = "fas fa-shopping-bag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400";
                 pContainer.classList.add('hidden');
-                input.placeholder = type === 'item_fetch' ? "e.g. 2L Milk from Shoprite" : "e.g. Parcel for Mrs. Zulu";
+                if (type === 'item_fetch') {
+                    input.placeholder = "Take away near Taxi rank";
+                } else {
+                    input.placeholder = "Deliver Kota to Sbusiso";
+                }
             }
         };
         
@@ -390,8 +468,10 @@
     });
 
     async function loadSuggestedPlaces() {
+        console.log("[Firestore] Reading suggested places from:", PATHS.SUGGESTED_PLACES);
         try {
             const snapshot = await getSuggestedPlacesRef().orderBy('order', 'asc').get();
+            console.log(`[Firestore] Read ${snapshot.size} suggested places`);
             suggestedPlaces = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             const chipsContainer = document.getElementById('suggestions-chips');
@@ -419,13 +499,16 @@
         
         document.getElementById('destination-input').value = place.name;
         document.getElementById('destination-error').classList.add('hidden');
+        updateViewPointsButton();
     }
 
     function observeMyBookings() {
+        console.log("[Firestore] Observing bookings for user:", currentUser.uid);
         getBookingsRef()
             .where('user_id', '==', currentUser.uid)
             .orderBy('created_at', 'desc')
             .onSnapshot(snapshot => {
+                console.log(`[Firestore] Bookings update received: ${snapshot.size} bookings`);
                 const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Check for active request (App logic)
@@ -577,22 +660,32 @@
 
     async function handleConfirm(id) {
         if (!confirm("Accept this price and proceed?")) return;
+        console.log("[Firestore] Updating booking status to ready_for_assignment:", id);
         try {
             await getBookingsRef().doc(id).update({
                 status: 'ready_for_assignment',
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
-        } catch (e) { alert("Error: " + e.message); }
+            console.log("[Firestore] Booking status updated successfully:", id);
+        } catch (e) { 
+            console.error("[Firestore] Error updating booking status:", e);
+            alert("Error: " + e.message); 
+        }
     }
 
     async function handleReject(id) {
         if (!confirm("Decline this request?")) return;
+        console.log("[Firestore] Updating booking status to rejected_by_user:", id);
         try {
             await getBookingsRef().doc(id).update({
                 status: 'rejected_by_user',
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
-        } catch (e) { alert("Error: " + e.message); }
+            console.log("[Firestore] Booking status rejected successfully:", id);
+        } catch (e) { 
+            console.error("[Firestore] Error rejecting booking:", e);
+            alert("Error: " + e.message); 
+        }
     }
 
     document.getElementById('book-btn').onclick = async () => {
@@ -632,6 +725,7 @@
         btn.disabled = true;
         btn.textContent = "Processing...";
 
+        console.log("[Firestore] Creating new booking request...");
         try {
             const docRef = getBookingsRef().doc();
             const booking = {
@@ -661,14 +755,16 @@
             };
 
             await docRef.set(booking);
+            console.log("[Firestore] Booking created successfully with ID:", docRef.id);
             document.getElementById('booking-reason').value = '';
             // Reset locations
             locations.pickup = null;
             locations.destination = null;
             document.getElementById('pickup-input').value = '';
             document.getElementById('destination-input').value = '';
+            updateViewPointsButton();
         } catch (e) {
-            console.error(e);
+            console.error("[Firestore] Error creating booking:", e);
             alert("Error: " + e.message);
         } finally {
             btn.disabled = false;
