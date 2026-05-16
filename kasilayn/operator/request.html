@@ -18,7 +18,7 @@
     </script>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased select-none">
 
 <div id="loader-overlay"
      class="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
@@ -170,7 +170,12 @@
     downloadBtn.addEventListener('touchstart', (e) => {
         // Prevent default only if we want to suppress the click, but we'll let it handle naturally
         startPress();
-    });
+    }, { passive: true });
+
+    // Prevent context menu to avoid copy/select options appearing
+    window.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    }, false);
 
     downloadBtn.addEventListener('mouseup', cancelPress);
     downloadBtn.addEventListener('mouseleave', cancelPress);
