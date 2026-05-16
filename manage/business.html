@@ -105,7 +105,7 @@
             userRef.get().then((doc) => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    isSuperUser = (userData.roles?.tuktuk?.is_super_user || userData.roles?.digilayn?.is_super_user) === true;
+                    isSuperUser = userData.roles?.digilayn?.is_super_user === true;
                     const isPoortjieAdmin = (userData.roles?.poortjie?.is_admin || userData.roles?.poortjie?.isAdmin) === true;
 
                     if (isSuperUser || isPoortjieAdmin) {

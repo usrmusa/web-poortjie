@@ -295,7 +295,7 @@
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    const isSuperUser = (userData.roles?.tuktuk?.is_super_user || userData.roles?.digilayn?.isSuperUser) === true;
+                    const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
                     const isTaxiRankAdmin = (userData.roles?.poortjie?.is_taxi_rank_admin || userData.roles?.poortjie?.isTaxiRankAdmin) === true;
 
                     if (isSuperUser || isTaxiRankAdmin) {

@@ -456,7 +456,15 @@
                     document.getElementById('manage-tuktuk-btn').classList.remove('hidden');
                 }
             }
-        }).catch(err => console.error("Error fetching user roles:", err));
+        }).catch(err => {
+            console.error("[Firestore] Role check failed", {
+                operation: "get_user",
+                path: "users/" + user.uid,
+                auth_uid: user.uid,
+                code: err.code,
+                message: err.message
+            });
+        });
         
         loadSuggestedPlaces();
         observeMyBookings();
@@ -537,11 +545,10 @@
                 console.log(`[Firestore] Bookings update received: ${snapshot.size} bookings`);
                 const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Check for active request (App logic)
-                const active = bookings.find(b => {
-                    const s = b.status;
-                    return !['completed', 'cancelled', 'rejected_by_user', 'rejected_by_owner'].includes(s);
-                });
+                // Filter for truly active requests based on backend status enum
+                const active = bookings.find(b => 
+                    !['completed', 'cancelled', 'rejected_by_user'].includes(b.status)
+                );
 
                 updateActiveRequestState(!!active);
                 renderBookings(bookings);
@@ -650,9 +657,8 @@
             case 'in_progress': return { color: '#f59e0b', label: 'In Progress' };
             case 'completed': return { color: '#22c55e', label: 'Completed' };
             case 'rejected_by_user': return { color: '#ef4444', label: 'Declined' };
-            case 'rejected_by_owner': return { color: '#ef4444', label: 'Rejected' };
             case 'cancelled': return { color: '#ef4444', label: 'Cancelled' };
-            default: return { color: '#64748b', label: status.replace(/_/g, ' ') };
+            default: return { color: '#64748b', label: status };
         }
     }
 
@@ -694,7 +700,14 @@
             });
             console.log("[Firestore] Booking status updated successfully:", id);
         } catch (e) { 
-            console.error("[Firestore] Error updating booking status:", e);
+            console.error("[Firestore] Booking confirmation failed", {
+                operation: "update_booking",
+                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + id,
+                payload: { status: 'ready_for_assignment' },
+                auth_uid: currentUser.uid,
+                code: e.code,
+                message: e.message
+            });
             alert("Error: " + e.message); 
         }
     }
@@ -709,7 +722,14 @@
             });
             console.log("[Firestore] Booking status rejected successfully:", id);
         } catch (e) { 
-            console.error("[Firestore] Error rejecting booking:", e);
+            console.error("[Firestore] Booking rejection failed", {
+                operation: "update_booking",
+                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + id,
+                payload: { status: 'rejected_by_user' },
+                auth_uid: currentUser.uid,
+                code: e.code,
+                message: e.message
+            });
             alert("Error: " + e.message); 
         }
     }
@@ -755,7 +775,6 @@
         try {
             const docRef = getBookingsRef().doc();
             const booking = {
-                id: docRef.id,
                 user_id: currentUser.uid,
                 passenger_count: type === 'passenger' ? passengers : 0,
                 reason: reason || null,
@@ -790,7 +809,14 @@
             document.getElementById('destination-input').value = '';
             updateViewPointsButton();
         } catch (e) {
-            console.error("[Firestore] Error creating booking:", e);
+            console.error("[Firestore] Booking creation failed", {
+                operation: "set_booking",
+                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + docRef.id,
+                payload: booking,
+                auth_uid: currentUser.uid,
+                code: e.code,
+                message: e.message
+            });
             alert("Error: " + e.message);
         } finally {
             btn.disabled = false;
