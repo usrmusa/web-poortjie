@@ -109,8 +109,8 @@
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
             const userData = userDoc.data();
-            const isSuperUser = userData?.roles?.tuktuk?.is_super_user || userData?.roles?.tuktuk?.isSuperUser || false;
-            const isOwner = userData?.roles?.tuktuk?.is_owner || userData?.roles?.tuktuk?.isOwner || false;
+            const isSuperUser = userData?.roles?.digilayn?.is_super_user || false;
+            const isOwner = userData?.roles?.tuktuk?.is_owner || false;
 
             if (!(isSuperUser || isOwner)) {
                 alert("Unauthorized access.");

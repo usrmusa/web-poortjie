@@ -526,7 +526,7 @@
             if (userDoc.exists) {
                 currentUserData = userDoc.data();
 
-                const isSuperUser = currentUserData?.roles?.tuktuk?.is_super_user || false;
+                const isSuperUser = currentUserData?.roles?.digilayn?.is_super_user || false;
                 const isOwner = currentUserData?.roles?.tuktuk?.is_owner || false;
                 if (!(isSuperUser || isOwner)) {
                     alert("Unauthorized access. Owners only.");
@@ -666,13 +666,19 @@
         try {
             await getBookingsRef().doc(bookingId).update({
                 assigned_driver_id: driverId,
-                assigned_driver_name: driver.display_name || "Driver",
-                status: 'ASSIGNED_TO_DRIVER',
+                status: 'assigned_to_driver',
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Driver assigned successfully!", "success");
         } catch (e) {
-            console.error("Error assigning driver:", e);
+            console.error("[Firestore] Assign driver failed", {
+                operation: "update_booking",
+                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + bookingId,
+                payload: { assigned_driver_id: driverId, status: 'assigned_to_driver' },
+                auth_uid: firebase.auth().currentUser?.uid,
+                code: e.code,
+                message: e.message
+            });
             showStatus("Error: " + e.message, "error");
         }
     };
@@ -691,7 +697,7 @@
         try {
             await getBookingsRef().doc(currentModalBookingId).update({
                 price: price,
-                status: 'PENDING_USER_CONFIRMATION',
+                status: 'pending_user_confirmation',
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Price updated and sent to user!", "success");
@@ -706,7 +712,7 @@
         if (!confirm("Are you sure you want to cancel this trip?")) return;
         try {
             await getBookingsRef().doc(bookingId).update({
-                status: 'CANCELLED',
+                status: 'cancelled',
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Trip cancelled successfully", "success");
@@ -744,7 +750,7 @@
         historyList.innerHTML = '';
 
         filtered.forEach(trip => {
-            const isCompleted = trip.status === 'COMPLETED';
+            const isCompleted = trip.status === 'completed';
             const fare = trip.price || 0;
             if (isCompleted) totalMoney += fare;
 
@@ -754,7 +760,7 @@
             div.className = "p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-green-500/50 transition-all";
             div.onclick = () => showBookingDetails(trip.id);
 
-            const isPending = ['PENDING_OWNER_REVIEW', 'PENDING_USER_CONFIRMATION', 'READY_FOR_ASSIGNMENT', 'ASSIGNED_TO_DRIVER'].includes(trip.status);
+            const isPending = ['pending_owner_review', 'pending_user_confirmation', 'ready_for_assignment', 'assigned_to_driver'].includes(trip.status);
 
             const driverInfo = `<span class="text-slate-900 dark:text-white">${trip.assignedDriverName || 'Unassigned'}</span>`;
 
@@ -791,13 +797,13 @@
 
     function getStatusColor(status) {
         switch (status) {
-            case 'PENDING_OWNER_REVIEW': return 'bg-yellow-500';
-            case 'PENDING_USER_CONFIRMATION': return 'bg-orange-500';
-            case 'READY_FOR_ASSIGNMENT': return 'bg-amber-500';
-            case 'ASSIGNED_TO_DRIVER': return 'bg-blue-500';
-            case 'COMPLETED': return 'bg-emerald-600';
-            case 'CANCELLED': return 'bg-red-500';
-            case 'REJECTED_BY_USER': return 'bg-red-700';
+            case 'pending_owner_review': return 'bg-yellow-500';
+            case 'pending_user_confirmation': return 'bg-orange-500';
+            case 'ready_for_assignment': return 'bg-amber-500';
+            case 'assigned_to_driver': return 'bg-blue-500';
+            case 'completed': return 'bg-emerald-600';
+            case 'cancelled': return 'bg-red-500';
+            case 'rejected_by_user': return 'bg-red-700';
             default: return 'bg-slate-400';
         }
     }
@@ -826,9 +832,9 @@
             });
         }
 
-        const completed = filtered.filter(b => b.status === 'COMPLETED').length;
-        const cancelled = filtered.filter(b => b.status === 'CANCELLED' || b.status === 'REJECTED_BY_USER').length;
-        const pending = filtered.filter(b => ['PENDING_OWNER_REVIEW', 'PENDING_USER_CONFIRMATION', 'READY_FOR_ASSIGNMENT', 'ASSIGNED_TO_DRIVER'].includes(b.status)).length;
+        const completed = filtered.filter(b => b.status === 'completed').length;
+        const cancelled = filtered.filter(b => b.status === 'cancelled' || b.status === 'rejected_by_user').length;
+        const pending = filtered.filter(b => ['pending_owner_review', 'pending_user_confirmation', 'ready_for_assignment', 'assigned_to_driver'].includes(b.status)).length;
 
         document.getElementById('breakdown-completed').textContent = completed;
         document.getElementById('breakdown-pending').textContent = pending;
@@ -871,7 +877,7 @@
         }
 
         const callDriverBtn = document.getElementById('modal-call-driver-btn');
-        if (trip.status === 'ASSIGNED_TO_DRIVER' && trip.assigned_driver_id) {
+        if (trip.status === 'assigned_to_driver' && trip.assigned_driver_id) {
              callDriverBtn.classList.remove('hidden');
              callDriverBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Fetching...</span>`;
              callDriverBtn.href = "#";
@@ -899,14 +905,14 @@
         const assignActions = document.getElementById('modal-assign-actions');
         const priceInput = document.getElementById('modal-price-input');
 
-        if (trip.status === 'PENDING_OWNER_REVIEW') {
+        if (trip.status === 'pending_owner_review') {
             operatorActions.classList.remove('hidden');
             priceInput.value = trip.price || "";
         } else {
             operatorActions.classList.add('hidden');
         }
 
-        if (trip.status === 'READY_FOR_ASSIGNMENT') {
+        if (trip.status === 'ready_for_assignment') {
             assignActions.classList.remove('hidden');
         } else {
             assignActions.classList.add('hidden');
@@ -1174,10 +1180,8 @@
 
             const bookingData = {
                 user_id: "MANUAL_" + phone.replace(/\s+/g, ''),
-                user_name: name,
-                user_phone: phone,
                 reason: reason,
-                passengers: passengers,
+                passenger_count: passengers,
                 pickup_location: {
                     name: pickup,
                     latitude: locations.pickup.lat || 0.0,
@@ -1189,9 +1193,8 @@
                     longitude: locations.destination.lng || 0.0
                 },
                 price: price,
-                status: selectedDriverId ? 'ASSIGNED_TO_DRIVER' : 'READY_FOR_ASSIGNMENT',
+                status: selectedDriverId ? 'assigned_to_driver' : 'ready_for_assignment',
                 assigned_driver_id: selectedDriverId || null,
-                assigned_driver_name: selectedDriver ? (selectedDriver.display_name || "Driver") : null,
                 created_at: now,
                 updated_at: now
             };
@@ -1204,7 +1207,14 @@
             locations.pickup = { name: '', lat: null, lng: null };
             locations.destination = { name: '', lat: null, lng: null };
         } catch (error) {
-            console.error("Manual booking error:", error);
+            console.error("[Firestore] Manual booking failed", {
+                operation: "add_booking",
+                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS,
+                payload: bookingData,
+                auth_uid: firebase.auth().currentUser?.uid,
+                code: error.code,
+                message: error.message
+            });
             showStatus("Error: " + error.message, "error");
         } finally {
             submitBtn.disabled = false;

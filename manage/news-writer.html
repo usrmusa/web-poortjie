@@ -340,7 +340,7 @@
                 if (doc.exists) {
                     const userData = doc.data();
                     currentUserName = userData.display_name || 'Admin';
-                    isSuperUser = (userData.roles?.tuktuk?.is_super_user || userData.roles?.digilayn?.isSuperUser) === true;
+                    isSuperUser = userData.roles?.digilayn?.is_super_user === true;
                     isPoortjieAdmin = (userData.roles?.poortjie?.is_admin || userData.roles?.poortjie?.isAdmin) === true;
 
                     if (isSuperUser || isPoortjieAdmin) {
