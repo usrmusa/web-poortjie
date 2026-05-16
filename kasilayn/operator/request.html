@@ -98,12 +98,39 @@
 
         <button id="launch-download-btn"
                 type="button"
-                class="w-full py-5 bg-slate-300 text-slate-600 rounded-2xl font-black uppercase tracking-[0.2em] text-xs">
+                class="w-full py-5 bg-slate-300 text-slate-600 rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-colors active:bg-slate-400">
             Download Android App
         </button>
     </div>
 
 </main>
+
+<!-- Testing Feature Prompt Modal -->
+<div id="test-prompt-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+        <div class="p-8 text-center space-y-6">
+            <div class="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto text-amber-600">
+                <i class="fas fa-flask text-2xl"></i>
+            </div>
+            
+            <div class="space-y-2">
+                <h3 class="text-xl font-black uppercase tracking-tight">Beta Testing</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    This feature is still in progress. You might experience bugs or connectivity issues. Would you like to proceed with testing?
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button id="agree-test-btn" class="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-green-700 transition shadow-lg shadow-green-500/20">
+                    I Agree, Proceed
+                </button>
+                <button id="cancel-test-btn" class="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    Not Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
     © 2026 Poortjie Services. Empowering poortjie economies.
@@ -116,9 +143,44 @@
         setTimeout(() => loader.remove(), 300);
     });
 
-    document.getElementById('launch-download-btn').addEventListener('click', function () {
+    const downloadBtn = document.getElementById('launch-download-btn');
+    const testModal = document.getElementById('test-prompt-modal');
+    const agreeBtn = document.getElementById('agree-test-btn');
+    const cancelBtn = document.getElementById('cancel-test-btn');
+    
+    let pressTimer;
+
+    // Handle normal click
+    downloadBtn.addEventListener('click', function () {
         alert('Please wait for 23 May 2026. Android app download opens on launch day.');
     });
+
+    // Long press logic
+    const startPress = () => {
+        pressTimer = setTimeout(() => {
+            testModal.classList.remove('hidden');
+        }, 800); // 800ms for long press
+    };
+
+    const cancelPress = () => {
+        clearTimeout(pressTimer);
+    };
+
+    downloadBtn.addEventListener('mousedown', startPress);
+    downloadBtn.addEventListener('touchstart', (e) => {
+        // Prevent default only if we want to suppress the click, but we'll let it handle naturally
+        startPress();
+    });
+
+    downloadBtn.addEventListener('mouseup', cancelPress);
+    downloadBtn.addEventListener('mouseleave', cancelPress);
+    downloadBtn.addEventListener('touchend', cancelPress);
+
+    // Modal Actions
+    cancelBtn.onclick = () => testModal.classList.add('hidden');
+    agreeBtn.onclick = () => {
+        window.location.href = 'test-requester.html';
+    };
 
     function updateCountdown() {
         const target = new Date('2026-05-23T08:00:00+02:00').getTime();
