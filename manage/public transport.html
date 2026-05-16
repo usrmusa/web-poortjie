@@ -296,11 +296,11 @@
                 if (doc.exists) {
                     const userData = doc.data();
                     const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                    const isTaxiRankAdmin = (userData.roles?.poortjie?.is_taxi_rank_admin || userData.roles?.poortjie?.isTaxiRankAdmin) === true;
+                    const isTaxiRankAdmin = userData.roles?.poortjie?.is_taxi_rank_admin === true;
 
                     if (isSuperUser || isTaxiRankAdmin) {
                         const welcomeMsg = document.getElementById('welcome-message');
-                        const name = userData.display_name || userData.displayName || userData.name || (isSuperUser ? 'Super User' : 'Admin');
+                        const name = userData.display_name || userData.name || (isSuperUser ? 'Super User' : 'Admin');
                         welcomeMsg.textContent = `Welcome, ${name}!`;
 
                         document.getElementById('admin-content').classList.remove('hidden');
@@ -492,8 +492,8 @@
             const currentUserId = firebase.auth().currentUser?.uid;
             const dataToSave = {
                 ...currentData,
-                lastModifiedBy: currentUserId,
-                lastModifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+                last_modified_by: currentUserId,
+                last_modified_at: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection('poortjie').doc('taxi_routes').set(dataToSave);
             showStatus(successMsg);
