@@ -124,6 +124,28 @@
         </div>
 
 
+        <div id="modal-cancellation-actions"
+             class="p-6 sm:p-8 bg-red-50 dark:bg-red-900/20 border-t border-red-100 dark:border-red-900/50 hidden">
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h4 class="text-xs font-black uppercase tracking-widest">Driver Cancellation Requested</h4>
+                </div>
+                <p id="modal-cancel-reason-text" class="text-sm font-bold opacity-70 italic"></p>
+                <div class="flex gap-3">
+                    <button onclick="approveCancellation()"
+                            class="flex-grow py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 shadow-xl shadow-red-500/20">
+                        Approve
+                    </button>
+                    <button onclick="rejectCancellation()"
+                            class="flex-grow py-4 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95">
+                        Decline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
         <div id="modal-operator-actions"
              class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 hidden">
             <div class="space-y-4">
@@ -138,6 +160,10 @@
                     <button onclick="updateBookingPrice()"
                             class="w-full sm:w-auto px-8 py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 shadow-xl shadow-green-500/20">
                         Submit
+                    </button>
+                    <button onclick="rejectBooking()"
+                            class="w-full sm:w-auto px-8 py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition active:scale-95 shadow-xl shadow-red-500/20">
+                        Reject
                     </button>
                 </div>
             </div>
@@ -693,21 +719,49 @@
         if (!confirm(`Assign ${driver.display_name || 'this driver'} to this trip?`)) return;
 
         try {
-            await getBookingsRef().doc(bookingId).update({
-                assigned_driver_id: driverId,
-                status: 'assigned_to_driver',
-                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            const bookingRef = getBookingsRef().doc(bookingId);
+            await db.runTransaction(async (transaction) => {
+                const bookingDoc = await transaction.get(bookingRef);
+                if (!bookingDoc.exists) throw new Error("Booking not found");
+                const bookingData = bookingDoc.data();
+
+                if (bookingData.status !== 'ready_for_assignment' && bookingData.status !== 'pending_user_confirmation') {
+                     // In Android it checks for READY_FOR_ASSIGNMENT, but manual trips might be slightly different.
+                     // We'll stick to mirroring Android's requirement mostly.
+                }
+
+                const requesterId = bookingData.user_id;
+                const requesterRef = getUsersRef().doc(requesterId);
+                const driverRef = getUsersRef().doc(driverId);
+
+                const bookingUpdates = {
+                    status: 'assigned_to_driver',
+                    assigned_driver_id: driverId,
+                    assigned_by: firebase.auth().currentUser.uid,
+                    assigned_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    task_stage: null,
+                    eta_minutes: null,
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                const requesterUpdates = {
+                    assigned_driver_uid: driverId,
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                const driverUpdates = {
+                    assigned_requester_uid: requesterId,
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                transaction.update(bookingRef, bookingUpdates);
+                transaction.update(requesterRef, requesterUpdates);
+                transaction.update(driverRef, driverUpdates);
             });
+
             showStatus("Driver assigned successfully!", "success");
         } catch (e) {
-            console.error("[Firestore] Assign driver failed", {
-                operation: "update_booking",
-                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + bookingId,
-                payload: { assigned_driver_id: driverId, status: 'assigned_to_driver' },
-                auth_uid: firebase.auth().currentUser?.uid,
-                code: e.code,
-                message: e.message
-            });
+            console.error("[Firestore] Assign driver failed", e);
             showStatus("Error: " + e.message, "error");
         }
     };
@@ -724,14 +778,100 @@
         if (isNaN(price) || !currentModalBookingId) return;
 
         try {
-            await getBookingsRef().doc(currentModalBookingId).update({
-                price: price,
-                status: 'pending_user_confirmation',
-                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            await db.runTransaction(async (transaction) => {
+                const docRef = getBookingsRef().doc(currentModalBookingId);
+                const bookingDoc = await transaction.get(docRef);
+                if (!bookingDoc.exists) throw new Error("Booking not found");
+
+                const booking = bookingDoc.data();
+                if (booking.status !== 'pending_owner_review') throw new Error("Booking already processed");
+
+                transaction.update(docRef, {
+                    price: price,
+                    status: 'pending_user_confirmation',
+                    priced_by: firebase.auth().currentUser.uid,
+                    priced_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
             });
             showStatus("Price updated and sent to user!", "success");
         } catch (e) {
             console.error("Error updating price:", e);
+            showStatus("Error: " + e.message, "error");
+        }
+    };
+
+    window.rejectBooking = async () => {
+        if (!currentModalBookingId) return;
+        const reason = prompt("Enter reason for rejection:");
+        if (reason === null) return;
+
+        try {
+            await db.runTransaction(async (transaction) => {
+                const docRef = getBookingsRef().doc(currentModalBookingId);
+                const bookingDoc = await transaction.get(docRef);
+                if (!bookingDoc.exists) throw new Error("Booking not found");
+
+                const booking = bookingDoc.data();
+                if (booking.status !== 'pending_owner_review') throw new Error("Booking already processed");
+
+                transaction.update(docRef, {
+                    status: 'rejected_by_owner',
+                    rejected_by: firebase.auth().currentUser.uid,
+                    rejected_reason: reason,
+                    rejected_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            showStatus("Booking rejected", "success");
+            closeModal();
+        } catch (e) {
+            console.error("Error rejecting booking:", e);
+            showStatus("Error: " + e.message, "error");
+        }
+    };
+
+    window.approveCancellation = async () => {
+        if (!currentModalBookingId) return;
+        if (!confirm("Approve driver's cancellation request?")) return;
+
+        try {
+            await getBookingsRef().doc(currentModalBookingId).update({
+                status: 'cancelled',
+                cancelled_by: firebase.auth().currentUser.uid,
+                cancelled_reason: "Driver cancellation approved",
+                cancelled_at: firebase.firestore.FieldValue.serverTimestamp(),
+                eta_minutes: null,
+                task_stage: null,
+                driver_cancel_requested: false,
+                driver_cancel_reason: null,
+                driver_cancel_requested_by: null,
+                driver_cancel_requested_at: null,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showStatus("Cancellation approved", "success");
+            closeModal();
+        } catch (e) {
+            console.error("Error approving cancellation:", e);
+            showStatus("Error: " + e.message, "error");
+        }
+    };
+
+    window.rejectCancellation = async () => {
+        if (!currentModalBookingId) return;
+        if (!confirm("Reject driver's cancellation request?")) return;
+
+        try {
+            await getBookingsRef().doc(currentModalBookingId).update({
+                driver_cancel_requested: false,
+                driver_cancel_reason: null,
+                driver_cancel_requested_by: null,
+                driver_cancel_requested_at: null,
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showStatus("Cancellation request rejected", "success");
+        } catch (e) {
+            console.error("Error rejecting cancellation:", e);
             showStatus("Error: " + e.message, "error");
         }
     };
@@ -834,9 +974,11 @@
             case 'pending_user_confirmation': return 'bg-orange-500';
             case 'ready_for_assignment': return 'bg-amber-500';
             case 'assigned_to_driver': return 'bg-blue-500';
+            case 'in_progress': return 'bg-indigo-600';
             case 'completed': return 'bg-emerald-600';
             case 'cancelled': return 'bg-red-500';
             case 'rejected_by_user': return 'bg-red-700';
+            case 'rejected_by_owner': return 'bg-red-800';
             default: return 'bg-slate-400';
         }
     }
@@ -944,19 +1086,26 @@
 
         const operatorActions = document.getElementById('modal-operator-actions');
         const assignActions = document.getElementById('modal-assign-actions');
+        const cancellationActions = document.getElementById('modal-cancellation-actions');
         const priceInput = document.getElementById('modal-price-input');
+
+        // Reset visibility
+        operatorActions.classList.add('hidden');
+        assignActions.classList.add('hidden');
+        cancellationActions.classList.add('hidden');
 
         if (trip.status === 'pending_owner_review') {
             operatorActions.classList.remove('hidden');
             priceInput.value = trip.price || "";
-        } else {
-            operatorActions.classList.add('hidden');
         }
 
-        if (trip.status === 'ready_for_assignment') {
+        if (trip.status === 'ready_for_assignment' || trip.status === 'pending_user_confirmation') {
             assignActions.classList.remove('hidden');
-        } else {
-            assignActions.classList.add('hidden');
+        }
+
+        if (trip.driver_cancel_requested) {
+            cancellationActions.classList.remove('hidden');
+            document.getElementById('modal-cancel-reason-text').textContent = `Reason: ${trip.driver_cancel_reason || 'None provided'}`;
         }
 
         detailsModal.classList.remove('hidden');
