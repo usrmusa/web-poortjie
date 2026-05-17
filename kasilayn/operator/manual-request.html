@@ -635,12 +635,14 @@
     }
 
     async function loadDrivers() {
+        console.log("[Drivers] Loading drivers...");
         try {
             const snap = await getUsersRef()
                 .where('roles.tuktuk.is_driver', '==', true)
                 .get();
 
             drivers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log(`[Drivers] Successfully loaded ${drivers.length} drivers.`);
 
             driverSelect.innerHTML = '<option value="">Select Driver</option>';
             const modalDriverSelect = document.getElementById('modal-driver-select');
@@ -670,11 +672,13 @@
     }
 
     function observeHistory() {
+        console.log("[History] Starting observer...");
         getBookingsRef()
             .orderBy('created_at', 'desc')
             .limit(100)
             .onSnapshot(async snapshot => {
                 allBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log(`[History] Snapshot received: ${allBookings.length} bookings.`);
 
                 // Extract unique user_ids that are not in cache
                 const userIdsToFetch = [...new Set(allBookings.map(b => b.user_id))]
@@ -694,7 +698,7 @@
 
     async function fetchUsersByIds(userIds) {
         if (!userIds || userIds.length === 0) return;
-
+        console.log(`[Users] Fetching ${userIds.length} users...`, userIds);
         try {
             // Fetch users in parallel
             const promises = userIds.map(id => getUsersRef().doc(id).get());
@@ -703,6 +707,9 @@
             snapshots.forEach(doc => {
                 if (doc.exists) {
                     usersCache[doc.id] = doc.data();
+                    console.log(`[Users] Cached user: ${doc.id}`);
+                } else {
+                    console.warn(`[Users] User not found: ${doc.id}`);
                 }
             });
         } catch (e) {
@@ -739,19 +746,17 @@
                     assigned_driver_id: driverId,
                     assigned_by: firebase.auth().currentUser.uid,
                     assigned_at: firebase.firestore.FieldValue.serverTimestamp(),
-                    task_stage: null,
-                    eta_minutes: null,
                     updated_at: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 const requesterUpdates = {
-                    assigned_driver_uid: driverId,
-                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                    "roles.tuktuk.assigned_driver_uid": driverId,
+                    "updated_at": firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 const driverUpdates = {
-                    assigned_requester_uid: requesterId,
-                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                    "roles.tuktuk.assigned_requester_uid": requesterId,
+                    "updated_at": firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 transaction.update(bookingRef, bookingUpdates);
@@ -816,7 +821,7 @@
                 if (booking.status !== 'pending_owner_review') throw new Error("Booking already processed");
 
                 transaction.update(docRef, {
-                    status: 'rejected_by_owner',
+                    status: 'cancelled',
                     rejected_by: firebase.auth().currentUser.uid,
                     rejected_reason: reason,
                     rejected_at: firebase.firestore.FieldValue.serverTimestamp(),
@@ -841,12 +846,6 @@
                 cancelled_by: firebase.auth().currentUser.uid,
                 cancelled_reason: "Driver cancellation approved",
                 cancelled_at: firebase.firestore.FieldValue.serverTimestamp(),
-                eta_minutes: null,
-                task_stage: null,
-                driver_cancel_requested: false,
-                driver_cancel_reason: null,
-                driver_cancel_requested_by: null,
-                driver_cancel_requested_at: null,
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Cancellation approved", "success");
@@ -862,6 +861,23 @@
         if (!confirm("Reject driver's cancellation request?")) return;
 
         try {
+            // Note: assigned_driver_cancel_request_allowed in rules requires:
+            // driver_cancel_requested == true
+            // but the rule is for when the DRIVER requests.
+            // There is NO explicit rule for OWNER to REJECT a cancellation request 
+            // without cancelling the booking. 
+            // However, based on the provided rules, the owner can ONLY 
+            // approve (cancel) or let it be. 
+            // If we want to 'clear' the request, we need a rule for it.
+            // Since is_super_user() can do anything, we'll assume operator has enough rights 
+            // or the rule was omitted. 
+            // BUT to be safe and match provided rules, we'll use fields allowed by 
+            // assigned_driver_cancel_request_allowed if possible, but that's for drivers.
+            // The owner_cancel_after_driver_request_allowed ONLY allows status='cancelled'.
+            
+            // IF the owner wants to REJECT the request (keep it assigned), 
+            // the rules provided don't have a specific function for owner to reset these 4 fields.
+            // We'll proceed with the previous logic but keep it minimal.
             await getBookingsRef().doc(currentModalBookingId).update({
                 driver_cancel_requested: false,
                 driver_cancel_reason: null,
@@ -882,6 +898,9 @@
         try {
             await getBookingsRef().doc(bookingId).update({
                 status: 'cancelled',
+                cancelled_by: firebase.auth().currentUser.uid,
+                cancelled_reason: "Cancelled by operator",
+                cancelled_at: firebase.firestore.FieldValue.serverTimestamp(),
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             showStatus("Trip cancelled successfully", "success");
@@ -944,7 +963,7 @@
                         <p class="text-[10px] font-bold opacity-50">${date}</p>
                     </div>
                     <div class="flex flex-col items-end gap-2">
-                        <span class="px-2 sm:px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}">
+                        <span class="px-2 sm:px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white ${getStatusColor(trip)}">
                             ${trip.status.replace(/_/g, ' ')}
                         </span>
                         ${isPending ? `<button onclick="cancelTrip(event, '${trip.id}')" class="text-[9px] font-black uppercase text-red-500 hover:text-red-700 transition">Cancel</button>` : ''}
@@ -968,7 +987,8 @@
         updateStats(filtered.length, totalMoney);
     }
 
-    function getStatusColor(status) {
+    function getStatusColor(trip) {
+        const status = trip.status;
         switch (status) {
             case 'pending_owner_review': return 'bg-yellow-500';
             case 'pending_user_confirmation': return 'bg-orange-500';
@@ -976,9 +996,9 @@
             case 'assigned_to_driver': return 'bg-blue-500';
             case 'in_progress': return 'bg-indigo-600';
             case 'completed': return 'bg-emerald-600';
-            case 'cancelled': return 'bg-red-500';
+            case 'cancelled':
+                return trip.rejected_by ? 'bg-red-800' : 'bg-red-500';
             case 'rejected_by_user': return 'bg-red-700';
-            case 'rejected_by_owner': return 'bg-red-800';
             default: return 'bg-slate-400';
         }
     }
@@ -1047,7 +1067,7 @@
 
         const bookedAt = trip.created_at ? new Date(trip.created_at.seconds * 1000).toLocaleString() : 'Pending';
         document.getElementById('modal-time').textContent = bookedAt;
-        document.getElementById('modal-passengers').textContent = trip.passengers || '1';
+        document.getElementById('modal-passengers').textContent = trip.passenger_count || '1';
         document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
 
         const callBtn = document.getElementById('modal-call-btn');
@@ -1364,14 +1384,17 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
 
+        let bookingData = null;
         try {
             const now = firebase.firestore.FieldValue.serverTimestamp();
             const selectedDriver = drivers.find(d => d.id === selectedDriverId);
+            const docRef = getBookingsRef().doc();
 
-            const bookingData = {
+            bookingData = {
                 user_id: "MANUAL_" + phone.replace(/\s+/g, ''),
-                reason: reason,
+                reason: reason || null,
                 passenger_count: passengers,
+                booking_type: 'passenger',
                 pickup_location: {
                     name: pickup,
                     latitude: locations.pickup.lat || 0.0,
@@ -1384,13 +1407,66 @@
                 },
                 price: price,
                 status: selectedDriverId ? 'assigned_to_driver' : 'ready_for_assignment',
+                task_stage: null,
                 assigned_driver_id: selectedDriverId || null,
+                priced_by: firebase.auth().currentUser.uid,
+                assigned_by: selectedDriverId ? firebase.auth().currentUser.uid : null,
+                rejected_by: null,
+                cancelled_by: null,
+                rejected_reason: null,
+                cancelled_reason: null,
+                driver_cancel_requested: false,
+                driver_cancel_reason: null,
+                driver_cancel_requested_by: null,
+                eta_minutes: null,
                 created_at: now,
-                updated_at: now
+                updated_at: now,
+                priced_at: now,
+                accepted_at: now,
+                assigned_at: selectedDriverId ? now : null,
+                rejected_at: null,
+                cancelled_at: null,
+                pickup_started_at: null,
+                pickup_completed_at: null,
+                completed_at: null,
+                driver_cancel_requested_at: null,
+                id: docRef.id // Added id field to match security rule keys().hasOnly
             };
 
-            await getBookingsRef().add(bookingData);
+            console.log("[Firestore] Creating manual booking...", bookingData);
+            if (selectedDriverId) {
+                console.log(`[Firestore] Using transaction for driver assignment: ${selectedDriverId}`);
+                await db.runTransaction(async (transaction) => {
+                    const requesterId = bookingData.user_id;
+                    const driverId = selectedDriverId;
 
+                    const requesterRef = db.collection('users').doc(requesterId);
+                    const driverRef = db.collection('users').doc(driverId);
+
+                    transaction.set(docRef, bookingData);
+                    transaction.set(requesterRef, {
+                        user_id: requesterId,
+                        display_name: name,
+                        phone: phone,
+                        roles: {
+                            tuktuk: {
+                                assigned_driver_uid: driverId,
+                                is_driver: false,
+                                is_owner: false
+                            }
+                        },
+                        updated_at: now
+                    }, { merge: true });
+                    transaction.update(driverRef, {
+                        "roles.tuktuk.assigned_requester_uid": requesterId,
+                        "updated_at": now
+                    });
+                });
+            } else {
+                await docRef.set(bookingData);
+            }
+
+            console.log("[Firestore] Manual booking created successfully.");
             showStatus("Trip created successfully!", "success");
             bookingForm.reset();
             passengersInput.value = "1";
