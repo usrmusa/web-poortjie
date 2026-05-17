@@ -183,16 +183,20 @@
         }
     });
 
-    displayNameInput.addEventListener('blur', (e) => {
-        let value = e.target.value.trim().replace(/\s+/g, ' ');
+    displayNameInput.addEventListener('input', (e) => {
+        let cursorPosition = e.target.selectionStart;
+        let value = e.target.value;
         if (value) {
             const words = value.split(' ');
-            const formattedWords = words.slice(0, 3).map(word => {
+            const formattedWords = words.map(word => {
                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             });
-            e.target.value = formattedWords.join(' ');
+            let newValue = formattedWords.join(' ');
+            if (newValue !== value) {
+                e.target.value = newValue;
+                e.target.setSelectionRange(cursorPosition, cursorPosition);
+            }
         }
-        validateForm();
     });
 
     const getFriendlyErrorMessage = (errorCode) => {
@@ -437,8 +441,8 @@
                         }
 
                         transaction.set(usernameRef, {
-                            uid: user.uid,
-                            claimed_at: firebase.firestore.FieldValue.serverTimestamp()
+                            user_id: user.uid,
+                            locked_until: null
                         });
 
                         transaction.set(userRef, {
@@ -447,8 +451,20 @@
                             display_name: displayName,
                             email: email,
                             phone: phone,
+                            email_verified: false,
+                            photo_url: null,
+                            bio: null,
                             created_at: firebase.firestore.FieldValue.serverTimestamp(),
-                            updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                            updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+                            devices: [],
+                            username_last_changed_at: firebase.firestore.FieldValue.serverTimestamp(),
+                            last_active: firebase.firestore.FieldValue.serverTimestamp(),
+                            last_login_device_id: null,
+                            roles: {
+                                digilayn: { is_super_user: false },
+                                poortjie: { is_admin: false, is_taxi_rank_admin: false },
+                                tuktuk: { is_owner: false, is_driver: false }
+                            }
                         });
                     });
 
