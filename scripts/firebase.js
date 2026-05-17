@@ -39,20 +39,3 @@ if (location.protocol !== 'file:') {
   }
 }
 
-/**
- * Logs a user trace (login or register event) to Firestore.
- * @param {string} uid - The user's Firebase UID.
- */
-async function logUserTrace(uid) {
-  try {
-    await db.collection('user_traces').doc(uid).set({
-      user_id: uid,
-      action: "registration_trace",
-      status: "completed",
-      app_type: "poortjie_connect",
-      created_at: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  } catch (error) {
-    console.error('Error logging user trace:', error);
-  }
-}
