@@ -724,6 +724,9 @@
         try {
             await getBookingsRef().doc(id).update({
                 status: 'rejected_by_user',
+                rejected_at: firebase.firestore.FieldValue.serverTimestamp(),
+                rejected_by: currentUser.uid,
+                rejected_reason: "Rejected by user",
                 updated_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             console.log("[Firestore] Booking status rejected successfully:", id);
@@ -781,6 +784,7 @@
         try {
             const docRef = getBookingsRef().doc();
             const booking = {
+                id: docRef.id,
                 user_id: currentUser.uid,
                 passenger_count: type === 'passenger' ? passengers : 0,
                 reason: reason || null,
@@ -798,11 +802,29 @@
                 status: 'pending_owner_review',
                 created_at: firebase.firestore.FieldValue.serverTimestamp(),
                 updated_at: firebase.firestore.FieldValue.serverTimestamp(),
-                
+
                 price: null,
                 task_stage: null,
                 assigned_driver_id: null,
-                driver_cancel_requested: false
+                priced_by: null,
+                assigned_by: null,
+                rejected_by: null,
+                cancelled_by: null,
+                rejected_reason: null,
+                cancelled_reason: null,
+                driver_cancel_requested: false,
+                driver_cancel_reason: null,
+                driver_cancel_requested_by: null,
+                eta_minutes: null,
+                priced_at: null,
+                accepted_at: null,
+                assigned_at: null,
+                rejected_at: null,
+                cancelled_at: null,
+                pickup_started_at: null,
+                pickup_completed_at: null,
+                completed_at: null,
+                driver_cancel_requested_at: null
             };
 
             await docRef.set(booking);
