@@ -46,8 +46,11 @@ if (location.protocol !== 'file:') {
 async function logUserTrace(uid) {
   try {
     await db.collection('user_traces').doc(uid).set({
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      browser: navigator.userAgent
+      user_id: uid,
+      action: "registration_trace",
+      status: "completed",
+      app_type: "poortjie_connect",
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
   } catch (error) {
     console.error('Error logging user trace:', error);
