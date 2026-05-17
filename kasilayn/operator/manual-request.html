@@ -218,11 +218,12 @@
 
 <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
     <div class="max-w-xl mx-auto px-4 h-16 flex items-center">
-        <button onclick="window.history.back()"
+        <button onclick="window.top.location.replace('../../index.html')"
                 class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition">
             <i class="fas fa-arrow-left"></i>
         </button>
         <a href="../../authentication/profile.html"
+           onclick="sessionStorage.setItem('redirectUrl', window.top.location.href); window.top.location.href = '../../authentication/profile.html'; return false;"
            class="flex-grow flex flex-col items-center justify-center hover:opacity-70 transition text-center px-2">
             <p id="header-user-name"
                class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest leading-none text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-none"></p>
@@ -484,6 +485,7 @@
 
     let drivers = [];
     let allBookings = [];
+    let usersCache = {}; // Global cache for user data
     let currentUserData = null;
     let currentModalBookingId = null;
     let map, marker, secondaryMarker, directionsService, directionsRenderer;
@@ -512,8 +514,8 @@
 
     firebase.auth().onAuthStateChanged(async user => {
         if (!user) {
-            sessionStorage.setItem('redirectUrl', window.location.href);
-            window.location.href = '../../authentication/login.html';
+            sessionStorage.setItem('redirectUrl', window.top.location.href);
+            window.top.location.href = '../../authentication/login.html';
             return;
         }
 
@@ -529,8 +531,8 @@
                 const isSuperUser = currentUserData?.roles?.digilayn?.is_super_user || false;
                 const isOwner = currentUserData?.roles?.tuktuk?.is_owner || false;
                 if (!(isSuperUser || isOwner)) {
-                    alert("Unauthorized access. Owners only.");
-                    window.location.href = 'request.html';
+                    // No alert, just redirect
+                    window.top.location.href = 'request.html';
                     return;
                 }
 
@@ -546,7 +548,7 @@
                     document.getElementById('header-user-bio').textContent = currentUserData.bio;
                 }
             } else {
-                 window.location.href = 'request.html';
+                 window.top.location.href = 'request.html';
                  return;
             }
         } catch (e) {
@@ -645,14 +647,41 @@
         getBookingsRef()
             .orderBy('created_at', 'desc')
             .limit(100)
-            .onSnapshot(snapshot => {
+            .onSnapshot(async snapshot => {
                 allBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Extract unique user_ids that are not in cache
+                const userIdsToFetch = [...new Set(allBookings.map(b => b.user_id))]
+                    .filter(id => id && !usersCache[id] && !id.startsWith("MANUAL_"));
+
+                if (userIdsToFetch.length > 0) {
+                    await fetchUsersByIds(userIdsToFetch);
+                }
+
                 renderHistory();
 
                 if (currentModalBookingId) {
                     showBookingDetails(currentModalBookingId);
                 }
             });
+    }
+
+    async function fetchUsersByIds(userIds) {
+        if (!userIds || userIds.length === 0) return;
+
+        try {
+            // Fetch users in parallel
+            const promises = userIds.map(id => getUsersRef().doc(id).get());
+            const snapshots = await Promise.all(promises);
+
+            snapshots.forEach(doc => {
+                if (doc.exists) {
+                    usersCache[doc.id] = doc.data();
+                }
+            });
+        } catch (e) {
+            console.error("Error fetching users:", e);
+        }
     }
 
     window.assignDriver = async (e, bookingId, driverId) => {
@@ -756,18 +785,22 @@
 
             const date = trip.created_at ? new Date(trip.created_at.seconds * 1000).toLocaleDateString() : 'Pending';
 
+            // Resolve user info from cache or booking data
+            const user = usersCache[trip.user_id] || {};
+            const userName = trip.user_name || user.display_name || 'Anonymous';
+
             const div = document.createElement('div');
             div.className = "p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2 cursor-pointer hover:border-green-500/50 transition-all";
             div.onclick = () => showBookingDetails(trip.id);
 
             const isPending = ['pending_owner_review', 'pending_user_confirmation', 'ready_for_assignment', 'assigned_to_driver'].includes(trip.status);
 
-            const driverInfo = `<span class="text-slate-900 dark:text-white">${trip.assignedDriverName || 'Unassigned'}</span>`;
+            const driverInfo = `<span class="text-slate-900 dark:text-white">${trip.assigned_driver_name || (trip.assigned_driver_id ? (drivers.find(d => d.id === trip.assigned_driver_id)?.display_name || 'Driver') : 'Unassigned')}</span>`;
 
             div.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div>
-                        <h4 class="text-sm font-black uppercase tracking-tight truncate max-w-[120px] sm:max-w-none">${trip.userName || 'Anonymous'}</h4>
+                        <h4 class="text-sm font-black uppercase tracking-tight truncate max-w-[120px] sm:max-w-none">${userName}</h4>
                         <p class="text-[10px] font-bold opacity-50">${date}</p>
                     </div>
                     <div class="flex flex-col items-end gap-2">
@@ -778,9 +811,9 @@
                     </div>
                 </div>
                 <div class="text-xs font-bold opacity-70">
-                    <span class="text-red-500">${trip.pickupLocation?.name || "Unknown"}</span>
+                    <span class="text-red-500">${trip.pickup_location?.name || "Unknown"}</span>
                     <span class="mx-1">→</span>
-                    <span class="text-green-600">${trip.destinationLocation?.name || "Unknown"}</span>
+                    <span class="text-green-600">${trip.destination_location?.name || "Unknown"}</span>
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
                     <p class="text-[9px] font-black uppercase opacity-40 flex items-center gap-2 truncate max-w-[150px]">
@@ -852,15 +885,22 @@
 
         currentModalBookingId = bookingId;
 
+        // Resolve user info from cache or booking data
+        const user = usersCache[trip.user_id] || {};
+        const userName = trip.user_name || user.display_name || 'Anonymous';
+        const userPhone = trip.user_phone || user.phone || 'No phone recorded';
+
+        const driverName = trip.assigned_driver_name || (trip.assigned_driver_id ? (drivers.find(d => d.id === trip.assigned_driver_id)?.display_name || 'Driver') : 'Unassigned');
+
         document.getElementById('modal-booking-id').textContent = `ID: ${trip.id}`;
         document.getElementById('modal-status').textContent = trip.status.replace(/_/g, ' ');
         document.getElementById('modal-status').className = `px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white ${getStatusColor(trip.status)}`;
         document.getElementById('modal-price').textContent = `R ${(trip.price || 0).toFixed(2)}`;
-        document.getElementById('modal-name').textContent = trip.user_name || 'Anonymous';
-        document.getElementById('modal-phone').textContent = trip.user_phone || 'No phone recorded';
+        document.getElementById('modal-name').textContent = userName;
+        document.getElementById('modal-phone').textContent = userPhone;
         document.getElementById('modal-pickup').textContent = trip.pickup_location?.name || 'Unknown';
         document.getElementById('modal-destination').textContent = trip.destination_location?.name || 'Unknown';
-        document.getElementById('modal-driver').textContent = trip.assigned_driver_name || 'Unassigned';
+        document.getElementById('modal-driver').textContent = driverName;
         document.getElementById('modal-driver-id').textContent = trip.assigned_driver_id ? `UID: ${trip.assigned_driver_id}` : '';
 
         const bookedAt = trip.created_at ? new Date(trip.created_at.seconds * 1000).toLocaleString() : 'Pending';
@@ -869,8 +909,9 @@
         document.getElementById('modal-reason').textContent = trip.reason || 'None provided';
 
         const callBtn = document.getElementById('modal-call-btn');
-        if (trip.user_phone) {
-            callBtn.href = `tel:${trip.user_phone}`;
+        if (userPhone && userPhone !== 'No phone recorded') {
+            callBtn.href = `tel:${userPhone}`;
+            callBtn.classList.remove('opacity-50', 'pointer-events-none');
         } else {
             callBtn.href = "#";
             callBtn.classList.add('opacity-50', 'pointer-events-none');
