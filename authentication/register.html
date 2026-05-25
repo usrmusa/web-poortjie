@@ -33,25 +33,29 @@
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
 <header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center">
-    <a href="../index.html" onclick="window.location.replace('../index.html'); return false;" class="text-6xl font-extrabold mb-4 tracking-tight text-slate-900 dark:text-white">Poortjie</a>
+    <a href="../index.html" onclick="window.location.replace('../index.html'); return false;"
+       class="text-6xl font-extrabold mb-4 tracking-tight text-slate-900 dark:text-white">Poortjie</a>
 </header>
 
 <main class="max-w-md mx-auto px-6 pb-24">
     <div class="card flex flex-col p-8 rounded-2xl border-l-4 border-l-green-500">
         <h2 class="text-2xl font-bold mb-6 text-center">Create Your Account</h2>
-        <div id="error-message" class="hidden mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200"></div>
+        <div id="error-message"
+             class="hidden mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200"></div>
         <form id="register-form" novalidate>
             <div class="form-group mb-4">
                 <label for="username" class="block mb-1 font-bold text-sm uppercase tracking-wider">Username</label>
                 <div class="relative">
                     <input type="text" id="username" name="username" placeholder="Username"
                            class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
-                           required pattern="[a-z0-9]+" title="Username must be lowercase and contain no spaces.">
+                           required pattern="[a-z0-9]+"
+                           title="Username must be lowercase and contain no spaces.">
                     <p id="error-username"
                        class="absolute right-2 top-2 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded shadow-sm hidden">
                         Invalid Format</p>
                 </div>
-                <p class="text-xs opacity-50 mt-1 pl-1">Lowercase letters and numbers only, no spaces.</p>
+                <p class="text-xs opacity-50 mt-1 pl-1">Lowercase letters and numbers only, no
+                    spaces.</p>
             </div>
             <div class="form-group mb-4">
                 <label for="email" class="block mb-1 font-bold text-sm uppercase tracking-wider">Email</label>
@@ -65,7 +69,9 @@
                 </div>
             </div>
             <div class="form-group mb-4">
-                <label for="display-name" class="block mb-1 font-bold text-sm uppercase tracking-wider">Full Name (max 3 names)</label>
+                <label for="display-name"
+                       class="block mb-1 font-bold text-sm uppercase tracking-wider">Full Name (max
+                    3 names)</label>
                 <div class="relative">
                     <input type="text" id="display-name" name="display-name" placeholder="Full Name"
                            class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
@@ -78,9 +84,12 @@
                 <p class="text-xs opacity-50 mt-1 pl-1">Required. Max 3 names.</p>
             </div>
             <div class="form-group mb-4">
-                <label for="phone-number" class="block mb-1 font-bold text-sm uppercase tracking-wider">Phone Number (optional)</label>
+                <label for="phone-number"
+                       class="block mb-1 font-bold text-sm uppercase tracking-wider">Phone Number
+                    (optional)</label>
                 <div class="relative">
-                    <input type="tel" id="phone-number" name="phone-number" placeholder="e.g. 0123456789"
+                    <input type="tel" id="phone-number" name="phone-number"
+                           placeholder="e.g. 0123456789"
                            maxlength="10" pattern="\d{10}"
                            class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
                            title="Please enter exactly 10 digits">
@@ -103,7 +112,9 @@
                 <p class="text-xs opacity-50 mt-1 pl-1">Must be 6 or more characters.</p>
             </div>
             <div class="form-group mb-6">
-                <label for="confirm-password" class="block mb-1 font-bold text-sm uppercase tracking-wider">Confirm Password</label>
+                <label for="confirm-password"
+                       class="block mb-1 font-bold text-sm uppercase tracking-wider">Confirm
+                    Password</label>
                 <div class="relative">
                     <input type="password" id="confirm-password" name="confirm-password"
                            placeholder="Confirm Password"
@@ -122,25 +133,34 @@
                         I confirm that I understand I am responsible for the data I add, and I retain ownership of my content hosted by Google Firebase.
                     </span>
                 </label>
-                <p id="error-policy-confirm" class="text-[10px] text-red-500 font-bold mt-1 hidden">Please confirm you understand the data policy.</p>
+                <p id="error-policy-confirm" class="text-[10px] text-red-500 font-bold mt-1 hidden">
+                    Please confirm you understand the data policy.</p>
             </div>
             <div class="flex items-center justify-between mb-4">
-                <button type="submit" class="w-full px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
+                <button type="submit"
+                        class="w-full px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">
                     Register
                 </button>
             </div>
             <p class="text-[10px] text-center opacity-60 leading-tight">
-                By registering, you agree that you are responsible for what you add. You own your data, hosted securely by Google Firebase. <a href="../support.html" class="underline font-bold">Read Policy</a>
+                By registering, you agree that you are responsible for what you add. You own your
+                data, hosted securely by Google Firebase. <a href="../support.html"
+                                                             class="underline font-bold">Read
+                Policy</a>
             </p>
         </form>
         <p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
-            Already have an account? <a href="login.html" onclick="window.location.replace('login.html'); return false;" class="text-green-500 hover:text-green-700 font-bold">Login</a>.
+            Already have an account? <a href="login.html"
+                                        onclick="window.location.replace('login.html'); return false;"
+                                        class="text-green-500 hover:text-green-700 font-bold">Login</a>.
         </p>
     </div>
 </main>
 
 <footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
-    &copy; 2026 Poortjie Services. Empowering poortjie economies.<br><a href="../support.html" class="hover:underline">Data Policy</a>
+    &copy; 2026 Poortjie Services. Empowering poortjie economies.<br><a href="../support.html"
+                                                                        class="hover:underline">Data
+    Policy</a>
 </footer>
 
 <script src="../scripts/theme.js"></script>
@@ -450,22 +470,13 @@
                             username: username,
                             display_name: displayName,
                             email: email,
-                            phone: phone,
                             email_verified: false,
                             photo_url: null,
-                            bio: null,
                             created_at: firebase.firestore.FieldValue.serverTimestamp(),
                             updated_at: firebase.firestore.FieldValue.serverTimestamp(),
-                            devices: [],
-                            username_last_changed_at: firebase.firestore.FieldValue.serverTimestamp(),
                             last_active: firebase.firestore.FieldValue.serverTimestamp(),
-                            last_login_device_id: null,
-                            roles: {
-                                digilayn: { is_super_user: false },
-                                poortjie: { is_admin: false, is_taxi_rank_admin: false },
-                                tuktuk: { is_owner: false, is_driver: false }
-                            }
-                        });
+                            devices: {}
+                            });
                     });
 
                     const redirectUrl = sessionStorage.getItem('redirectUrl');
