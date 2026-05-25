@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Requests - Poortjie Services</title>
+    <title>Alpha Test - Poortjie Connect</title>
 
     <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
@@ -14,16 +14,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#22c55e',
+                        secondary: '#16a34a',
+                    }
+                }
+            }
+        }
     </script>
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #22c55e; border-radius: 10px; }
 
-        .route-line {
-            position: relative;
-        }
+        .route-line { position: relative; }
         .route-line::before {
             content: '';
             position: absolute;
@@ -34,8 +42,24 @@
             background: #e2e8f0;
             z-index: 0;
         }
-        .dark .route-line::before {
-            background: #334155;
+        .dark .route-line::before { background: #334155; }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+        .pulse-dot {
+            position: relative;
+            width: 8px;
+            height: 8px;
+        }
+        .pulse-dot::before {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
     </style>
 </head>
@@ -45,7 +69,7 @@
 <div id="loader-overlay"
      class="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
     <div class="animate-spin h-10 w-10 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
-    <p class="text-xs font-black uppercase tracking-widest animate-pulse">Connecting...</p>
+    <p class="text-xs font-black uppercase tracking-widest animate-pulse">Initializing Alpha Portal...</p>
 </div>
 
     <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
@@ -54,178 +78,236 @@
                     class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                 <i class="fas fa-arrow-left"></i>
             </button>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black uppercase tracking-widest text-slate-400">Poortjie</span>
+                <span class="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter border border-green-200 dark:border-green-800">Alpha</span>
+            </div>
             <a href="../../authentication/profile.html" id="user-avatar" onclick="sessionStorage.setItem('redirectUrl', window.top.location.href); window.top.location.href = '../../authentication/profile.html'; return false;" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold overflow-hidden border border-slate-200 dark:border-slate-700">
                 <span id="user-initial">?</span>
             </a>
         </div>
     </header>
 
-    <main class="max-w-xl mx-auto p-4 space-y-6 pb-24">
+    <main class="max-w-xl mx-auto p-4 space-y-8 pb-24">
 
-        <div id="download-apps-section" class="flex flex-col gap-3">
-            <a href="mobile-app/Poortjie_Connect.apk" download
-               class="w-full py-4 bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-slate-900 transition shadow-lg">
-                <i class="fab fa-android text-lg"></i> Download Poortjie Connect App
-            </a>
-            <a id="download-operator-btn" href="mobile-app/Poortjie_Operator.apk" download
-               class="hidden w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-green-700 transition shadow-lg">
-                <i class="fab fa-android text-lg"></i> Download Operator App
-            </a>
-            <a id="manage-tuktuk-btn" href="manual-request.html"
-               class="hidden w-full py-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-lg">
-                <i class="fas fa-tasks text-lg text-green-600"></i> Manage TukTuk Requests
-            </a>
-        </div>
-
-        <div class="pt-6 sm:pt-10 pb-4 text-center">
-            <div class="flex justify-center mb-4 sm:mb-6">
-                <img src="./logo/tuktuk.png"
-                     alt="Tuktuk Logo"
-                     class="w-1/4 sm:w-1/3 max-w-[180px] min-w-[100px] object-contain">
-            </div>
-
-            <h1 class="text-4xl sm:text-5xl font-black tracking-tight">
-                Poortjie<br>
-                <span class="text-green-600">Requests</span>
-            </h1>
-
-            <div class="mt-3 sm:mt-4 inline-block bg-green-500/10 text-green-600 dark:text-green-400 px-4 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em]">
-                TukTuk Operator
-            </div>
-        </div>
-
-        <!-- Active Request Check -->
-    <div id="active-request-banner" class="hidden">
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-3xl p-5 flex items-start gap-4">
-            <i class="fas fa-info-circle text-blue-500 mt-1"></i>
-            <div>
-                <p class="text-sm font-bold text-blue-800 dark:text-blue-300">Active Request Found</p>
-                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">You have an active request. Please complete or cancel it before making a new one.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Booking Form Section -->
-    <section id="booking-form-section" class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-700 p-8 space-y-6">
-        <h2 class="text-2xl font-black uppercase tracking-tight">New Request</h2>
-        
-        <div class="space-y-5">
-            <!-- Suggestions chips -->
-            <div class="space-y-3">
-                <div class="flex flex-col items-center">
-                    <div class="flex items-center justify-between w-full">
-                        <div class="flex-grow"></div>
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Suggested Destinations</label>
-                        <div class="flex-grow flex justify-end">
-                            <button id="view-points-btn" class="hidden text-[10px] font-black uppercase tracking-widest text-green-600 hover:text-green-700 transition flex items-center gap-1">
-                                <i class="fas fa-map-location-dot"></i> View on Map
-                            </button>
-                        </div>
+        <!-- Alpha Welcome & Pro CTA -->
+        <section class="space-y-6 pt-4">
+            <div class="text-center space-y-2">
+                <div class="flex justify-center mb-6">
+                    <div class="p-4 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
+                        <img src="./logo/tuktuk.png" alt="Tuktuk Logo" class="w-20 object-contain">
                     </div>
                 </div>
-                <div id="suggestions-chips" class="flex flex-wrap gap-2 justify-center">
-                    <!-- Chips will be injected here -->
-                </div>
+                <h1 class="text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Join the <span class="text-green-600">Alpha Phase</span>
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto font-medium">
+                    You're among the first to test Poortjie Connect! Help us shape the future of local travel.
+                </p>
             </div>
 
-            <!-- Pickup -->
-            <div class="space-y-2">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Location</label>
-                <div class="relative">
-                    <i class="fas fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-red-500"></i>
-                    <input type="text" id="pickup-input" readonly
-                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
+            <!-- Pro App Card -->
+            <div class="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl group">
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-green-500/20 rounded-full blur-3xl"></div>
+
+                <div class="relative z-10 space-y-6">
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-1">
+                            <h2 class="text-2xl font-black uppercase tracking-tight leading-none">The Pro Experience</h2>
+                            <p class="text-green-400 text-[10px] font-black uppercase tracking-widest">Recommended for testers</p>
+                        </div>
+                        <i class="fas fa-rocket text-3xl text-green-500 rotate-12 group-hover:scale-110 transition"></i>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                                <i class="fas fa-bell text-green-500"></i> Instant Alerts
+                            </div>
+                            <p class="text-[9px] text-slate-500">Get notified when drivers accept or arrive.</p>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                                <i class="fas fa-location-arrow text-green-500"></i> Live Tracking
+                            </div>
+                            <p class="text-[9px] text-slate-500">See your TukTuk move in real-time.</p>
+                        </div>
+                    </div>
+
+                    <div id="download-apps-section" class="space-y-3">
+                        <a href="mobile-app/Poortjie_Connect.apk" download
+                           class="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition shadow-lg shadow-green-900/20">
+                            <i class="fab fa-android text-lg"></i> Download Connect App
+                        </a>
+
+                        <a id="download-operator-btn" href="mobile-app/Poortjie_Operator.apk" download
+                           class="hidden w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 transition border border-slate-700">
+                            <i class="fas fa-hard-hat text-green-500"></i> Download Operator App
+                        </a>
+                    </div>
                 </div>
-                <p id="pickup-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Pickup location is required</p>
+            </div>
+        </section>
+
+        <!-- Active Request Banner -->
+        <div id="active-request-banner" class="hidden">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-3xl p-5 flex items-start gap-4">
+                <div class="pulse-dot mt-2 ml-1"></div>
+                <div>
+                    <p class="text-sm font-bold text-blue-800 dark:text-blue-300">Ongoing Trip/Request</p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Please finish your current activity before creating a new one.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage TukTuk (Owners Only) -->
+        <div id="manage-tuktuk-btn" class="hidden">
+            <a href="manual-request.html"
+               class="w-full py-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-lg">
+                <i class="fas fa-tasks text-lg text-green-600"></i> Manage Incoming Requests
+            </a>
+        </div>
+
+        <!-- Web Booking Form -->
+        <section id="booking-form-section" class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-xl border border-slate-200 dark:border-slate-700 p-8 space-y-8">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-black uppercase tracking-tight">Quick Request</h2>
+                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Web Portal</span>
             </div>
 
-            <!-- Destination -->
-            <div class="space-y-2">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Destination</label>
-                <div class="relative">
-                    <i class="fas fa-navigation absolute left-4 top-1/2 -translate-y-1/2 text-green-500"></i>
-                    <input type="text" id="destination-input" readonly
-                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer">
+            <div class="space-y-6">
+                <!-- Suggestions -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Where to?</label>
+                        <button id="view-points-btn" class="hidden text-[10px] font-black uppercase tracking-widest text-green-600 hover:text-green-700 transition flex items-center gap-1">
+                            <i class="fas fa-map-marked"></i> Preview Route
+                        </button>
+                    </div>
+                    <div id="suggestions-chips" class="flex flex-wrap gap-2">
+                        <!-- Chips injected here -->
+                    </div>
                 </div>
-                <p id="destination-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Destination is required</p>
-            </div>
 
-            <!-- Service & Details -->
-            <div class="grid grid-cols-2 gap-4">
+                <!-- Locations -->
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <div class="relative group">
+                            <i class="fas fa-circle-dot absolute left-4 top-1/2 -translate-y-1/2 text-red-500 text-xs"></i>
+                            <input type="text" id="pickup-input" readonly placeholder="Set Pickup Location"
+                                   class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer group-hover:bg-slate-100 dark:group-hover:bg-slate-800">
+                        </div>
+                        <p id="pickup-error" class="text-red-500 text-[10px] font-bold ml-4 hidden">Required</p>
+                    </div>
+
+                    <div class="flex justify-center -my-2 relative z-10">
+                        <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-arrow-down text-[10px]"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="relative group">
+                            <i class="fas fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-green-500 text-xs"></i>
+                            <input type="text" id="destination-input" readonly placeholder="Where are you going?"
+                                   class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm cursor-pointer group-hover:bg-slate-100 dark:group-hover:bg-slate-800">
+                        </div>
+                        <p id="destination-error" class="text-red-500 text-[10px] font-bold ml-4 hidden">Required</p>
+                    </div>
+                </div>
+
+                <!-- Type & Count -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Service</label>
+                        <select id="booking-type" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm appearance-none cursor-pointer">
+                            <option value="passenger">Passenger</option>
+                            <option value="item_fetch">Item Fetch</option>
+                            <option value="delivery">Delivery</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2" id="passenger-container">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Quantity</label>
+                        <select id="passenger-count" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm appearance-none cursor-pointer">
+                            <option value="1">1 Person</option>
+                            <option value="2">2 People</option>
+                            <option value="3">3 People</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Reason/Details -->
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Service Type</label>
-                    <select id="booking-type" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
-                        <option value="passenger">Passenger</option>
-                        <option value="item_fetch">Item Fetch</option>
-                        <option value="delivery">Delivery</option>
-                    </select>
+                    <label id="reason-label" class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Additional Details</label>
+                    <div class="relative">
+                        <i id="reason-icon" class="fas fa-comment-dots absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="booking-reason" placeholder="e.g. Near the spaza shop"
+                               class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
+                    </div>
+                    <p id="reason-error" class="text-red-500 text-[10px] font-bold ml-4 hidden">Required for this service</p>
                 </div>
-                <div class="space-y-2" id="passenger-container">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Passengers</label>
-                    <select id="passenger-count" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
-                        <option value="1">1 Passenger</option>
-                        <option value="2">2 Passengers</option>
-                        <option value="3">3 Passengers</option>
-                    </select>
+
+                <button id="book-btn" class="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-green-500/20">
+                    Send Request
+                </button>
+            </div>
+        </section>
+
+        <!-- Feedback & Support -->
+        <section class="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-3xl p-6 text-center space-y-4">
+            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-800 rounded-full flex items-center justify-center mx-auto text-amber-600">
+                <i class="fas fa-bug"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-sm font-black uppercase tracking-widest text-amber-800 dark:text-amber-400">Found a bug?</h3>
+                <p class="text-xs text-amber-600 dark:text-amber-500 font-medium">Alpha testing means things might break. We need your feedback!</p>
+            </div>
+            <a href="https://wa.me/27815532209" target="_blank" class="inline-block text-[10px] font-black uppercase tracking-widest bg-amber-600 text-white px-8 py-3 rounded-xl hover:bg-amber-700 transition flex items-center justify-center gap-2">
+                <i class="fab fa-whatsapp text-lg"></i> Send us WhatsApp
+            </a>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-xl font-black uppercase tracking-tight">Your Activity</h2>
+                <div class="h-px bg-slate-200 dark:bg-slate-700 flex-grow mx-4"></div>
+            </div>
+            <div id="bookings-list" class="space-y-4 pb-10">
+                <div class="text-center py-12 opacity-30 italic text-sm">Loading your trip history...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Map Modal -->
+    <div id="address-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl border border-white/10">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+                <h3 id="modal-title" class="text-lg font-black uppercase tracking-tight">Select Location</h3>
+                <button type="button" id="close-address-modal" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="relative group">
+                    <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="modal-address" placeholder="Search for a street or landmark..."
+                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition font-bold text-sm">
+                </div>
+
+                <div class="space-y-2">
+                    <div id="map" class="w-full h-72 rounded-[1.5rem] border-4 border-slate-100 dark:border-slate-800 overflow-hidden"></div>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center">Drag pin to adjust exact spot</p>
                 </div>
             </div>
-
-            <!-- Reason -->
-            <div class="space-y-2">
-                <label id="reason-label" class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Reason (Optional)</label>
-                <div class="relative">
-                    <i id="reason-icon" class="fas fa-users absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="booking-reason"
-                           class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-green-500 outline-none transition font-bold text-sm">
-                </div>
-                <p id="reason-error" class="text-red-500 text-[10px] font-bold mt-1 hidden">Please specify details</p>
+            <div class="p-6 bg-slate-50 dark:bg-slate-800/50">
+                <button type="button" id="confirm-address" class="w-full py-4 bg-green-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-green-700 transition shadow-lg shadow-green-900/20">
+                    Confirm Selection
+                </button>
             </div>
-
-            <button id="book-btn" class="w-full py-5 bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-green-500/20 mt-2">
-                Request Now
-            </button>
-        </div>
-    </section>
-
-    <!-- Recent Activity -->
-    <section class="space-y-4">
-        <h2 class="text-xl font-black uppercase tracking-tight px-2">Recent Activity</h2>
-        <div id="bookings-list" class="space-y-4">
-            <div class="text-center py-12 opacity-30 italic text-sm">Connecting to services...</div>
-        </div>
-    </section>
-
-</main>
-
-<!-- Address Selection Modal (from business-form.html style) -->
-<div id="address-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-800">
-        <div class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
-            <h3 id="modal-title" class="text-xl font-bold">Select Location</h3>
-            <button type="button" id="close-address-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-        </div>
-        <div class="p-6 space-y-4">
-            <div class="form-group">
-                <label for="modal-address" class="block mb-1 font-bold text-xs uppercase tracking-wider opacity-70">Type location</label>
-                <input type="text" id="modal-address"
-                       class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition font-bold">
-            </div>
-
-            <div class="space-y-2">
-                <h4 class="font-bold text-sm uppercase tracking-wider opacity-70">Is the location correct?</h4>
-                <div id="map" class="w-full h-64 rounded-xl border-2 border-gray-100 dark:border-slate-800"></div>
-                <p class="text-[10px] text-gray-500 italic text-center">You can type to search or use the map</p>
-            </div>
-        </div>
-        <div class="p-6 bg-gray-50 dark:bg-slate-800/50">
-            <button type="button" id="confirm-address" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
-                Confirm Location
-            </button>
         </div>
     </div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -246,35 +328,31 @@
     let hasActiveRequest = false;
 
     let map, marker, autocomplete;
-    let selectedLocation = null; // {name, lat, lng}
-    let activeInputType = null; // 'pickup' or 'destination'
-    let locations = {
-        pickup: null,
-        destination: null
-    };
+    let selectedLocation = null;
+    let activeInputType = null;
+    let locations = { pickup: null, destination: null };
 
     const getRootDoc = () => db.collection(PATHS.ROOT_COLLECTION).doc(PATHS.ROOT_DOCUMENT);
     const getBookingsRef = () => getRootDoc().collection(PATHS.BOOKINGS);
     const getSuggestedPlacesRef = () => getRootDoc().collection(PATHS.SUGGESTED_PLACES);
 
     function initMap() {
-        const defaultPos = {lat: -26.456323807221267, lng: 27.77044633885547}; // Same as business-form.html
+        const defaultPos = {lat: -26.456323807221267, lng: 27.77044633885547};
         map = new google.maps.Map(document.getElementById("map"), {
             center: defaultPos,
             zoom: 15,
             mapTypeControl: false,
             streetViewControl: false,
-            fullscreenControl: false
+            fullscreenControl: false,
+            styles: [
+                { "featureType": "all", "elementType": "labels.text.fill", "stylers": [{"color": "#747474"}] },
+                { "featureType": "poi", "stylers": [{"visibility": "off"}] }
+            ]
         });
 
-        marker = new google.maps.Marker({
-            map: map,
-            draggable: true,
-            position: defaultPos
-        });
+        marker = new google.maps.Marker({ map, draggable: true, position: defaultPos });
 
-        const modalInput = document.getElementById('modal-address');
-        autocomplete = new google.maps.places.Autocomplete(modalInput, {
+        autocomplete = new google.maps.places.Autocomplete(document.getElementById('modal-address'), {
             componentRestrictions: { country: "za" },
             fields: ["formatted_address", "geometry", "name"],
             types: ["geocode", "establishment"]
@@ -282,8 +360,7 @@
 
         autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
-            if (!place.geometry || !place.geometry.location) return;
-
+            if (!place.geometry) return;
             map.setCenter(place.geometry.location);
             marker.setPosition(place.geometry.location);
             selectedLocation = {
@@ -293,11 +370,7 @@
             };
         });
 
-        marker.addListener("dragend", () => {
-            const pos = marker.getPosition();
-            updateLocationFromPos(pos);
-        });
-
+        marker.addListener("dragend", () => updateLocationFromPos(marker.getPosition()));
         map.addListener("click", (e) => {
             marker.setPosition(e.latLng);
             updateLocationFromPos(e.latLng);
@@ -311,129 +384,70 @@
             if (response.results[0]) {
                 const name = response.results[0].formatted_address;
                 document.getElementById('modal-address').value = name;
-                selectedLocation = {
-                    name: name,
-                    lat: pos.lat(),
-                    lng: pos.lng()
-                };
+                selectedLocation = { name, lat: pos.lat(), lng: pos.lng() };
             }
-        } catch (e) {
-            console.error("Geocoder failed:", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // Modal logic
     const addressModal = document.getElementById('address-modal');
     const modalTitle = document.getElementById('modal-title');
-    const pickupInput = document.getElementById('pickup-input');
-    const destinationInput = document.getElementById('destination-input');
 
-    function openLocationModal(type) {
+    function openModal(type) {
         activeInputType = type;
-        modalTitle.textContent = type === 'pickup' ? 'Select Pickup Point' : 'Select Destination';
-        const currentLoc = locations[type];
-        
-        const modalInput = document.getElementById('modal-address');
-        if (currentLoc) {
-            modalInput.value = currentLoc.name;
-            const pos = { lat: currentLoc.latitude, lng: currentLoc.longitude };
+        modalTitle.textContent = type === 'pickup' ? 'Where are we picking you up?' : 'Where are you going?';
+        const current = locations[type];
+        if (current) {
+            const pos = { lat: current.latitude, lng: current.longitude };
+            document.getElementById('modal-address').value = current.name;
             map.setCenter(pos);
             marker.setPosition(pos);
-            selectedLocation = { name: currentLoc.name, lat: currentLoc.latitude, lng: currentLoc.longitude };
-        } else {
-            modalInput.value = '';
-            selectedLocation = null;
+            selectedLocation = { name: current.name, ...pos };
         }
-        
         addressModal.classList.remove('hidden');
         google.maps.event.trigger(map, 'resize');
-        if (currentLoc) {
-             map.setCenter({ lat: currentLoc.latitude, lng: currentLoc.longitude });
-        }
     }
 
-    pickupInput.onclick = () => openLocationModal('pickup');
-    destinationInput.onclick = () => openLocationModal('destination');
-
+    document.getElementById('pickup-input').onclick = () => openModal('pickup');
+    document.getElementById('destination-input').onclick = () => openModal('destination');
     document.getElementById('close-address-modal').onclick = () => addressModal.classList.add('hidden');
-        document.getElementById('confirm-address').onclick = () => {
-        if (!selectedLocation) {
-            alert("Please select a location on the map or type to search");
-            return;
-        }
-        
+
+    document.getElementById('confirm-address').onclick = () => {
+        if (!selectedLocation) return alert("Please select a spot");
         locations[activeInputType] = {
             name: selectedLocation.name,
             latitude: selectedLocation.lat,
             longitude: selectedLocation.lng
         };
-        
         document.getElementById(`${activeInputType}-input`).value = selectedLocation.name;
         document.getElementById(`${activeInputType}-error`).classList.add('hidden');
         addressModal.classList.add('hidden');
-        updateViewPointsButton();
+        updateViewBtn();
     };
 
-    function updateViewPointsButton() {
+    function updateViewBtn() {
         const btn = document.getElementById('view-points-btn');
-        if (locations.pickup && locations.destination) {
-            btn.classList.remove('hidden');
-        } else {
-            btn.classList.add('hidden');
-        }
+        btn.classList.toggle('hidden', !locations.pickup || !locations.destination);
     }
 
     document.getElementById('view-points-btn').onclick = () => {
-        if (!locations.pickup || !locations.destination) return;
-        
         const bounds = new google.maps.LatLngBounds();
         const p1 = new google.maps.LatLng(locations.pickup.latitude, locations.pickup.longitude);
         const p2 = new google.maps.LatLng(locations.destination.latitude, locations.destination.longitude);
+        bounds.extend(p1); bounds.extend(p2);
         
-        bounds.extend(p1);
-        bounds.extend(p2);
-        
-        // Use the modal to show the points
-        modalTitle.textContent = "Route Overview";
+        modalTitle.textContent = "Preview Route";
         addressModal.classList.remove('hidden');
         google.maps.event.trigger(map, 'resize');
-        
         map.fitBounds(bounds);
-        
-        // Add markers for both
-        const pickupMarker = new google.maps.Marker({
-            position: p1,
-            map: map,
-            icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-            title: 'Pickup'
-        });
-        
-        const destMarker = new google.maps.Marker({
-            position: p2,
-            map: map,
-            icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-            title: 'Destination'
-        });
 
-        // Remove them when modal closes to not mess with single selection logic
+        const m1 = new google.maps.Marker({ position: p1, map, icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+        const m2 = new google.maps.Marker({ position: p2, map, icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' });
+
         const oldClose = document.getElementById('close-address-modal').onclick;
         document.getElementById('close-address-modal').onclick = () => {
-            pickupMarker.setMap(null);
-            destMarker.setMap(null);
+            m1.setMap(null); m2.setMap(null);
             addressModal.classList.add('hidden');
             document.getElementById('close-address-modal').onclick = oldClose;
-        };
-
-        const oldConfirm = document.getElementById('confirm-address').onclick;
-        const confirmBtn = document.getElementById('confirm-address');
-        const oldText = confirmBtn.textContent;
-        confirmBtn.textContent = "Close View";
-        confirmBtn.onclick = () => {
-            pickupMarker.setMap(null);
-            destMarker.setMap(null);
-            addressModal.classList.add('hidden');
-            confirmBtn.onclick = oldConfirm;
-            confirmBtn.textContent = oldText;
         };
     };
 
@@ -445,411 +459,160 @@
         }
         currentUser = user;
         
-        // Role-based download visibility
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
-                const userData = doc.data();
-                
-                const name = userData?.display_name || user.displayName || user.email || "?";
+                const d = doc.data();
+                const name = d.display_name || user.email || "?";
                 document.getElementById('user-initial').textContent = name.charAt(0).toUpperCase();
-                
-                if (userData.photo_url) {
-                    document.getElementById('user-avatar').innerHTML = `<img src="${userData.photo_url}" class="w-full h-full object-cover">`;
-                }
-
-                if (userData.roles?.tuktuk?.is_owner === true) {
+                if (d.photo_url) document.getElementById('user-avatar').innerHTML = `<img src="${d.photo_url}" class="w-full h-full object-cover">`;
+                if (d.roles?.tuktuk?.is_owner) {
                     document.getElementById('download-operator-btn').classList.remove('hidden');
                     document.getElementById('manage-tuktuk-btn').classList.remove('hidden');
                 }
             }
-        }).catch(err => {
-            console.error("[Firestore] Role check failed", {
-                operation: "get_user",
-                path: "users/" + user.uid,
-                auth_uid: user.uid,
-                code: err.code,
-                message: err.message
-            });
         });
         
-        loadSuggestedPlaces();
-        observeMyBookings();
+        loadPlaces();
+        observeBookings();
 
-        // Type change UI logic
         document.getElementById('booking-type').onchange = (e) => {
-            const label = document.getElementById('reason-label');
-            const icon = document.getElementById('reason-icon');
-            const pContainer = document.getElementById('passenger-container');
-            const input = document.getElementById('booking-reason');
             const type = e.target.value;
+            const label = document.getElementById('reason-label');
+            const p = document.getElementById('passenger-container');
+            const input = document.getElementById('booking-reason');
 
-            if (type === 'passenger') {
-                label.textContent = "Reason (Optional)";
-                icon.className = "fas fa-users absolute left-4 top-1/2 -translate-y-1/2 text-slate-400";
-                pContainer.classList.remove('hidden');
-                input.placeholder = "e.g. Shopping at the mall";
-            } else {
-                label.textContent = "What are we " + (type === 'item_fetch' ? 'fetching' : 'delivering') + "? (Required)";
-                icon.className = "fas fa-shopping-bag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400";
-                pContainer.classList.add('hidden');
-                if (type === 'item_fetch') {
-                    input.placeholder = "Take away near Taxi rank";
-                } else {
-                    input.placeholder = "Deliver Kota to Sbusiso";
-                }
-            }
+            p.classList.toggle('hidden', type !== 'passenger');
+            label.textContent = type === 'passenger' ? "Details (Optional)" : "What are we " + (type === 'item_fetch' ? "fetching?" : "delivering?");
+            input.placeholder = type === 'passenger' ? "Near the big tree, etc." : "Required for " + type;
         };
-        
-        const loader = document.getElementById('loader-overlay');
-        if (loader) {
-            loader.classList.add('opacity-0');
-            setTimeout(() => loader.remove(), 300);
-        }
+
+        const l = document.getElementById('loader-overlay');
+        if (l) { l.classList.add('opacity-0'); setTimeout(() => l.remove(), 300); }
     });
 
-    async function loadSuggestedPlaces() {
-        console.log("[Firestore] Reading suggested places from:", PATHS.SUGGESTED_PLACES);
-        try {
-            const snapshot = await getSuggestedPlacesRef().orderBy('order', 'asc').get();
-            console.log(`[Firestore] Read ${snapshot.size} suggested places`);
-            suggestedPlaces = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            const chipsContainer = document.getElementById('suggestions-chips');
-            chipsContainer.innerHTML = suggestedPlaces.map(place => `
-                <button type="button" 
-                        onclick="selectSuggestedDestination('${place.id}')"
-                        class="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-green-100 dark:hover:bg-green-900/30 border border-slate-200 dark:border-slate-600 transition text-xs font-bold whitespace-nowrap">
-                    ${place.name}
-                </button>
-            `).join('');
-        } catch (e) {
-            console.error("Error loading places:", e);
-        }
+    async function loadPlaces() {
+        const snap = await getSuggestedPlacesRef().orderBy('order', 'asc').get();
+        suggestedPlaces = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        document.getElementById('suggestions-chips').innerHTML = suggestedPlaces.map(p => `
+            <button onclick="selectPlace('${p.id}')" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-green-100 dark:hover:bg-green-900/30 border border-slate-200 dark:border-slate-600 transition text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                ${p.name}
+            </button>
+        `).join('');
     }
 
-    function selectSuggestedDestination(placeId) {
-        const place = suggestedPlaces.find(p => p.id === placeId);
-        if (!place) return;
-        
-        locations.destination = {
-            name: place.name,
-            latitude: place.latitude,
-            longitude: place.longitude
-        };
-        
-        document.getElementById('destination-input').value = place.name;
+    function selectPlace(id) {
+        const p = suggestedPlaces.find(x => x.id === id);
+        locations.destination = { name: p.name, latitude: p.latitude, longitude: p.longitude };
+        document.getElementById('destination-input').value = p.name;
         document.getElementById('destination-error').classList.add('hidden');
-        updateViewPointsButton();
+        updateViewBtn();
     }
 
-    function observeMyBookings() {
-        console.log("[Firestore] Observing bookings for user:", currentUser.uid);
-        getBookingsRef()
-            .where('user_id', '==', currentUser.uid)
-            .orderBy('created_at', 'desc')
-            .onSnapshot(snapshot => {
-                console.log(`[Firestore] Bookings update received: ${snapshot.size} bookings`);
-                const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Filter for truly active requests based on backend status enum
-                const active = bookings.find(b => 
-                    !['completed', 'cancelled', 'rejected_by_user'].includes(b.status)
-                );
-
-                updateActiveRequestState(!!active);
-                renderBookings(bookings);
-            }, error => {
-                console.error("Error observing bookings:", error);
-                document.getElementById('bookings-list').innerHTML = `<div class="text-center py-12 text-red-500 text-sm font-bold">Failed to load activity</div>`;
-            });
+    function observeBookings() {
+        getBookingsRef().where('user_id', '==', currentUser.uid).orderBy('created_at', 'desc').onSnapshot(snap => {
+            const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const active = items.find(b => !['completed', 'cancelled', 'rejected_by_user'].includes(b.status));
+            hasActiveRequest = !!active;
+            const banner = document.getElementById('active-request-banner');
+            const form = document.getElementById('booking-form-section');
+            banner.classList.toggle('hidden', !active);
+            form.classList.toggle('opacity-40', !!active);
+            form.classList.toggle('pointer-events-none', !!active);
+            render(items);
+        });
     }
 
-    function updateActiveRequestState(active) {
-        hasActiveRequest = active;
-        const banner = document.getElementById('active-request-banner');
-        const form = document.getElementById('booking-form-section');
-
-        if (active) {
-            banner.classList.remove('hidden');
-            form.classList.add('opacity-40', 'pointer-events-none');
-        } else {
-            banner.classList.add('hidden');
-            form.classList.remove('opacity-40', 'pointer-events-none');
-        }
-    }
-
-    function renderBookings(bookings) {
+    function render(bookings) {
         const list = document.getElementById('bookings-list');
         if (bookings.length === 0) {
-            list.innerHTML = `<div class="text-center py-24 opacity-20 flex flex-col items-center gap-4">
-                <i class="fas fa-box-open text-4xl"></i>
-                <p class="font-black uppercase tracking-widest text-xs">No activity yet</p>
-            </div>`;
+            list.innerHTML = `<div class="text-center py-24 opacity-20"><i class="fas fa-box-open text-4xl mb-4 block"></i><p class="font-black uppercase tracking-widest text-xs">No activity yet</p></div>`;
             return;
         }
-
         list.innerHTML = bookings.map(b => {
-            const date = b.created_at?.toDate ? b.created_at.toDate().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Processing...';
-            const statusConfig = getStatusConfig(b.status);
-            const stageMessage = getStageMessage(b);
-            
+            const date = b.created_at?.toDate ? b.created_at.toDate().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Pending...';
+            const status = getStatus(b.status);
             return `
-                <div class="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="p-6 space-y-5">
-                        <div class="flex justify-between items-start">
-                            <div class="space-y-1">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">${date}</p>
-                                <div class="flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${statusConfig.color}"></span>
-                                    <h3 class="font-black text-xs uppercase tracking-widest" style="color: ${statusConfig.color}">${statusConfig.label}</h3>
-                                </div>
-                            </div>
-                            ${b.price ? `
-                                <div class="text-right">
-                                    <p class="text-[8px] font-black uppercase text-slate-400 mb-0.5">Price</p>
-                                    <p class="font-black text-green-600 text-lg">R${b.price.toFixed(2)}</p>
-                                </div>
-                            ` : ''}
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+                    <div class="flex justify-between">
+                        <div class="space-y-1">
+                            <p class="text-[8px] font-black uppercase text-slate-400 tracking-[0.2em]">${date}</p>
+                            <h3 class="font-black text-xs uppercase" style="color: ${status.color}">${status.label}</h3>
                         </div>
-
-                        <!-- Trip Visualization -->
-                        <div class="route-line space-y-6">
-                            <div class="flex items-start gap-4">
-                                <div class="w-[12px] h-[12px] rounded-full bg-red-500 mt-1 border-4 border-red-100 dark:border-red-900/30 z-10"></div>
-                                <div class="flex-grow">
-                                    <p class="text-[9px] font-black uppercase text-slate-400 mb-0.5">Pickup</p>
-                                    <p class="font-bold text-sm">${b.pickup_location.name}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-4">
-                                <div class="w-[12px] h-[12px] rounded-full bg-green-500 mt-1 border-4 border-green-100 dark:border-green-900/30 z-10"></div>
-                                <div class="flex-grow">
-                                    <p class="text-[9px] font-black uppercase text-slate-400 mb-0.5">Destination</p>
-                                    <p class="font-bold text-sm">${b.destination_location.name}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-3 pt-2">
-                            <i class="fas ${b.booking_type === 'passenger' ? 'fa-users' : 'fa-shopping-bag'} text-green-600 text-xs"></i>
-                            <p class="text-xs font-bold text-slate-500">${b.reason || (b.passenger_count + ' Passenger(s)')}</p>
-                        </div>
-
-                        ${stageMessage ? `
-                            <div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 rounded-2xl p-4 flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                <p class="text-[11px] font-black uppercase text-green-700 dark:text-green-400 leading-tight">${stageMessage}</p>
-                            </div>
-                        ` : ''}
-
-                        ${b.status === 'pending_user_confirmation' ? `
-                            <div class="flex gap-3 pt-2">
-                                <button onclick="handleReject('${b.id}')" class="flex-grow py-3 rounded-xl bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition">Decline</button>
-                                <button onclick="handleConfirm('${b.id}')" class="flex-grow py-3 rounded-xl bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition">Accept Price</button>
-                            </div>
-                        ` : ''}
+                        ${b.price ? `<div class="text-right"><p class="font-black text-green-600 text-lg leading-none">R${b.price.toFixed(2)}</p></div>` : ''}
                     </div>
+                    <div class="route-line space-y-4 ml-1">
+                        <div class="flex items-start gap-4">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500 mt-1 border-2 border-white dark:border-slate-800 z-10"></div>
+                            <p class="font-bold text-xs truncate">${b.pickup_location.name}</p>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500 mt-1 border-2 border-white dark:border-slate-800 z-10"></div>
+                            <p class="font-bold text-xs truncate">${b.destination_location.name}</p>
+                        </div>
+                    </div>
+                    ${b.status === 'pending_user_confirmation' ? `
+                        <div class="flex gap-2 pt-2">
+                            <button onclick="updateStatus('${b.id}', 'rejected_by_user')" class="flex-grow py-3 rounded-xl bg-red-50 text-red-600 text-[10px] font-black uppercase">Decline</button>
+                            <button onclick="updateStatus('${b.id}', 'ready_for_assignment')" class="flex-grow py-3 rounded-xl bg-green-600 text-white text-[10px] font-black uppercase">Accept Price</button>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
     }
 
-    function getStatusConfig(status) {
-        switch(status) {
-            case 'pending_owner_review': return { color: '#94a3b8', label: 'Waiting' };
-            case 'pending_user_confirmation': return { color: '#f59e0b', label: 'Price Ready' };
-            case 'ready_for_assignment': return { color: '#3b82f6', label: 'Finding Driver' };
-            case 'assigned_to_driver': return { color: '#10b981', label: 'Driver Assigned' };
-            case 'in_progress': return { color: '#f59e0b', label: 'In Progress' };
-            case 'completed': return { color: '#22c55e', label: 'Completed' };
-            case 'rejected_by_user': return { color: '#ef4444', label: 'Declined' };
-            case 'cancelled': return { color: '#ef4444', label: 'Cancelled' };
-            default: return { color: '#64748b', label: status };
+    function getStatus(s) {
+        switch(s) {
+            case 'pending_owner_review': return { color: '#94a3b8', label: 'Reviewing' };
+            case 'pending_user_confirmation': return { color: '#f59e0b', label: 'Offer Sent' };
+            case 'ready_for_assignment': return { color: '#3b82f6', label: 'Searching' };
+            case 'assigned_to_driver': return { color: '#10b981', label: 'On Way' };
+            case 'completed': return { color: '#22c55e', label: 'Done' };
+            case 'cancelled': case 'rejected_by_user': return { color: '#ef4444', label: 'Cancelled' };
+            default: return { color: '#64748b', label: s };
         }
     }
 
-    function getStageMessage(b) {
-        const stage = b.task_stage;
-        const status = b.status;
-        
-        if (status === 'ready_for_assignment') {
-            return "Finding a driver... Please wait.";
-        }
-
-        if (!stage && status === 'assigned_to_driver') {
-            return "Driver assigned. Preparing for pickup.";
-        }
-
-        switch(stage) {
-            case 'en_route_to_pickup': return "Driver is on their way to pickup.";
-            case 'at_pickup': return "Driver has arrived at pickup point.";
-            case 'passenger_onboard': return "Trip started. Heading to destination.";
-            case 'en_route_to_destination': return "En route to destination.";
-            case 'arrived_at_destination': return "You have arrived.";
-            case 'item_collected': return "Item collected. Moving to requester.";
-            case 'en_route_to_requester': return "Driver bringing item to you.";
-            case 'arrived_at_requester': return "Driver is here with your item.";
-            case 'package_collected': return "Package collected.";
-            case 'en_route_to_delivery': return "On the way to deliver package.";
-            case 'arrived_at_delivery': return "Driver at delivery point.";
-            default: return null;
-        }
-    }
-
-    async function handleConfirm(id) {
-        if (!confirm("Accept this price and proceed?")) return;
-        console.log("[Firestore] Updating booking status to ready_for_assignment:", id);
-        try {
-            await getBookingsRef().doc(id).update({
-                status: 'ready_for_assignment',
-                updated_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log("[Firestore] Booking status updated successfully:", id);
-        } catch (e) { 
-            console.error("[Firestore] Booking confirmation failed", {
-                operation: "update_booking",
-                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + id,
-                payload: { status: 'ready_for_assignment' },
-                auth_uid: currentUser.uid,
-                code: e.code,
-                message: e.message
-            });
-            alert("Error: " + e.message); 
-        }
-    }
-
-    async function handleReject(id) {
-        if (!confirm("Decline this request?")) return;
-        console.log("[Firestore] Updating booking status to rejected_by_user:", id);
-        try {
-            await getBookingsRef().doc(id).update({
-                status: 'rejected_by_user',
-                rejected_at: firebase.firestore.FieldValue.serverTimestamp(),
-                rejected_by: currentUser.uid,
-                rejected_reason: "Rejected by user",
-                updated_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log("[Firestore] Booking status rejected successfully:", id);
-        } catch (e) { 
-            console.error("[Firestore] Booking rejection failed", {
-                operation: "update_booking",
-                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + id,
-                payload: { status: 'rejected_by_user' },
-                auth_uid: currentUser.uid,
-                code: e.code,
-                message: e.message
-            });
-            alert("Error: " + e.message); 
-        }
+    async function updateStatus(id, s) {
+        if (!confirm("Confirm choice?")) return;
+        await getBookingsRef().doc(id).update({ status: s, updated_at: firebase.firestore.FieldValue.serverTimestamp() });
     }
 
     document.getElementById('book-btn').onclick = async () => {
         if (hasActiveRequest) return;
+        const p = locations.pickup;
+        const d = locations.destination;
+        const t = document.getElementById('booking-type').value;
+        const r = document.getElementById('booking-reason').value.trim();
 
-        const pickup = locations.pickup;
-        const dest = locations.destination;
-        const passengers = parseInt(document.getElementById('passenger-count').value);
-        const type = document.getElementById('booking-type').value;
-        const reason = document.getElementById('booking-reason').value.trim();
-
-        let hasError = false;
-        if (!pickup) {
-            document.getElementById('pickup-error').classList.remove('hidden');
-            hasError = true;
-        } else {
-            document.getElementById('pickup-error').classList.add('hidden');
-        }
-
-        if (!dest) {
-            document.getElementById('destination-error').classList.remove('hidden');
-            hasError = true;
-        } else {
-            document.getElementById('destination-error').classList.add('hidden');
-        }
-
-        if ((type === 'item_fetch' || type === 'delivery') && !reason) {
-            document.getElementById('reason-error').classList.remove('hidden');
-            hasError = true;
-        } else {
-            document.getElementById('reason-error').classList.add('hidden');
-        }
-
-        if (hasError) return;
+        if (!p) return document.getElementById('pickup-error').classList.remove('hidden');
+        if (!d) return document.getElementById('destination-error').classList.remove('hidden');
+        if (t !== 'passenger' && !r) return document.getElementById('reason-error').classList.remove('hidden');
 
         const btn = document.getElementById('book-btn');
-        btn.disabled = true;
-        btn.textContent = "Processing...";
+        btn.disabled = true; btn.textContent = "Sending...";
 
-        console.log("[Firestore] Creating new booking request...");
         try {
-            const docRef = getBookingsRef().doc();
-            const booking = {
-                id: docRef.id,
+            const doc = getBookingsRef().doc();
+            await doc.set({
+                id: doc.id,
                 user_id: currentUser.uid,
-                passenger_count: type === 'passenger' ? passengers : 0,
-                reason: reason || null,
-                booking_type: type,
-                pickup_location: {
-                    name: pickup.name,
-                    latitude: pickup.latitude,
-                    longitude: pickup.longitude
-                },
-                destination_location: {
-                    name: dest.name,
-                    latitude: dest.latitude,
-                    longitude: dest.longitude
-                },
+                booking_type: t,
+                reason: r || null,
+                passenger_count: t === 'passenger' ? parseInt(document.getElementById('passenger-count').value) : 0,
+                pickup_location: { name: p.name, latitude: p.latitude, longitude: p.longitude },
+                destination_location: { name: d.name, latitude: d.latitude, longitude: d.longitude },
                 status: 'pending_owner_review',
                 created_at: firebase.firestore.FieldValue.serverTimestamp(),
-                updated_at: firebase.firestore.FieldValue.serverTimestamp(),
-
-                price: null,
-                task_stage: null,
-                assigned_driver_id: null,
-                priced_by: null,
-                assigned_by: null,
-                rejected_by: null,
-                cancelled_by: null,
-                rejected_reason: null,
-                cancelled_reason: null,
-                driver_cancel_requested: false,
-                driver_cancel_reason: null,
-                driver_cancel_requested_by: null,
-                eta_minutes: null,
-                priced_at: null,
-                accepted_at: null,
-                assigned_at: null,
-                rejected_at: null,
-                cancelled_at: null,
-                pickup_started_at: null,
-                pickup_completed_at: null,
-                completed_at: null,
-                driver_cancel_requested_at: null
-            };
-
-            await docRef.set(booking);
-            console.log("[Firestore] Booking created successfully with ID:", docRef.id);
-            document.getElementById('booking-reason').value = '';
-            // Reset locations
-            locations.pickup = null;
-            locations.destination = null;
+                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            locations = { pickup: null, destination: null };
             document.getElementById('pickup-input').value = '';
             document.getElementById('destination-input').value = '';
-            updateViewPointsButton();
-        } catch (e) {
-            console.error("[Firestore] Booking creation failed", {
-                operation: "set_booking",
-                path: PATHS.ROOT_COLLECTION + "/" + PATHS.ROOT_DOCUMENT + "/" + PATHS.BOOKINGS + "/" + docRef.id,
-                payload: booking,
-                auth_uid: currentUser.uid,
-                code: e.code,
-                message: e.message
-            });
-            alert("Error: " + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Request Now";
-        }
+            document.getElementById('booking-reason').value = '';
+            updateViewBtn();
+        } catch (e) { alert(e.message); }
+        finally { btn.disabled = false; btn.textContent = "Send Request"; }
     };
 </script>
 
