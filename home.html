@@ -195,6 +195,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="scripts/firebase.js" defer></script>
+<script src="scripts/core/observable.js" defer></script>
+<script src="scripts/core/case-mapper.js" defer></script>
+<script src="scripts/models/user-model.js" defer></script>
+<script src="scripts/viewmodels/auth-store.js" defer></script>
 <script src="scripts/theme.js" defer></script>
 <script src="https://unpkg.com/dexie/dist/dexie.js" defer></script>
 <script src="scripts/card-renderer.js" defer></script>
@@ -223,7 +227,7 @@
                     </div>
                     <div class="mt-6 flex flex-col gap-2">
                         <a href="${service.url}" class="block text-center py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition">${service.btnText}</a>
-                        ${service.category.toLowerCase() === 'transport' ? `<a href="kasilayn/operator/test-requester.html" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition mt-2">Book a Ride</a>` : ''}
+                        ${service.category.toLowerCase() === 'transport' ? `<a href="laynfleet/operator/test-requester.html" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition mt-2">Book a Fleet</a>` : ''}
                         ${service.extraBtn ? `<a href="${service.extraBtn.url}" onclick="window.top.location.replace('${service.extraBtn.url}'); return false;" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition">${service.extraBtn.text}</a>` : ''}
                     </div>
                 </div>
@@ -525,54 +529,45 @@
             e.stopPropagation();
             menuItems.classList.toggle('hidden');
         });
-        firebase.auth().onAuthStateChanged(user => {
-            if (authDivider) authDivider.classList.remove('hidden');
-            if (user) {
-                if (addBusinessBtn) addBusinessBtn.classList.remove('hidden');
-                if (profileLink) {
-                    profileLink.classList.remove('hidden');
-                    if (user.displayName) {
-                        profileLink.textContent = user.displayName;
+        // --- Auth UI: a pure View bound to the global AuthStore (MVVM) ---
+        // renderAuthUI is a "dumb" render: given state, it reflects it in the DOM.
+        // All login logic lives in AuthStore; this page only reacts to state.
+        function renderAuthUI(state) {
+            const resolved = state.status !== 'loading';
+            const isAuth = state.isAuthenticated;
+            const user = state.user;
+            const roles = (user && user.roles) || {};
+
+            if (authDivider) authDivider.classList.toggle('hidden', !resolved);
+            if (addBusinessBtn) addBusinessBtn.classList.toggle('hidden', !isAuth);
+            if (loginLink) loginLink.classList.toggle('hidden', isAuth);
+            if (logoutBtn) logoutBtn.classList.toggle('hidden', !isAuth);
+
+            if (profileLink) {
+                profileLink.classList.toggle('hidden', !isAuth);
+                if (isAuth) {
+                    const name = user.displayName || 'Profile';
+                    if (user.photoUrl) {
+                        profileLink.innerHTML = `<img src="${user.photoUrl}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt="" onerror="this.src='favicon/favicon-48x48.png'"> ${name}`;
+                    } else {
+                        profileLink.textContent = name;
                     }
-                        if (user.photoURL) {
-                            profileLink.innerHTML = `<img src="${user.photoURL}" class="w-6 h-6 rounded-full inline-block mr-2 object-cover" alt="" onerror="this.src='favicon/favicon-48x48.png'"> ${user.displayName || 'Profile'}`;
-                        }
-                }
-                if (loginLink) loginLink.classList.add('hidden');
-                if (logoutBtn) logoutBtn.classList.remove('hidden');
-                firebase.firestore().collection('users').doc(user.uid).get().then((doc) => {
-                    if (doc.exists) {
-                        const userData = doc.data();
-                        const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                        const isPoortjieAdmin = userData.roles?.poortjie?.is_admin === true;
-                        const isTaxiRankAdmin = userData.roles?.poortjie?.is_taxi_rank_admin === true;
-                        if (isSuperUser || isPoortjieAdmin) {
-                            if (adminLink) adminLink.classList.remove('hidden');
-                            if (newsAdminLink) newsAdminLink.classList.remove('hidden');
-                        }
-                        if (isSuperUser) {
-                            if (homeAdminLink) homeAdminLink.classList.remove('hidden');
-                        }
-                        if (isSuperUser || isTaxiRankAdmin) {
-                            if (taxiAdminLink) taxiAdminLink.classList.remove('hidden');
-                        }
-                    }
-                });
-            } else {
-                if (profileLink) {
-                    profileLink.classList.add('hidden');
+                } else {
                     profileLink.innerHTML = 'Profile';
                 }
-                if (loginLink) loginLink.classList.remove('hidden');
-                if (adminLink) adminLink.classList.add('hidden');
-                if (homeAdminLink) homeAdminLink.classList.add('hidden');
-                if (taxiAdminLink) taxiAdminLink.classList.add('hidden');
-                if (newsAdminLink) newsAdminLink.classList.add('hidden');
-                if (logoutBtn) logoutBtn.classList.add('hidden');
             }
-        });
+
+            if (adminLink) adminLink.classList.toggle('hidden', !(roles.isSuperUser || roles.isPoortjieAdmin));
+            if (newsAdminLink) newsAdminLink.classList.toggle('hidden', !(roles.isSuperUser || roles.isPoortjieAdmin));
+            if (homeAdminLink) homeAdminLink.classList.toggle('hidden', !roles.isSuperUser);
+            if (taxiAdminLink) taxiAdminLink.classList.toggle('hidden', !(roles.isSuperUser || roles.isTaxiRankAdmin));
+        }
+
+        AuthStore.subscribe(renderAuthUI);
+        AuthStore.init();
+
         logoutBtn.addEventListener('click', () => {
-            firebase.auth().signOut();
+            AuthStore.signOut();
         });
         window.onclick = (e) => {
             if (hamburgerMenu && !hamburgerMenu.contains(e.target)) menuItems.classList.add('hidden');

@@ -98,6 +98,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="../scripts/firebase.js"></script>
+<script src="../scripts/core/observable.js"></script>
+<script src="../scripts/core/case-mapper.js"></script>
+<script src="../scripts/models/user-model.js"></script>
+<script src="../scripts/viewmodels/auth-store.js"></script>
 <script>
     const loginForm = document.getElementById('login-form');
     const errorMessage = document.getElementById('error-message');
@@ -282,7 +286,7 @@
             Logging in...
         </span>`;
 
-        auth.signInWithEmailAndPassword(email, password)
+        AuthStore.signIn(email, password)
             .then(async (userCredential) => {
                 const redirectUrl = sessionStorage.getItem('redirectUrl');
                 if (redirectUrl && !redirectUrl.includes('login.html') && !redirectUrl.includes('register.html')) {
