@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
+  <link rel="icon" type="image/png" href="laynrider.png" />
   <link rel="stylesheet" href="rider.css" />
 </head>
 <body>
@@ -19,7 +20,7 @@
   <header class="header-nav">
     <div class="header-content">
       <a href="../../home.html" class="brand-wrap" title="Back to Poortjie Home">
-        <span class="brand-badge">LF</span>
+        <img src="laynrider.png" alt="LaynFleet Logo" class="brand-logo" />
         <div class="brand-text">
           <h1>LaynFleet <span style="color: var(--brand); font-weight: 800;">Rider</span></h1>
           <span class="brand-sub">Poortjie Community</span>
@@ -60,10 +61,11 @@
       </a>
     </div>
 
-    <!-- BOOT / LOADING VIEW -->
+    <!-- BOOT / LOADING VIEW (Centered visible before any context) -->
     <div id="boot-view" class="boot-loader">
+      <img src="laynrider.png" alt="LaynRider Logo" class="boot-logo" />
       <div class="spinner"></div>
-      <p>Connecting to LaynFleet…</p>
+      <p class="boot-text">Connecting to LaynFleet…</p>
     </div>
 
     <!-- SUSPENDED VIEW -->
@@ -80,7 +82,7 @@
     <!-- AUTH GATE VIEW (When not logged in) -->
     <div id="auth-gate-view" class="auth-gate-card is-hidden">
       <div class="auth-gate-header">
-        <div class="auth-gate-logo">LF</div>
+        <img src="laynrider.png" alt="LaynRider Logo" class="auth-gate-img" />
         <h2 class="auth-gate-title">Welcome to LaynFleet</h2>
         <p class="auth-gate-desc">Sign in with your Poortjie account to book local rides and see online drivers.</p>
       </div>
@@ -139,16 +141,19 @@
         <button id="complete-profile-btn" class="btn btn-sm btn-primary">Complete Profile</button>
       </div>
 
-      <!-- ACTIVE BOOKING BANNER (If rider has a live booking) -->
-      <div id="active-booking-banner" class="alert-banner alert-banner-warn is-hidden">
+      <!-- ACTIVE BOOKING WIDGET (If rider has a live booking) -->
+      <div id="active-booking-banner" class="active-booking-widget is-hidden">
         <div class="alert-content">
-          <span class="alert-icon">🚗</span>
-          <div class="alert-text">
-            <strong>Active Ride in Progress</strong>
-            <p id="active-booking-status-text">Status: Finding your ride…</p>
+          <span id="active-booking-icon" style="font-size: 28px;">🚖</span>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <strong id="active-booking-title" style="font-size: 15px;">Active Ride in Progress</strong>
+              <span id="active-booking-countdown-pill" class="countdown-badge is-hidden">⏱️ 60s</span>
+            </div>
+            <p id="active-booking-status-text" style="font-size: 13px; color: var(--text-dim); margin-top: 2px;">Finding your ride…</p>
           </div>
         </div>
-        <button id="view-active-booking-btn" class="btn btn-sm btn-primary">View Trip</button>
+        <button id="view-active-booking-btn" class="btn btn-sm btn-primary">Track Trip</button>
       </div>
 
       <!-- QUICK RIDE CARD -->
@@ -209,6 +214,7 @@
   <!-- ===================== BOOKING FORM MODAL ===================== -->
   <div id="booking-modal" class="modal-overlay is-hidden">
     <div class="modal-card booking-modal-card">
+      <img src="laynrider.png" alt="LaynRider Logo" class="booking-top-logo" />
       <div class="modal-header">
         <h3 class="modal-title">Book a Fleet</h3>
         <button id="booking-modal-close" class="modal-close" aria-label="Close">&times;</button>
@@ -358,13 +364,24 @@
 
       <!-- State 2: QUOTED (Quote Handshake) -->
       <div id="track-quoted-section" class="is-hidden" style="display: flex; flex-direction: column; gap: 14px;">
-        <div class="quote-box">
-          <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Price Quote Received</span>
+        <!-- Driver Profile Header on Quote -->
+        <div class="quote-driver-hero">
+          <img id="quoted-driver-avatar" class="quote-driver-avatar" src="" alt="Driver Photo" />
+          <div style="flex: 1; min-width: 0;">
+            <div id="quoted-driver-name" style="font-size: 15px; font-weight: 800;">—</div>
+            <div id="quoted-driver-rating" style="font-size: 12px; color: var(--text-dim);">★ 5.0 (0 trips)</div>
+            <div id="quoted-driver-vehicle" style="font-size: 12px; color: var(--brand); font-weight: 600;">—</div>
+          </div>
+          <div id="quoted-driver-plate" style="font-size: 11px; font-weight: 700; background: var(--panel-2); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-family: monospace;">Verified</div>
+        </div>
+
+        <div class="quote-highlight-box">
+          <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Driver's Price Quote</span>
           <div id="quoted-price-amount" class="quote-price-big">R 0.00</div>
           <div id="quoted-eta-text" style="font-size: 13px; font-weight: 600; color: var(--text);">Est. Pickup: ~5 mins</div>
           <div class="countdown-timer-wrap">
-            <span>⚠️ Auto-expires in:</span>
-            <span id="quoted-countdown" style="font-size: 14px; font-weight: 900;">60s</span>
+            <span>⏱️ Quote expires in:</span>
+            <span id="quoted-countdown" class="countdown-badge">60s</span>
           </div>
         </div>
 
@@ -494,6 +511,12 @@
         <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Vehicle Details</span>
         <div id="driver-modal-vehicle-desc" style="font-size: 14px; font-weight: 700;">—</div>
         <div id="driver-modal-plate" style="font-size: 12px; color: var(--text-dim); font-family: monospace;">—</div>
+      </div>
+
+      <!-- Ratings & Passenger Reviews -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Passenger Reviews & Comments</span>
+        <div id="driver-modal-reviews-list" class="reviews-container"></div>
       </div>
 
       <div class="modal-actions" style="margin-top: 8px;">
