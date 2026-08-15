@@ -550,7 +550,7 @@
         return db.collection('users').doc(user.uid).get().then((userDoc) => {
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                ownerNameInput.value = userData.display_name || user.displayName || '';
+                ownerNameInput.value = userData.displayName || user.displayName || '';
                 phoneInput.value = userData.phone || user.phoneNumber || '';
                 emailInput.value = userData.email || user.email || '';
             } else {

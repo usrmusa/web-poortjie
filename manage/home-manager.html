@@ -138,7 +138,7 @@
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             db.collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists && doc.data().roles?.digilayn?.is_super_user) {
+                if (doc.exists && doc.data().roles?.digilayn?.isSuperUser) {
                     document.getElementById('admin-content').classList.remove('hidden');
                     loadHomeData();
                 } else {

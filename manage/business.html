@@ -105,12 +105,12 @@
             userRef.get().then((doc) => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                    const isPoortjieAdmin = userData.roles?.poortjie?.is_admin === true;
+                    isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    const isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
 
                     if (isSuperUser || isPoortjieAdmin) {
                         const welcomeMsg = document.getElementById('welcome-message');
-                        const name = userData.display_name || userData.name || (isSuperUser ? 'Super User' : 'Admin');
+                        const name = userData.displayName || (isSuperUser ? 'Super User' : 'Admin');
                         welcomeMsg.textContent = `Welcome, ${name}!`;
 
                         if (isSuperUser) {
@@ -292,7 +292,7 @@
             db.collection('users').doc(uid).get().then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    const name = userData.display_name || 'Unknown User';
+                    const name = userData.displayName || 'Unknown User';
                     document.querySelectorAll(`.user-name[data-uid="${uid}"]`).forEach(el => {
                         el.textContent = name;
                     });
