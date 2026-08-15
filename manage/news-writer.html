@@ -339,9 +339,9 @@
             db.collection('users').doc(user.uid).get().then((doc) => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    currentUserName = userData.display_name || 'Admin';
-                    isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                    isPoortjieAdmin = userData.roles?.poortjie?.is_admin === true;
+                    currentUserName = userData.displayName || 'Admin';
+                    isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
 
                     if (isSuperUser || isPoortjieAdmin) {
                         document.getElementById('admin-content').classList.remove('hidden');

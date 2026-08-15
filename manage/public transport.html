@@ -295,12 +295,12 @@
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                    const isTaxiRankAdmin = userData.roles?.poortjie?.is_taxi_rank_admin === true;
+                    const isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    const isTaxiRankAdmin = userData.roles?.poortjie?.isTaxiRankAdmin === true;
 
                     if (isSuperUser || isTaxiRankAdmin) {
                         const welcomeMsg = document.getElementById('welcome-message');
-                        const name = userData.display_name || userData.name || (isSuperUser ? 'Super User' : 'Admin');
+                        const name = userData.displayName || (isSuperUser ? 'Super User' : 'Admin');
                         welcomeMsg.textContent = `Welcome, ${name}!`;
 
                         document.getElementById('admin-content').classList.remove('hidden');
