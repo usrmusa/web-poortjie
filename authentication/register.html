@@ -481,6 +481,12 @@
                         });
                     });
 
+                    await user.updateProfile({ displayName: displayName }).catch(() => {});
+
+                    try {
+                        sessionStorage.removeItem('authUserCache');
+                    } catch (e) {}
+
                     const redirectUrl = sessionStorage.getItem('redirectUrl');
                     if (redirectUrl && !redirectUrl.includes('login.html') && !redirectUrl.includes('register.html')) {
                         sessionStorage.removeItem('redirectUrl');

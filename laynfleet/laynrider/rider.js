@@ -11,22 +11,22 @@
 (function (global) {
   'use strict';
 
-  // 1. Initialise Firebase instance
-  if (!firebase.apps.length) {
-    firebase.initializeApp(global.LAYNFLEET_FIREBASE_CONFIG);
-  }
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  // Cloud Functions in the dispatch region — mirrors Android DispatchGateway
-  // (FirebaseFunctions.getInstance("us-central1")). All post-creation booking
-  // transitions go through these callables so the server stays authoritative.
-  const functions = firebase.app().functions(global.FUNCTIONS_REGION || 'us-central1');
-  // Realtime Database for driver presence cross-check (europe-west1 instance).
-  const rtdb = firebase.database();
-  // Cloud Storage for profile photo uploads (users/{uid}/profile/{ts}.jpg — mirrors Android StorageRepository).
-  const storage = firebase.storage();
+  // 1. Firebase instances initialized globally from scripts/firebase.js
+  const auth = global.auth || firebase.auth();
+  const db = global.db || firebase.firestore();
+  const functions = global.functions || firebase.app().functions(global.FUNCTIONS_REGION || 'us-central1');
+  const rtdb = global.rtdb || firebase.database();
+  const storage = global.storage || firebase.storage();
 
-  const FS = global.FS;
+  const FS = global.FS || {
+    users: 'users',
+    laynfleet: 'laynfleet',
+    laynfleetDoc: 'main',
+    drivers: 'drivers',
+    riders: 'riders',
+    bookings: 'bookings',
+    ratings: 'ratings'
+  };
   const RTDB_LOCATIONS = global.RTDB_LOCATIONS || 'driverLocations';
   const HEARTBEAT_FRESHNESS_WINDOW_MS = global.HEARTBEAT_FRESHNESS_WINDOW_MS || 60000;
   const SERVICE_AREA = global.SERVICE_AREA || {
