@@ -136,6 +136,8 @@
   const busySectionEl = document.getElementById('section-busy');
   const availableCountEl = document.getElementById('available-count');
   const busyCountEl = document.getElementById('busy-count');
+  const headerDriverCountEl = document.getElementById('header-driver-count');
+  const heroDriverCountBadge = document.getElementById('hero-driver-count-badge');
   const emptyDriversView = document.getElementById('empty-drivers-view');
 
   // Driver Modal Elements
@@ -169,10 +171,12 @@
   const scheduledDateInput = document.getElementById('booking-scheduled-date');
   const scheduledTimeInput = document.getElementById('booking-scheduled-time');
   const pickupAddressInput = document.getElementById('booking-pickup-address');
+  const pickupClearBtn = document.getElementById('pickup-clear-btn');
   const pickupGpsBtn = document.getElementById('pickup-gps-btn');
   const pickupGeofenceBadge = document.getElementById('pickup-geofence-badge');
   const pickupErrorEl = document.getElementById('pickup-error');
   const dropoffAddressInput = document.getElementById('booking-dropoff-address');
+  const dropoffClearBtn = document.getElementById('dropoff-clear-btn');
   const bookingNoteInput = document.getElementById('booking-note');
   const bookingNoteCount = document.getElementById('booking-note-count');
   const bookingFormError = document.getElementById('booking-form-error');
@@ -795,6 +799,8 @@
 
     if (availableCountEl) availableCountEl.textContent = availableDrivers.length;
     if (busyCountEl) busyCountEl.textContent = busyDrivers.length;
+    if (headerDriverCountEl) headerDriverCountEl.textContent = availableDrivers.length;
+    if (heroDriverCountBadge) heroDriverCountBadge.textContent = `${availableDrivers.length} Online`;
 
     if (availableListEl) {
       if (availableDrivers.length > 0) {
@@ -987,13 +993,17 @@
       setPickupLocation(bookingState.pickup.address, bookingState.pickup.lat, bookingState.pickup.lng);
     } else {
       if (pickupAddressInput) pickupAddressInput.value = '';
+      if (pickupClearBtn) pickupClearBtn.classList.add('is-hidden');
       if (pickupGeofenceBadge) {
         pickupGeofenceBadge.className = 'geofence-badge';
         pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
       }
       if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
     }
-    if (dropoffAddressInput) dropoffAddressInput.value = bookingState.dropoff.address || '';
+    if (dropoffAddressInput) {
+      dropoffAddressInput.value = bookingState.dropoff.address || '';
+      if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !dropoffAddressInput.value.trim());
+    }
     if (bookingNoteInput) bookingNoteInput.value = '';
     if (bookingNoteCount) bookingNoteCount.textContent = '0/64';
     if (bookingFormError) bookingFormError.classList.add('is-hidden');
@@ -1033,8 +1043,10 @@
 
   /** Update pickup coordinates and validate geofence */
   function setPickupLocation(address, lat, lng) {
-    bookingState.pickup = { address: address.trim(), lat, lng };
-    if (pickupAddressInput) pickupAddressInput.value = address;
+    const trimmed = (address || '').trim();
+    bookingState.pickup = { address: trimmed, lat, lng };
+    if (pickupAddressInput) pickupAddressInput.value = trimmed;
+    if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !trimmed);
     validatePickupGeofence();
   }
 
@@ -1090,6 +1102,8 @@
         setPickupLocation('Current GPS Location (Outside Area)', lat, lng);
         showToast('Your GPS location is outside the Poortjie service area.');
       }
+
+      if (pickupClearBtn) pickupClearBtn.classList.remove('is-hidden');
 
       if (pickupGpsBtn) {
         pickupGpsBtn.disabled = false;
@@ -1875,18 +1889,89 @@
     // GPS Pickup
     if (pickupGpsBtn) pickupGpsBtn.addEventListener('click', getGpsLocation);
 
-    // Pickup input manual change
+    // Clear Pickup Input Button
+    if (pickupClearBtn) {
+      pickupClearBtn.addEventListener('click', () => {
+        if (pickupAddressInput) {
+          pickupAddressInput.value = '';
+          pickupAddressInput.focus();
+        }
+        bookingState.pickup = { address: '', lat: null, lng: null };
+        pickupClearBtn.classList.add('is-hidden');
+        if (pickupGeofenceBadge) {
+          pickupGeofenceBadge.className = 'geofence-badge';
+          pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
+        }
+        if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+      });
+    }
+
+    // Clear Drop-off Input Button
+    if (dropoffClearBtn) {
+      dropoffClearBtn.addEventListener('click', () => {
+        if (dropoffAddressInput) {
+          dropoffAddressInput.value = '';
+          dropoffAddressInput.focus();
+        }
+        bookingState.dropoff = { address: '', lat: null, lng: null };
+        dropoffClearBtn.classList.add('is-hidden');
+      });
+    }
+
+    // Quick Preset Chips (Pickup & Dropoff)
+    const presetChips = document.querySelectorAll('.preset-chip');
+    presetChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const target = chip.getAttribute('data-target');
+        const val = chip.getAttribute('data-val') || '';
+        const lat = parseFloat(chip.getAttribute('data-lat')) || SERVICE_AREA.center.lat;
+        const lng = parseFloat(chip.getAttribute('data-lng')) || SERVICE_AREA.center.lng;
+
+        if (target === 'pickup') {
+          setPickupLocation(val, lat, lng);
+          if (pickupClearBtn) pickupClearBtn.classList.remove('is-hidden');
+        } else if (target === 'dropoff') {
+          bookingState.dropoff = { address: val, lat, lng };
+          if (dropoffAddressInput) {
+            dropoffAddressInput.value = val;
+            if (dropoffClearBtn) dropoffClearBtn.classList.remove('is-hidden');
+          }
+        }
+      });
+    });
+
+    // Pickup input manual change & select on focus
     if (pickupAddressInput) {
       pickupAddressInput.addEventListener('input', () => {
-        bookingState.pickup.address = pickupAddressInput.value;
-        validatePickupGeofence();
+        const val = pickupAddressInput.value;
+        bookingState.pickup.address = val;
+        if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !val.trim());
+        if (!val.trim()) {
+          bookingState.pickup.lat = null;
+          bookingState.pickup.lng = null;
+          if (pickupGeofenceBadge) {
+            pickupGeofenceBadge.className = 'geofence-badge';
+            pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
+          }
+        } else {
+          validatePickupGeofence();
+        }
+      });
+
+      // If user focuses pickup while GPS text is present, select all for instant 1-key replacement
+      pickupAddressInput.addEventListener('focus', () => {
+        if (pickupAddressInput.value && pickupAddressInput.value.startsWith('Current GPS Location')) {
+          pickupAddressInput.select();
+        }
       });
     }
 
     // Dropoff input manual change
     if (dropoffAddressInput) {
       dropoffAddressInput.addEventListener('input', () => {
-        bookingState.dropoff.address = dropoffAddressInput.value;
+        const val = dropoffAddressInput.value;
+        bookingState.dropoff.address = val;
+        if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !val.trim());
       });
     }
 

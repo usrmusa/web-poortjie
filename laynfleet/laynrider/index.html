@@ -20,13 +20,25 @@
   <!-- ===================== HEADER ===================== -->
   <header class="header-nav">
     <div class="header-content">
-      <a href="../../home.html" class="brand-wrap" title="Back to Poortjie Home">
-        <div class="brand-text">
-          <h1 class="brand-title">Poortjie <span class="brand-accent">Rides</span></h1>
-        </div>
-      </a>
+      <div class="header-left">
+        <a href="../../home.html" class="back-link" title="Back to Poortjie Home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <a href="../../home.html" class="brand-wrap" title="Poortjie Services">
+          <div class="brand-text">
+            <h1 class="brand-title">Poortjie <span class="brand-accent">Rides</span></h1>
+          </div>
+        </a>
+      </div>
 
       <div class="nav-actions">
+        <div id="live-driver-status-pill" class="live-pill">
+          <span class="live-pulse"></span>
+          <span id="header-driver-count">0</span> Drivers Live
+        </div>
+
         <button id="header-user-btn" class="user-menu-btn is-hidden" title="View / Edit Profile">
           <img id="header-avatar" class="user-avatar" src="" alt="Profile" />
           <span id="header-user-name">Profile</span>
@@ -42,34 +54,11 @@
   <!-- ===================== MAIN CONTAINER ===================== -->
   <main class="app-container">
 
-    <!-- Prominent Brand Hero with Centered Large Logo -->
-    <section class="brand-hero-section">
-      <img src="laynrider.png" alt="LaynRider" class="brand-hero-logo" />
-      <div class="brand-hero-info">
-        <span class="hero-eyebrow">🟢 Poortjie Rides · Live</span>
-        <p class="brand-hero-desc">Fast, verified local rides inside Poortjie. Drop-off anywhere.</p>
-      </div>
-    </section>
-
-    <!-- Android App Nudge Banner -->
-    <div class="nudge-card">
-      <div class="nudge-left">
-        <span class="nudge-icon">📱</span>
-        <div>
-          <div class="nudge-title">Get the LaynRider Android App</div>
-          <div class="nudge-desc">Real-time push notifications & live map tracking on Android.</div>
-        </div>
-      </div>
-      <a href="laynrider-release.apk" download="laynrider-release.apk" class="btn btn-sm btn-primary">
-        Get App
-      </a>
-    </div>
-
-    <!-- BOOT / LOADING VIEW (Centered visible before any context) -->
+    <!-- BOOT / LOADING VIEW -->
     <div id="boot-view" class="boot-loader">
       <img src="laynrider.png" alt="LaynRider" class="boot-logo" />
       <div class="spinner"></div>
-      <p class="boot-text">Starting LaynRider…</p>
+      <p class="boot-text">Loading verified drivers in Poortjie…</p>
     </div>
 
     <!-- SUSPENDED VIEW -->
@@ -83,7 +72,7 @@
       <button id="suspended-signout-btn" class="btn btn-danger btn-block">Sign out</button>
     </div>
 
-    <!-- AUTH GATE / REDIRECT VIEW (When not logged in) -->
+    <!-- AUTH GATE / REDIRECT VIEW -->
     <div id="auth-gate-view" class="auth-gate-card is-hidden">
       <div class="auth-gate-header">
         <img src="laynrider.png" alt="LaynRider" class="auth-gate-img" />
@@ -100,14 +89,46 @@
       </p>
     </div>
 
-    <!-- MAIN APP / RIDER DASHBOARD (When authenticated) -->
-    <div id="app-view" class="is-hidden" style="display: flex; flex-direction: column; gap: 20px;">
+    <!-- MAIN APP / RIDER DASHBOARD -->
+    <div id="app-view" class="is-hidden app-view-container">
 
-      <!-- HERO GREETING -->
-      <section class="hero-card">
-        <div class="hero-content">
+      <!-- HERO DASHBOARD SECTION (Desktop 2-col, Mobile clean stack) -->
+      <section class="dashboard-hero-grid">
+        <!-- Main Action Hero Card -->
+        <div class="hero-main-card">
+          <div class="hero-badge-row">
+            <span class="hero-eyebrow">🟢 Poortjie Rides · Live</span>
+            <span id="hero-driver-count-badge" class="hero-driver-badge">0 Online</span>
+          </div>
           <h2 class="hero-title">Where to, <span id="hero-name">rider</span>?</h2>
           <p class="hero-sub">Book a verified local driver in seconds. Pickup inside Poortjie, drop-off anywhere.</p>
+          <div class="hero-actions">
+            <button id="quick-ride-btn" class="btn btn-primary btn-hero">
+              <span class="btn-icon">⚡</span> Quick Ride (Instant Dispatch)
+            </button>
+          </div>
+        </div>
+
+        <!-- How It Works / Guarantees & Android App Card -->
+        <div class="hero-info-card">
+          <div class="info-card-header">
+            <span class="info-card-badge">✨ Kasi Transport</span>
+            <h3 class="info-card-title">Direct & Transparent</h3>
+          </div>
+          <ul class="info-card-list">
+            <li><span>🛡️</span> Verified local township drivers</li>
+            <li><span>💵</span> Settle cash or direct EFT on arrival</li>
+            <li><span>📍</span> Fast pickup across all Poortjie zones</li>
+          </ul>
+          <div class="nudge-compact">
+            <div class="nudge-left">
+              <span class="nudge-icon">📱</span>
+              <span class="nudge-text">Get LaynRider Android App</span>
+            </div>
+            <a href="laynrider-release.apk" download="laynrider-release.apk" class="btn btn-sm btn-ghost nudge-btn">
+              Download APK
+            </a>
+          </div>
         </div>
       </section>
 
@@ -131,7 +152,7 @@
       <!-- ACTIVE BOOKING WIDGET (If rider has a live booking) -->
       <div id="active-booking-banner" class="active-booking-widget is-hidden">
         <div class="alert-content">
-          <span id="active-booking-icon" style="font-size: 28px;">🚖</span>
+          <span id="active-booking-icon" class="active-booking-icon">🚖</span>
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <strong id="active-booking-title" style="font-size: 15px;">Active Ride in Progress</strong>
@@ -143,33 +164,23 @@
         <button id="view-active-booking-btn" class="btn btn-sm btn-primary">Track Trip</button>
       </div>
 
-      <!-- QUICK RIDE CARD -->
-      <div class="quick-ride-card">
-        <div class="quick-ride-left">
-          <span class="quick-ride-badge">Fast Dispatch</span>
-          <h2 class="quick-ride-title">Quick Ride</h2>
-          <p class="quick-ride-desc">Auto-dispatch to the nearest available Private Car in Poortjie.</p>
-        </div>
-        <button id="quick-ride-btn" class="btn btn-primary">
-          <span>⚡</span> Quick Ride
-        </button>
-      </div>
-
       <!-- TRANSPORT TYPE FILTER CHIPS -->
-      <div class="filter-scroll" role="tablist" aria-label="Transport Types">
-        <button class="filter-chip is-active" data-type="ALL">🚗 All Types</button>
-        <button class="filter-chip" data-type="PRIVATE_CAR">🚙 Private Car</button>
-        <button class="filter-chip" data-type="MINI_BUS">🚐 Mini Bus</button>
-        <button class="filter-chip" data-type="BAKKIE">🛻 Bakkie</button>
-        <button class="filter-chip" data-type="MOTORBIKE">🏍️ Motorbike</button>
-        <button class="filter-chip" data-type="TUK_TUK">🛺 TukTuk</button>
+      <div class="filter-section">
+        <div class="filter-scroll" role="tablist" aria-label="Transport Types">
+          <button class="filter-chip is-active" data-type="ALL">🚗 All Types</button>
+          <button class="filter-chip" data-type="PRIVATE_CAR">🚙 Private Car</button>
+          <button class="filter-chip" data-type="MINI_BUS">🚐 Mini Bus</button>
+          <button class="filter-chip" data-type="BAKKIE">🛻 Bakkie</button>
+          <button class="filter-chip" data-type="MOTORBIKE">🏍️ Motorbike</button>
+          <button class="filter-chip" data-type="TUK_TUK">🛺 TukTuk</button>
+        </div>
       </div>
 
       <!-- AVAILABLE DRIVERS SECTION -->
-      <section id="section-available" class="space-y-3">
+      <section id="section-available" class="drivers-section">
         <div class="section-header">
           <h3 class="section-title">
-            <span>🟢</span> Available Drivers
+            <span class="status-indicator-dot online"></span> Available Drivers
           </h3>
           <span id="available-count" class="section-count">0</span>
         </div>
@@ -177,10 +188,10 @@
       </section>
 
       <!-- BUSY DRIVERS SECTION -->
-      <section id="section-busy" class="space-y-3">
+      <section id="section-busy" class="drivers-section">
         <div class="section-header">
           <h3 class="section-title">
-            <span>🟡</span> Busy Drivers (On a Trip)
+            <span class="status-indicator-dot busy"></span> Busy Drivers (On a Trip)
           </h3>
           <span id="busy-count" class="section-count">0</span>
         </div>
@@ -201,92 +212,132 @@
   <!-- ===================== BOOKING FORM MODAL ===================== -->
   <div id="booking-modal" class="modal-overlay is-hidden">
     <div class="modal-card booking-modal-card">
-      <img src="laynrider.png" alt="LaynRider" class="booking-top-logo" />
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
-        <h3 class="modal-title">Book a Ride</h3>
+        <div>
+          <h3 class="modal-title">Book a Ride</h3>
+          <p id="booking-target-subtitle" class="modal-subtitle">Quick Ride Auto-Dispatch</p>
+        </div>
         <button id="booking-modal-close" class="modal-close" aria-label="Close">&times;</button>
       </div>
 
       <div class="booking-hero-header">
         <div class="booking-hero-left">
-          <span style="font-size: 24px;">🚖</span>
+          <span id="booking-target-icon" style="font-size: 26px;">🚖</span>
           <div>
-            <div id="booking-target-title" style="font-size: 14px; font-weight: 800;">Quick Ride Auto-Dispatch</div>
-            <div id="booking-target-subtitle" style="font-size: 12px; color: var(--text-dim);">Nearest Private Car</div>
+            <div id="booking-target-title" style="font-size: 15px; font-weight: 800;">Quick Ride Auto-Dispatch</div>
+            <div style="font-size: 12px; color: var(--text-dim);">Nearest verified driver inside Poortjie</div>
           </div>
         </div>
         <span id="booking-target-type-badge" class="vehicle-type-tag">Private Car</span>
       </div>
 
-      <form id="booking-form" style="display: flex; flex-direction: column; gap: 16px;">
+      <form id="booking-form" class="booking-form-flow">
 
         <!-- RIDE TYPE TOGGLE (ASAP vs SCHEDULED) -->
         <div class="field">
-          <span class="field-label">Ride Schedule</span>
+          <span class="field-label">When do you need the ride?</span>
           <div class="booking-type-toggle">
             <button type="button" id="toggle-type-asap" class="booking-type-btn is-active">
               <span>⚡</span> Ride Now (ASAP)
             </button>
             <button type="button" id="toggle-type-scheduled" class="booking-type-btn">
-              <span>📅</span> Schedule for Later
+              <span>📅</span> Schedule Later
             </button>
           </div>
         </div>
 
         <!-- SCHEDULED DATE/TIME FIELDS (Hidden by default) -->
-        <div id="scheduled-fields" class="is-hidden" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div id="scheduled-fields" class="is-hidden scheduled-grid">
           <label class="field">
-            <span class="field-label">Date</span>
+            <span class="field-label">Pickup Date</span>
             <input id="booking-scheduled-date" type="date" class="field-input" />
           </label>
           <label class="field">
-            <span class="field-label">Time</span>
+            <span class="field-label">Pickup Time</span>
             <input id="booking-scheduled-time" type="time" class="field-input" />
           </label>
         </div>
 
-        <!-- PICKUP LOCATION FIELD & GOOGLE PLACES SEARCH -->
+        <!-- PICKUP LOCATION FIELD & QUICK CHIPS -->
         <div class="field">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span class="field-label">Pickup Location (Inside Poortjie)</span>
+          <div class="field-label-row">
+            <span class="field-label">📍 Pickup Location</span>
             <span id="pickup-geofence-badge" class="geofence-badge is-valid">🟢 Inside Poortjie</span>
           </div>
 
-          <div class="location-input-wrap">
-            <input id="booking-pickup-address" type="text" class="field-input" placeholder="Search pickup address in Poortjie…" required />
-            <button type="button" id="pickup-gps-btn" class="btn btn-ghost" title="Use Current GPS Location">
+          <div class="input-with-tools">
+            <input id="booking-pickup-address" type="text" class="field-input address-field" placeholder="Search address or tap GPS / preset..." required autocomplete="off" />
+            <button type="button" id="pickup-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear pickup address" title="Clear address">✕</button>
+            <button type="button" id="pickup-gps-btn" class="btn-input-action" title="Use Current GPS Location">
               <span>📍</span> GPS
             </button>
+          </div>
+
+          <!-- Quick Pickup Preset Chips -->
+          <div class="preset-chips-wrap">
+            <span class="preset-label">Quick Pick:</span>
+            <div class="preset-chips-scroll">
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Taxi Rank" data-lat="-26.45520" data-lng="27.77150">🚖 Taxi Rank</button>
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Clinic" data-lat="-26.45480" data-lng="27.76920">🏥 Clinic</button>
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Secondary School" data-lat="-26.45710" data-lng="27.77310">🏫 High School</button>
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Shopping Complex" data-lat="-26.45600" data-lng="27.77087">🛒 Complex</button>
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Ext 1" data-lat="-26.45350" data-lng="27.76800">📍 Ext 1</button>
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Ext 2" data-lat="-26.45650" data-lng="27.77450">📍 Ext 2</button>
+              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Ext 3" data-lat="-26.45890" data-lng="27.77200">📍 Ext 3</button>
+            </div>
           </div>
           <div id="pickup-error" class="form-error is-hidden"></div>
         </div>
 
-        <!-- DROP-OFF LOCATION FIELD & GOOGLE PLACES SEARCH -->
+        <!-- DROP-OFF LOCATION FIELD & QUICK CHIPS -->
         <div class="field">
-          <span class="field-label">Drop-off Destination (Anywhere)</span>
-          <input id="booking-dropoff-address" type="text" class="field-input" placeholder="Search destination address anywhere…" required />
+          <div class="field-label-row">
+            <span class="field-label">🏁 Drop-off Destination</span>
+            <span class="field-sublabel">Any destination</span>
+          </div>
+
+          <div class="input-with-tools">
+            <input id="booking-dropoff-address" type="text" class="field-input address-field" placeholder="Search destination address anywhere..." required autocomplete="off" />
+            <button type="button" id="dropoff-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear drop-off address" title="Clear address">✕</button>
+          </div>
+
+          <!-- Quick Dropoff Preset Chips -->
+          <div class="preset-chips-wrap">
+            <span class="preset-label">Popular:</span>
+            <div class="preset-chips-scroll">
+              <button type="button" class="preset-chip" data-target="dropoff" data-val="Poortjie Taxi Rank" data-lat="-26.45520" data-lng="27.77150">🚖 Taxi Rank</button>
+              <button type="button" class="preset-chip" data-target="dropoff" data-val="Poortjie Clinic" data-lat="-26.45480" data-lng="27.76920">🏥 Clinic</button>
+              <button type="button" class="preset-chip" data-target="dropoff" data-val="Jabulani Mall, Soweto" data-lat="-26.2483" data-lng="27.8601">🛒 Jabulani Mall</button>
+              <button type="button" class="preset-chip" data-target="dropoff" data-val="Orange Farm Eyethu Mall" data-lat="-26.4842" data-lng="27.8694">🛍️ Eyethu Mall</button>
+              <button type="button" class="preset-chip" data-target="dropoff" data-val="Sebokeng Plaza" data-lat="-26.5772" data-lng="27.8347">🏢 Sebokeng</button>
+            </div>
+          </div>
         </div>
 
         <!-- NOTE FOR DRIVER -->
         <div class="field">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="field-label">Note for Driver (Optional)</span>
+          <div class="field-label-row">
+            <span class="field-label">📝 Note for Driver (Optional)</span>
             <span id="booking-note-count" class="field-hint">0/64</span>
           </div>
-          <input id="booking-note" type="text" maxlength="64" class="field-input" placeholder="e.g. Waiting by green gate / 2 passengers" />
+          <input id="booking-note" type="text" maxlength="64" class="field-input" placeholder="e.g. Near blue gate, 2 bags / 2 passengers" />
         </div>
 
         <!-- OFFLINE PAYMENT NOTICE -->
         <div class="payment-notice">
-          💵 <strong>Offline Payment:</strong> Settle cash or direct EFT with your driver upon arrival. The driver will quote a price upon receiving this request for your approval.
+          <div class="payment-notice-icon">💵</div>
+          <div class="payment-notice-text">
+            <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival. The driver quotes the price when receiving your request.
+          </div>
         </div>
 
         <div id="booking-form-error" class="form-error is-hidden"></div>
 
         <div class="modal-actions">
-          <button type="button" id="booking-modal-cancel" class="btn btn-ghost" style="flex: 1;">Cancel</button>
-          <button type="submit" id="booking-submit-btn" class="btn btn-primary" style="flex: 2;">
-            Request Ride
+          <button type="button" id="booking-modal-cancel" class="btn btn-ghost">Cancel</button>
+          <button type="submit" id="booking-submit-btn" class="btn btn-primary btn-submit">
+            <span>⚡</span> Request Ride
           </button>
         </div>
 
