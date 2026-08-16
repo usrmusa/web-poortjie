@@ -233,16 +233,6 @@
   const cancelledReasonText = document.getElementById('cancelled-reason-text');
   const cancelledDismissBtn = document.getElementById('cancelled-dismiss-btn');
 
-  // Auth Gate Form
-  const authEmailForm = document.getElementById('auth-email-form');
-  const authEmailInput = document.getElementById('auth-email');
-  const authPasswordInput = document.getElementById('auth-password');
-  const authSubmitBtn = document.getElementById('auth-submit-btn');
-  const authGoogleBtn = document.getElementById('auth-google-btn');
-  const authErrorEl = document.getElementById('auth-error');
-  const toggleEmailAuthBtn = document.getElementById('toggle-email-auth-btn');
-  const emailAuthContainer = document.getElementById('email-auth-container');
-
   // Toast
   const toastEl = document.getElementById('toast');
 
@@ -1756,6 +1746,9 @@
       stopDriverListener();
       if (activeBookingUnsub) { activeBookingUnsub(); activeBookingUnsub = null; }
       showView('auth');
+      // LaynFleet reuses the global authentication system
+      sessionStorage.setItem('redirectUrl', window.location.href);
+      window.top.location.replace('../../authentication/login.html?redirect=' + encodeURIComponent(window.location.href));
       return;
     }
 
@@ -1799,84 +1792,18 @@
     startActiveBookingListener(authUser.uid);
   }
 
-  /** Email/Password sign in */
-  async function handleEmailSignIn(e) {
-    if (e) e.preventDefault();
-    if (authErrorEl) authErrorEl.classList.add('is-hidden');
-
-    const email = authEmailInput ? authEmailInput.value.trim() : '';
-    const password = authPasswordInput ? authPasswordInput.value : '';
-
-    if (!email || !password) {
-      if (authErrorEl) {
-        authErrorEl.textContent = 'Please enter both email and password.';
-        authErrorEl.classList.remove('is-hidden');
-      }
-      return;
-    }
-
-    try {
-      if (authSubmitBtn) {
-        authSubmitBtn.disabled = true;
-        authSubmitBtn.innerHTML = '<div class="spinner"></div> Signing in…';
-      }
-
-      await auth.signInWithEmailAndPassword(email, password);
-    } catch (err) {
-      console.error('Sign in error:', err);
-      if (authErrorEl) {
-        let msg = 'Failed to sign in. Please check your credentials.';
-        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-login-credentials') {
-          msg = 'Invalid email or password.';
-        } else if (err.code === 'auth/too-many-requests') {
-          msg = 'Too many attempts. Please try again later.';
-        }
-        authErrorEl.textContent = msg;
-        authErrorEl.classList.remove('is-hidden');
-      }
-    } finally {
-      if (authSubmitBtn) {
-        authSubmitBtn.disabled = false;
-        authSubmitBtn.textContent = 'Sign in';
-      }
-    }
-  }
-
-  /** Google Sign-In */
-  async function handleGoogleSignIn() {
-    if (authErrorEl) authErrorEl.classList.add('is-hidden');
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    try {
-      if (authGoogleBtn) {
-        authGoogleBtn.disabled = true;
-      }
-      await auth.signInWithPopup(provider);
-    } catch (err) {
-      console.warn('Popup sign in failed, trying redirect:', err);
-      try {
-        await auth.signInWithRedirect(provider);
-      } catch (redirectErr) {
-        console.error('Google sign in failed:', redirectErr);
-        if (authErrorEl) {
-          authErrorEl.textContent = 'Google sign-in could not be completed. Please try with email/password.';
-          authErrorEl.classList.remove('is-hidden');
-        }
-      }
-    } finally {
-      if (authGoogleBtn) {
-        authGoogleBtn.disabled = false;
-      }
-    }
-  }
-
   /** Sign Out */
   async function handleSignOut() {
     try {
       stopDriverListener();
       if (activeBookingUnsub) { activeBookingUnsub(); activeBookingUnsub = null; }
-      await auth.signOut();
+      if (typeof AuthStore !== 'undefined' && AuthStore.signOut) {
+        await AuthStore.signOut();
+      } else {
+        await auth.signOut();
+      }
       showToast('Signed out');
+      window.top.location.replace('../../authentication/login.html');
     } catch (err) {
       console.error('Sign out error:', err);
     }
@@ -1884,17 +1811,9 @@
 
   /** Event Listeners */
   function initListeners() {
-    if (authEmailForm) authEmailForm.addEventListener('submit', handleEmailSignIn);
-    if (authGoogleBtn) authGoogleBtn.addEventListener('click', handleGoogleSignIn);
     if (headerSignOutBtn) headerSignOutBtn.addEventListener('click', handleSignOut);
     const suspendedSignOutBtn = document.getElementById('suspended-signout-btn');
     if (suspendedSignOutBtn) suspendedSignOutBtn.addEventListener('click', handleSignOut);
-
-    if (toggleEmailAuthBtn && emailAuthContainer) {
-      toggleEmailAuthBtn.addEventListener('click', () => {
-        emailAuthContainer.classList.toggle('is-hidden');
-      });
-    }
 
     if (completeProfileBtn) completeProfileBtn.addEventListener('click', () => openProfileModal(undefined));
     if (headerUserBtn) headerUserBtn.addEventListener('click', () => openProfileModal(undefined));

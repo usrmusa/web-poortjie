@@ -83,7 +83,11 @@
 
             // 2) Enrich with the Firestore profile + roles.
             try {
-                const doc = await firebase.firestore().collection('users').doc(authUser.uid).get();
+                let doc = await firebase.firestore().collection('users').doc(authUser.uid).get();
+                if (!doc.exists) {
+                    await ensureUserDoc(authUser);
+                    doc = await firebase.firestore().collection('users').doc(authUser.uid).get();
+                }
                 user = global.UserModel.fromFirestore(authUser, doc.exists ? doc.data() : null);
                 store.setState({ user });
                 writeCache(user);
@@ -93,6 +97,79 @@
         });
 
         return store;
+    }
+
+    /** Ensures the user's Firestore document exists upon Google Sign-In or initial auth */
+    async function ensureUserDoc(authUser) {
+        if (!authUser || !authUser.uid) return null;
+        try {
+            const userRef = firebase.firestore().collection('users').doc(authUser.uid);
+            const doc = await userRef.get();
+            if (!doc.exists) {
+                let baseUsername = (authUser.email ? authUser.email.split('@')[0] : (authUser.displayName || 'user'))
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, '');
+                if (!baseUsername) baseUsername = 'user' + Math.floor(1000 + Math.random() * 9000);
+
+                let finalUsername = baseUsername;
+                try {
+                    const usernameDoc = await firebase.firestore().collection('usernames').doc(finalUsername).get();
+                    if (usernameDoc.exists) {
+                        finalUsername = `${baseUsername}${Math.floor(100 + Math.random() * 900)}`;
+                    }
+                    await firebase.firestore().collection('usernames').doc(finalUsername).set({
+                        userId: authUser.uid,
+                        lockedUntil: null
+                    }, { merge: true });
+                } catch (e) {
+                    console.warn('AuthStore: error reserving username', e);
+                }
+
+                const newDocData = {
+                    userId: authUser.uid,
+                    username: finalUsername,
+                    displayName: authUser.displayName || finalUsername,
+                    email: authUser.email || '',
+                    emailVerified: authUser.emailVerified || false,
+                    phone: authUser.phoneNumber || '',
+                    photoUrl: authUser.photoURL || null,
+                    registeredWith: 'com.digilayn.web',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                    devices: {}
+                };
+                await userRef.set(newDocData, { merge: true });
+                return newDocData;
+            } else {
+                await userRef.set({
+                    lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(() => {});
+                return doc.data();
+            }
+        } catch (err) {
+            console.warn('AuthStore: failed ensuring user doc', err);
+            return null;
+        }
+    }
+
+    /** Sign in with Google (Popup with fallback to redirect). */
+    async function signInWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        try {
+            const result = await firebase.auth().signInWithPopup(provider);
+            if (result && result.user) {
+                await ensureUserDoc(result.user);
+            }
+            return result;
+        } catch (err) {
+            if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+                return firebase.auth().signInWithRedirect(provider);
+            }
+            throw err;
+        }
     }
 
     /** Sign in with email/password. Resolves with the Firebase UserCredential. */
@@ -109,5 +186,5 @@
     const subscribe = (listener, options) => store.subscribe(listener, options);
     const getState = () => store.getState();
 
-    global.AuthStore = { init, subscribe, getState, signIn, signOut };
+    global.AuthStore = { init, subscribe, getState, signIn, signInWithGoogle, signOut, ensureUserDoc };
 })(window);
