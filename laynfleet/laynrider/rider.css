@@ -1,6 +1,6 @@
 /* ============================================================
-   LaynFleet Rider — rider.css
-   Self-contained, responsive, clean styling for LaynRider Web.
+   LaynRider — rider.css
+   Self-contained, responsive, awesome styling for LaynRider Web.
    Strict camelCase, Android-aligned tokens & Material3 inspired.
    ============================================================ */
 
@@ -1314,4 +1314,252 @@ body {
 @keyframes fade-in {
   from { opacity: 0; transform: translate(-50%, 10px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ============================================================
+   ✦ LAYNRIDER GLOW-UP LAYER (overrides + new components)
+   ============================================================ */
+
+:root {
+  --brand-2: #06b6d4;              /* teal accent for gradients */
+  --grad-brand: linear-gradient(135deg, #22c55e 0%, #06b6d4 100%);
+  --grad-brand-soft: linear-gradient(135deg, rgba(34,197,94,0.16) 0%, rgba(6,182,212,0.10) 100%);
+  --ring: rgba(34, 197, 94, 0.35);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --glass: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(15, 23, 42, 0.06);
+  }
+}
+
+/* Aurora backdrop */
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(34, 197, 94, 0.16), transparent 60%),
+    radial-gradient(1000px 520px at 100% 0%, rgba(6, 182, 212, 0.12), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* Header refinements */
+.header-nav {
+  background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.brand-logo {
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.28);
+}
+.brand-text h1 { font-size: 17px; letter-spacing: -0.3px; }
+.brand-accent {
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* Gradient primary buttons */
+.btn-primary {
+  background: var(--grad-brand);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 22px rgba(34, 197, 94, 0.32);
+}
+.btn-primary:hover {
+  background: var(--grad-brand);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn { transition: transform .15s ease, box-shadow .15s ease, filter .15s ease, background .15s ease, border-color .15s ease; }
+
+/* Filter chips active = gradient */
+.filter-chip.is-active {
+  background: var(--grad-brand);
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+}
+
+/* HERO */
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 26px 24px;
+  background:
+    var(--grad-brand-soft),
+    var(--panel);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+}
+.hero-glow {
+  position: absolute;
+  inset: auto -40px -60px auto;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(34,197,94,0.5), transparent 70%);
+  filter: blur(30px);
+  opacity: 0.6;
+  pointer-events: none;
+  animation: hero-float 6s ease-in-out infinite alternate;
+}
+@keyframes hero-float {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-16px, -10px) scale(1.12); }
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--brand);
+  background: var(--success-bg);
+  padding: 4px 10px; border-radius: var(--radius-pill);
+}
+.hero-title { font-size: 26px; font-weight: 900; margin-top: 12px; letter-spacing: -0.6px; }
+.hero-title span { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-sub { font-size: 13px; color: var(--text-dim); margin-top: 6px; max-width: 46ch; line-height: 1.5; }
+
+/* QUICK RIDE — bolder */
+.quick-ride-card {
+  background: var(--grad-brand);
+  border: none;
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(34, 197, 94, 0.32);
+}
+.quick-ride-card:hover { transform: translateY(-2px); box-shadow: 0 18px 42px rgba(34,197,94,0.4); }
+.quick-ride-badge { color: rgba(255,255,255,0.9); }
+.quick-ride-title { color: #fff; }
+.quick-ride-desc { color: rgba(255,255,255,0.85); }
+.quick-ride-card .btn-primary {
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(6px);
+  box-shadow: none;
+}
+.quick-ride-card .btn-primary:hover { background: rgba(255,255,255,0.26); }
+
+/* DRIVER CARDS — lift + accent line */
+.driver-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.driver-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--grad-brand);
+  opacity: 0; transition: opacity .18s ease;
+}
+.driver-card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(0,0,0,0.28); border-color: transparent; }
+.driver-card:hover::before { opacity: 1; }
+.driver-avatar { border-color: var(--brand); }
+
+/* Section titles */
+.section-title { letter-spacing: -0.2px; }
+
+/* ============================================================
+   PROFILE GATE CHECKLIST
+   ============================================================ */
+.profile-gate-card {
+  background: var(--grad-brand-soft), var(--panel);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.profile-gate-head { display: flex; align-items: flex-start; gap: 12px; }
+.profile-gate-icon {
+  font-size: 20px; flex: none;
+  width: 40px; height: 40px; display: grid; place-items: center;
+  background: var(--success-bg); border-radius: 12px;
+}
+.profile-gate-head strong { font-size: 14px; display: block; }
+.profile-gate-head p { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.profile-gate-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.profile-check {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 600; color: var(--text-dim);
+}
+.check-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border); flex: none;
+  display: grid; place-items: center;
+  transition: all .18s ease;
+}
+.profile-check.is-done { color: var(--text); }
+.profile-check.is-done .check-dot {
+  background: var(--brand); border-color: var(--brand);
+}
+.profile-check.is-done .check-dot::after {
+  content: '✓'; color: #fff; font-size: 11px; font-weight: 900; line-height: 1;
+}
+
+/* ============================================================
+   AVATAR UPLOADER (Complete Profile modal)
+   ============================================================ */
+.avatar-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.avatar-ring {
+  position: relative;
+  width: 116px; height: 116px; border-radius: 50%;
+  padding: 4px;
+  background: var(--grad-brand);
+  box-shadow: 0 10px 26px rgba(34, 197, 94, 0.3);
+}
+.avatar-ring.is-missing {
+  background: linear-gradient(135deg, var(--warn) 0%, #f97316 100%);
+  animation: nudge 1.2s ease-in-out infinite;
+}
+@keyframes nudge {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.avatar-preview {
+  width: 100%; height: 100%; border-radius: 50%;
+  object-fit: cover; background: var(--panel-2);
+  display: block;
+}
+.avatar-edit {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--bg-elevated); border: 2px solid var(--panel);
+  display: grid; place-items: center; cursor: pointer;
+  font-size: 15px; box-shadow: var(--shadow-sm);
+  transition: transform .15s ease;
+}
+.avatar-edit:hover { transform: scale(1.08); }
+.avatar-hint { font-size: 12px; color: var(--text-dim); }
+.field-req {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  color: var(--warn); letter-spacing: 0.5px; margin-left: 6px;
+}
+.field.is-missing .field-input {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 3px var(--warn-bg);
+}
+.field.is-missing .field-req { color: var(--warn); }
+.field:not(.is-missing) .field-req { display: none; }
+
+/* Modal polish */
+.modal-card {
+  border-radius: 22px;
+  border: 1px solid var(--glass-border);
+  animation: modal-pop .22s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes modal-pop {
+  from { transform: translateY(14px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Mobile spacing */
+@media (max-width: 520px) {
+  .hero-title { font-size: 22px; }
+  .quick-ride-card { flex-direction: column; align-items: flex-start; }
+  .quick-ride-card .btn { width: 100%; }
+  .driver-list { grid-template-columns: 1fr; }
 }
