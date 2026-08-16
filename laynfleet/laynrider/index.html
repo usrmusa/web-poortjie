@@ -13,6 +13,7 @@
 
   <link rel="icon" type="image/png" href="laynrider.png" />
   <link rel="stylesheet" href="rider.css" />
+  <script src="../../scripts/theme.js"></script>
 </head>
 <body>
 
@@ -20,10 +21,8 @@
   <header class="header-nav">
     <div class="header-content">
       <a href="../../home.html" class="brand-wrap" title="Back to Poortjie Home">
-        <img src="laynrider.png" alt="LaynRider" class="brand-logo" />
         <div class="brand-text">
-          <h1>Layn<span class="brand-accent">Rider</span></h1>
-          <span class="brand-sub">Poortjie Rides</span>
+          <h1 class="brand-title">Poortjie <span class="brand-accent">Rides</span></h1>
         </div>
       </a>
 
@@ -36,16 +35,21 @@
         <a id="header-signin-btn" href="../../authentication/login.html" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" class="btn btn-sm btn-ghost is-hidden">
           Sign In
         </a>
-
-        <button id="header-signout-btn" class="btn btn-sm btn-ghost is-hidden" title="Sign out of LaynRider">
-          Sign Out
-        </button>
       </div>
     </div>
   </header>
 
   <!-- ===================== MAIN CONTAINER ===================== -->
   <main class="app-container">
+
+    <!-- Prominent Brand Hero with Centered Large Logo -->
+    <section class="brand-hero-section">
+      <img src="laynrider.png" alt="LaynRider" class="brand-hero-logo" />
+      <div class="brand-hero-info">
+        <span class="hero-eyebrow">🟢 Poortjie Rides · Live</span>
+        <p class="brand-hero-desc">Fast, verified local rides inside Poortjie. Drop-off anywhere.</p>
+      </div>
+    </section>
 
     <!-- Android App Nudge Banner -->
     <div class="nudge-card">
@@ -56,7 +60,7 @@
           <div class="nudge-desc">Real-time push notifications & live map tracking on Android.</div>
         </div>
       </div>
-      <a href="https://github.com/usrmusa/LaynFleet/releases" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">
+      <a href="laynrider-release.apk" download="laynrider-release.apk" class="btn btn-sm btn-primary">
         Get App
       </a>
     </div>
@@ -72,7 +76,8 @@
     <div id="suspended-view" class="suspended-view is-hidden">
       <div class="suspended-icon">⚠️</div>
       <h2 class="suspended-title">Account Suspended</h2>
-      <p style="font-size: 13px; color: var(--text-dim);">Your account has been suspended from requesting rides.</p>      <div class="suspended-reason-box">
+      <p style="font-size: 13px; color: var(--text-dim);">Your account has been suspended from requesting rides.</p>
+      <div class="suspended-reason-box">
         <strong>Reason:</strong> <span id="suspended-reason-text">—</span>
       </div>
       <button id="suspended-signout-btn" class="btn btn-danger btn-block">Sign out</button>
@@ -130,9 +135,7 @@
 
       <!-- HERO GREETING -->
       <section class="hero-card">
-        <div class="hero-glow"></div>
         <div class="hero-content">
-          <span class="hero-eyebrow">🟢 Poortjie · Live</span>
           <h2 class="hero-title">Where to, <span id="hero-name">rider</span>?</h2>
           <p class="hero-sub">Book a verified local driver in seconds. Pickup inside Poortjie, drop-off anywhere.</p>
         </div>
@@ -591,7 +594,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <!-- App scripts -->
+  <!-- Unified Shared Firebase & Auth Architecture -->
+  <script src="../../scripts/firebase.js"></script>
+  <script src="../../scripts/models/user-model.js"></script>
+  <script src="../../scripts/viewmodels/auth-store.js"></script>
+
+  <!-- LaynRider scripts -->
   <script src="firebase-config.js"></script>
   <script src="rider.js"></script>
 

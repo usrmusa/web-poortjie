@@ -7,7 +7,7 @@
 (function (global) {
   'use strict';
 
-  global.LAYNFLEET_FIREBASE_CONFIG = {
+  global.LAYNFLEET_FIREBASE_CONFIG = (typeof firebaseConfig !== 'undefined') ? firebaseConfig : {
     apiKey: 'AIzaSyANCpYHeLyWkgVtWL06xpI7XsP08xu9GPA',
     authDomain: 'digilayn-projects.firebaseapp.com',
     projectId: 'digilayn-projects',
@@ -15,8 +15,6 @@
     messagingSenderId: '95485356681',
     appId: '1:95485356681:web:3cf619a266961009e17458',
     measurementId: 'G-27H9WZSCGQ',
-    // Realtime Database (driver presence). Instance is europe-west1 — must be
-    // set explicitly or the SDK defaults to the wrong (us-central) URL.
     databaseURL: 'https://digilayn-projects-default-rtdb.europe-west1.firebasedatabase.app'
   };
 

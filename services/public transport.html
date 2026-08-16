@@ -149,7 +149,7 @@
     const gridTitle = document.getElementById('grid-title');
 
     let currentMode = 'taxis'; // 'taxis' or 'buses'
-    let allData = { news: [], routes: {}, bus_routes: {} };
+    let allData = { news: [], routes: {}, busRoutes: {} };
 
     tabTaxis.addEventListener('click', () => switchTab('taxis'));
     tabBuses.addEventListener('click', () => switchTab('buses'));
@@ -167,7 +167,7 @@
             tabBuses.className = 'px-6 py-3 font-bold text-lg border-b-4 border-green-500 text-green-600 dark:text-green-400';
             tabTaxis.className = 'px-6 py-3 font-bold text-lg border-b-4 border-transparent text-gray-500 hover:text-green-500 transition';
             gridTitle.innerHTML = '<span class="w-8 h-1 bg-green-500"></span> Bus Routes & Fares';
-            renderRoutes(allData.bus_routes || {});
+            renderRoutes(allData.busRoutes || {});
         }
     }
 
@@ -184,6 +184,9 @@
             const doc = await db.collection('poortjie').doc('taxi_routes').get();
             if (doc.exists) {
                 allData = doc.data();
+                if (!allData.busRoutes) {
+                    allData.busRoutes = {};
+                }
                 if (allData.news && allData.news.length > 0) {
                     renderNews(allData.news);
                 } else {
@@ -197,8 +200,8 @@
                         routesGrid.innerHTML = '<p class="col-span-full text-center py-12 opacity-60">No taxi routes found.</p>';
                     }
                 } else {
-                    if (allData.bus_routes) {
-                        renderRoutes(allData.bus_routes);
+                    if (allData.busRoutes) {
+                        renderRoutes(allData.busRoutes);
                     } else {
                         routesGrid.innerHTML = '<p class="col-span-full text-center py-12 opacity-60">No bus routes found.</p>';
                     }
