@@ -277,7 +277,7 @@
     }
 
     // State
-    let currentData = {news: [], routes: {}, bus_routes: {}};
+    let currentData = {news: [], routes: {}, busRoutes: {}};
     let editingNewsIndex = -1;
     let editingRouteKey = null;
 
@@ -295,12 +295,12 @@
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    const isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                    const isTaxiRankAdmin = userData.roles?.poortjie?.is_taxi_rank_admin === true;
+                    const isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    const isTaxiRankAdmin = userData.roles?.poortjie?.isTaxiRankAdmin === true;
 
                     if (isSuperUser || isTaxiRankAdmin) {
                         const welcomeMsg = document.getElementById('welcome-message');
-                        const name = userData.display_name || userData.name || (isSuperUser ? 'Super User' : 'Admin');
+                        const name = userData.displayName || (isSuperUser ? 'Super User' : 'Admin');
                         welcomeMsg.textContent = `Welcome, ${name}!`;
 
                         document.getElementById('admin-content').classList.remove('hidden');
@@ -325,7 +325,7 @@
                 currentData = doc.data();
                 if (!currentData.news) currentData.news = [];
                 if (!currentData.routes) currentData.routes = {};
-                if (!currentData.bus_routes) currentData.bus_routes = {};
+                if (!currentData.busRoutes) currentData.busRoutes = {};
             }
             renderAll();
         } catch (err) {
@@ -358,7 +358,7 @@
     }
 
     function renderRoutes() {
-        const routesData = currentMode === 'taxis' ? currentData.routes : (currentData.bus_routes || {});
+        const routesData = currentMode === 'taxis' ? currentData.routes : (currentData.busRoutes || {});
         routesList.innerHTML = Object.keys(routesData).length === 0 ?
             `<p class="col-span-full text-center py-8 opacity-50 italic text-sm">No ${currentMode} routes added yet.</p>` : '';
 
@@ -368,24 +368,26 @@
         );
 
         sortedKeys.forEach(key => {
-            const route = routesData[key];
+            const r = routesData[key];
             const div = document.createElement('div');
-            div.className = 'card p-6 rounded-xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm flex flex-col justify-between';
+            div.className = 'p-5 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col justify-between';
             div.innerHTML = `
                 <div>
                     <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-bold text-lg">${route.origin} <i class="fas ${route.returns ? 'fa-exchange-alt' : 'fa-arrow-right'} text-xs opacity-40"></i> ${route.destination}</h4>
-                        <span class="text-green-600 font-bold">R${route.fare}</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-green-600">${r.origin} &rarr;</span>
+                        <span class="font-black text-lg text-green-600">R${r.fare}</span>
                     </div>
-                    <div class="text-sm opacity-70 space-y-1">
-                        <p><i class="fas fa-clock w-5"></i> ${route.hours}</p>
-                        <p><i class="fas fa-info-circle w-5"></i> <span class="capitalize">${route.type.replace('_', ' ')}</span></p>
-                        ${route.location ? `<p><i class="fas fa-map-marker-alt w-5"></i> ${route.location}</p>` : ''}
+                    <h3 class="font-extrabold text-xl mb-1">${r.destination}</h3>
+                    <div class="space-y-1 text-xs opacity-70 mb-4">
+                        <p><i class="fas fa-clock mr-1"></i> ${r.hours}</p>
+                        <p><i class="fas fa-tag mr-1"></i> ${r.type}</p>
+                        ${r.returns ? '<p class="text-green-600 font-semibold"><i class="fas fa-undo mr-1"></i> Return Available</p>' : ''}
+                        ${r.location ? `<p class="truncate"><i class="fas fa-map-marker-alt mr-1"></i> ${r.location}</p>` : ''}
                     </div>
                 </div>
-                <div class="mt-6 flex justify-end gap-2">
-                    <button onclick="editRoute('${key}')" class="px-4 py-2 border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 transition text-sm font-bold"><i class="fas fa-edit mr-2"></i>Edit</button>
-                    <button onclick="deleteRoute('${key}')" class="px-4 py-2 border rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition text-sm font-bold"><i class="fas fa-trash mr-2"></i>Delete</button>
+                <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-slate-700">
+                    <button onclick="editRoute('${key}')" class="flex-1 py-2 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 font-bold rounded-lg text-sm hover:bg-blue-100 transition">Edit</button>
+                    <button onclick="deleteRoute('${key}')" class="flex-1 py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 font-bold rounded-lg text-sm hover:bg-red-100 transition">Delete</button>
                 </div>
             `;
             routesList.appendChild(div);
@@ -430,7 +432,7 @@
 
     window.editNews = (index) => {
         editingNewsIndex = index;
-        document.getElementById('news-modal-title').textContent = 'Edit News';
+        document.getElementById('news-modal-title').textContent = 'Edit News Item';
         document.getElementById('news-content').value = currentData.news[index];
         newsModal.classList.remove('hidden');
     };
@@ -438,33 +440,31 @@
     window.deleteNews = async (index) => {
         if (confirm('Delete this news item?')) {
             currentData.news.splice(index, 1);
-            await saveToFirestore('News item deleted successfully');
+            await saveToFirestore('News deleted successfully');
             renderNews();
         }
     };
 
     window.editRoute = (key) => {
         editingRouteKey = key;
-        const routesData = currentMode === 'taxis' ? currentData.routes : (currentData.bus_routes || {});
-        const route = routesData[key];
-        document.getElementById('route-modal-title').textContent = currentMode === 'taxis' ? 'Edit Taxi Route' : 'Edit Bus Route';
-        document.getElementById('route-origin').value = route.origin;
-        document.getElementById('route-destination').value = route.destination;
-        document.getElementById('route-fare').value = route.fare;
-        document.getElementById('route-hours').value = route.hours;
-        document.getElementById('route-type').value = route.type;
-        document.getElementById('route-returns').checked = route.returns;
-        document.getElementById('route-location').value = route.location || '';
-        document.getElementById('route-lat').value = route.lat || '';
-        document.getElementById('route-lng').value = route.lng || '';
+        const routesData = currentMode === 'taxis' ? currentData.routes : (currentData.busRoutes || {});
+        const r = routesData[key];
+        document.getElementById('route-modal-title').textContent = `Edit ${currentMode === 'taxis' ? 'Taxi' : 'Bus'} Route`;
+        document.getElementById('route-origin').value = r.origin;
+        document.getElementById('route-destination').value = r.destination;
+        document.getElementById('route-fare').value = r.fare;
+        document.getElementById('route-hours').value = r.hours;
+        document.getElementById('route-type').value = r.type || 'standard';
+        document.getElementById('route-returns').checked = r.returns || false;
+        document.getElementById('route-location').value = r.location || '';
 
         routeModal.classList.remove('hidden');
         setTimeout(() => {
             initMap();
             map.invalidateSize();
-            if (route.lat && route.lng) {
-                setMarker(route.lat, route.lng);
-                map.setView([route.lat, route.lng], 15);
+            if (r.lat && r.lng) {
+                setMarker(r.lat, r.lng);
+                map.setView([r.lat, r.lng], 16);
             } else {
                 if (marker) map.removeLayer(marker);
                 marker = null;
@@ -480,7 +480,7 @@
             if (currentMode === 'taxis') {
                 delete currentData.routes[key];
             } else {
-                delete currentData.bus_routes[key];
+                delete currentData.busRoutes[key];
             }
             await saveToFirestore('Route deleted successfully');
             renderRoutes();
@@ -492,8 +492,8 @@
             const currentUserId = firebase.auth().currentUser?.uid;
             const dataToSave = {
                 ...currentData,
-                last_modified_by: currentUserId,
-                last_modified_at: firebase.firestore.FieldValue.serverTimestamp()
+                lastModifiedBy: currentUserId,
+                lastModifiedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection('poortjie').doc('taxi_routes').set(dataToSave);
             showStatus(successMsg);
@@ -562,8 +562,8 @@
         if (currentMode === 'taxis') {
             currentData.routes[key] = routeData;
         } else {
-            if (!currentData.bus_routes) currentData.bus_routes = {};
-            currentData.bus_routes[key] = routeData;
+            if (!currentData.busRoutes) currentData.busRoutes = {};
+            currentData.busRoutes[key] = routeData;
         }
 
         await saveToFirestore('Route saved successfully');

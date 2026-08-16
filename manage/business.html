@@ -105,12 +105,12 @@
             userRef.get().then((doc) => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    isSuperUser = userData.roles?.digilayn?.is_super_user === true;
-                    const isPoortjieAdmin = userData.roles?.poortjie?.is_admin === true;
+                    isSuperUser = userData.roles?.digilayn?.isSuperUser === true;
+                    const isPoortjieAdmin = userData.roles?.poortjie?.isAdmin === true;
 
                     if (isSuperUser || isPoortjieAdmin) {
                         const welcomeMsg = document.getElementById('welcome-message');
-                        const name = userData.display_name || userData.name || (isSuperUser ? 'Super User' : 'Admin');
+                        const name = userData.displayName || (isSuperUser ? 'Super User' : 'Admin');
                         welcomeMsg.textContent = `Welcome, ${name}!`;
 
                         if (isSuperUser) {
@@ -223,14 +223,14 @@
 
         // Enrich for search and sort
         let appsToProcess = await Promise.all(allApplications.map(async app => {
-            if (app.business_ref && !app.business_name) {
+            if (app.businessRef && !app.businessName) {
                 try {
-                    const doc = await db.doc(app.business_ref).get();
+                    const doc = await db.doc(app.businessRef).get();
                     if (doc.exists) {
                         return { ...doc.data(), ...app };
                     }
                 } catch (e) {
-                    console.error("Error fetching business_ref data for enrich:", e);
+                    console.error("Error fetching businessRef data for enrich:", e);
                 }
             }
             return app;
@@ -252,24 +252,24 @@
         // Apply Search
         if (searchTerm) {
             filtered = filtered.filter(app =>
-                app.business_name?.toLowerCase().includes(searchTerm) ||
-                app.sub_heading?.toLowerCase().includes(searchTerm) ||
+                app.businessName?.toLowerCase().includes(searchTerm) ||
+                app.subHeading?.toLowerCase().includes(searchTerm) ||
                 app.description?.toLowerCase().includes(searchTerm) ||
-                app.owner_name?.toLowerCase().includes(searchTerm) ||
-                app.user_email?.toLowerCase().includes(searchTerm) ||
+                app.ownerName?.toLowerCase().includes(searchTerm) ||
+                app.userEmail?.toLowerCase().includes(searchTerm) ||
                 app.id?.toLowerCase().includes(searchTerm) ||
-                app.business_type?.toLowerCase().includes(searchTerm) ||
+                app.businessType?.toLowerCase().includes(searchTerm) ||
                 app.status?.toLowerCase().includes(searchTerm)
             );
         }
 
         // Apply Sort
         if (sortValue === 'owner') {
-            filtered.sort((a, b) => (a.owner_name || '').localeCompare(b.owner_name || ''));
+            filtered.sort((a, b) => (a.ownerName || '').localeCompare(b.ownerName || ''));
         } else if (sortValue === 'business') {
-            filtered.sort((a, b) => (a.business_name || '').localeCompare(b.business_name || ''));
+            filtered.sort((a, b) => (a.businessName || '').localeCompare(b.businessName || ''));
         } else if (sortValue === 'newest') {
-            filtered.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+            filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         } else if (sortValue === 'ratings') {
             filtered.sort((a, b) => {
                 const countA = a.ratings ? Object.keys(a.ratings).length : 0;
@@ -292,7 +292,7 @@
             db.collection('users').doc(uid).get().then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
-                    const name = userData.display_name || 'Unknown User';
+                    const name = userData.displayName || 'Unknown User';
                     document.querySelectorAll(`.user-name[data-uid="${uid}"]`).forEach(el => {
                         el.textContent = name;
                     });
@@ -310,11 +310,11 @@
         const renderDiff = (oldData, newData) => {
             if (!oldData) return '';
             const fields = [
-                { label: 'Business Name', key: 'business_name' },
-                { label: 'Sub Heading', key: 'sub_heading' },
-                { label: 'Owner Name', key: 'owner_name' },
+                { label: 'Business Name', key: 'businessName' },
+                { label: 'Sub Heading', key: 'subHeading' },
+                { label: 'Owner Name', key: 'ownerName' },
                 { label: 'Phone', key: 'phone' },
-                { label: 'Type', key: 'business_type' },
+                { label: 'Type', key: 'businessType' },
                 { label: 'Address', key: 'address' },
                 { label: 'WhatsApp', key: 'whatsapp' },
                 { label: 'Facebook', key: 'facebook' },
@@ -427,9 +427,9 @@
         // Pre-check for existence of pending applications to show "Approve Update"
         const existenceChecks = await Promise.all(enrichedApplications.map(async app => {
             const isPending = !app.status || app.status === 'pending' || app.status === 'update';
-            if (isPending && app.business_type && app.business_type !== 'Other') {
+            if (isPending && app.businessType && app.businessType !== 'Other') {
                 try {
-                    const doc = await db.collection('poortjie').doc('services').collection(app.business_type).doc(app.id).get();
+                    const doc = await db.collection('poortjie').doc('services').collection(app.businessType).doc(app.id).get();
                     return { id: app.id, exists: doc.exists, existingData: doc.exists ? doc.data() : null };
                 } catch (e) {
                     console.error("Error checking existence for", app.id, e);
@@ -447,8 +447,7 @@
         let html = '';
         enrichedApplications.forEach(app => {
             const isPending = !app.status || app.status === 'pending' || app.status === 'update';
-            const isOther = app.business_type === 'Other';
-            const isOldData = !app.business_ref && (app.status === 'approved' || app.status === 'update' || app.status === 'rejected');
+            const isOther = app.businessType === 'Other';
             const check = existsMap[app.id];
             const alreadyExists = check?.exists;
             const existingData = check?.data;
@@ -457,7 +456,7 @@
                 <div class="p-6 card rounded-xl border border-gray-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div class="flex-grow">
                         <div class="flex items-center gap-3 mb-2">
-                            <h4 class="text-lg font-bold">${app.business_name}</h4>
+                            <h4 class="text-lg font-bold">${app.businessName || 'Untitled Business'}</h4>
                             ${getStatusBadge(app.status)}
                             ${app.rating ? `
                                 <div class="flex items-center gap-1 bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded text-[10px] font-bold">
@@ -466,10 +465,10 @@
                             ` : ''}
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm opacity-80">
-                            <p><span class="font-semibold">Owner:</span> ${app.owner_name}</p>
-                            <p><span class="font-semibold">Email:</span> ${app.user_email || 'N/A'}</p>
-                            <p><span class="font-semibold">Phone:</span> ${app.phone}</p>
-                            <p><span class="font-semibold">Type:</span> ${app.business_type}</p>
+                            <p><span class="font-semibold">Owner:</span> ${app.ownerName || 'N/A'}</p>
+                            <p><span class="font-semibold">Email:</span> ${app.userEmail || app.email || 'N/A'}</p>
+                            <p><span class="font-semibold">Phone:</span> ${app.phone || 'N/A'}</p>
+                            <p><span class="font-semibold">Type:</span> ${app.businessType || 'N/A'}</p>
                         </div>
 
                         <div id="details-${app.id}" class="hidden mt-4 pt-4 border-t border-gray-100 dark:border-slate-800 text-sm space-y-2">
@@ -495,30 +494,30 @@
                             ` : ''}
 
                             ${isPending && alreadyExists ? renderDiff(existingData, app) : ''}
-                            ${app.approved_by ? `
+                            ${app.approvedBy ? `
                             <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-900/30">
                                 <p class="text-xs font-bold uppercase text-green-700 dark:text-green-400 mb-1">Approval Info</p>
                                 <div class="flex flex-col sm:flex-row gap-x-8 gap-y-1 text-xs">
-                                    <p><span class="font-semibold">Approved By:</span> <span class="user-name" data-uid="${app.approved_by}">${app.approved_by}</span></p>
-                                    <p><span class="font-semibold">Date:</span> ${app.approved_at?.toDate ? app.approved_at.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                    <p><span class="font-semibold">Approved By:</span> <span class="user-name" data-uid="${app.approvedBy}">${app.approvedBy}</span></p>
+                                    <p><span class="font-semibold">Date:</span> ${app.approvedAt?.toDate ? app.approvedAt.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                 </div>
                             </div>
                             ` : ''}
-                            ${app.rejected_by ? `
+                            ${app.rejectedBy ? `
                             <div class="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30">
                                 <p class="text-xs font-bold uppercase text-red-700 dark:text-red-400 mb-1">Rejection Info</p>
                                 <div class="flex flex-col sm:flex-row gap-x-8 gap-y-1 text-xs">
-                                    <p><span class="font-semibold">Rejected By:</span> <span class="user-name" data-uid="${app.rejected_by}">${app.rejected_by}</span></p>
-                                    <p><span class="font-semibold">Date:</span> ${app.rejected_at?.toDate ? app.rejected_at.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                    <p><span class="font-semibold">Rejected By:</span> <span class="user-name" data-uid="${app.rejectedBy}">${app.rejectedBy}</span></p>
+                                    <p><span class="font-semibold">Date:</span> ${app.rejectedAt?.toDate ? app.rejectedAt.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                 </div>
                             </div>
                             ` : ''}
-                            ${app.disabled_by ? `
+                            ${app.disabledBy ? `
                             <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-900/20 rounded-lg border border-slate-100 dark:border-slate-800">
                                 <p class="text-xs font-bold uppercase text-slate-700 dark:text-slate-400 mb-1">Disabling Info</p>
                                 <div class="flex flex-col sm:flex-row gap-x-8 gap-y-1 text-xs">
-                                    <p><span class="font-semibold">Disabled By:</span> <span class="user-name" data-uid="${app.disabled_by}">${app.disabled_by}</span></p>
-                                    <p><span class="font-semibold">Date:</span> ${app.disabled_at?.toDate ? app.disabled_at.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                    <p><span class="font-semibold">Disabled By:</span> <span class="user-name" data-uid="${app.disabledBy}">${app.disabledBy}</span></p>
+                                    <p><span class="font-semibold">Date:</span> ${app.disabledAt?.toDate ? app.disabledAt.toDate().toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                 </div>
                             </div>
                             ` : ''}
@@ -548,7 +547,7 @@
                         <button onclick="disableListing('${app.id}')" class="bg-slate-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-slate-700 transition shadow-sm">Disable</button>
                         ` : ''}
                         ${isSuperUser ? `
-                        <button onclick="brutalDelete('${app.id}', '${app.business_type}')" class="bg-red-700 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-800 transition shadow-sm">
+                        <button onclick="brutalDelete('${app.id}', '${app.businessType}')" class="bg-red-700 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-800 transition shadow-sm">
                             <i class="fas fa-trash-alt mr-1"></i> Delete
                         </button>
                         ` : ''}
@@ -569,33 +568,21 @@
             if (!appDoc.exists) throw "Application does not exist!";
             const appData = appDoc.data();
 
-            const servicesRef = db.collection('poortjie').doc('services');
-            const liveServiceRef = db.collection('poortjie').doc('services').collection(appData.business_type).doc(appId);
+            const liveServiceRef = db.collection('poortjie').doc('services').collection(appData.businessType).doc(appId);
 
             await db.runTransaction(async (transaction) => {
-                const servicesDoc = await transaction.get(servicesRef);
-                const servicesData = servicesDoc.data() || {};
-                const homeScreen = servicesData.homeScreen || {};
-                const category = appData.business_type;
-
-                // 1. Update status in homeScreen instead of removing
-                if (homeScreen[category]) {
-                    // We no longer store data in homeScreen, but if it exists, we could clean it up or just ignore
-                    // For now, let's just make sure we don't try to access .data[appId] if we are removing it
-                }
-
-                // 2. Update status in live services collection
+                // Update status in live services collection
                 transaction.set(liveServiceRef, {
                     status: 'disabled',
-                    disabled_by: currentUserId,
-                    disabled_at: firebase.firestore.FieldValue.serverTimestamp()
+                    disabledBy: currentUserId,
+                    disabledAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // 3. Update status in applications collection
+                // Update status in applications collection
                 transaction.update(appRef, {
                     status: 'disabled',
-                    disabled_by: currentUserId,
-                    disabled_at: firebase.firestore.FieldValue.serverTimestamp()
+                    disabledBy: currentUserId,
+                    disabledAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             });
 
@@ -606,7 +593,7 @@
         }
     }
 
-    async function brutalDelete(appId, business_type) {
+    async function brutalDelete(appId, businessType) {
         if (!isSuperUser) {
             alert("Unauthorized: Only super users can perform this action.");
             return;
@@ -614,7 +601,7 @@
 
         const confirmMsg = `DANGER: You are about to BRUTALLY DELETE this business.\n\n` +
                           `Business ID: ${appId}\n` +
-                          `Category: ${business_type}\n\n` +
+                          `Category: ${businessType}\n\n` +
                           `This will delete the LIVE listing AND the application record. This action cannot be undone.\n\n` +
                           `Are you absolutely sure?`;
 
@@ -622,7 +609,7 @@
 
         try {
             const appRef = db.collection('poortjie').doc('applications').collection('listings').doc(appId);
-            const liveServiceRef = db.collection('poortjie').doc('services').collection(business_type).doc(appId);
+            const liveServiceRef = db.collection('poortjie').doc('services').collection(businessType).doc(appId);
 
             await db.runTransaction(async (transaction) => {
                 transaction.delete(appRef);
@@ -640,22 +627,22 @@
         const app = allApplications.find(a => a.id === appId);
         if (!app) return;
 
-        if (!app.business_type) {
-            alert("Error: Business category (business_type) is missing. Cannot fix data.");
+        if (!app.businessType) {
+            alert("Error: Business category (businessType) is missing. Cannot fix data.");
             return;
         }
 
-        const business_ref = `poortjie/services/${app.business_type}/${appId}`;
+        const businessRef = `poortjie/services/${app.businessType}/${appId}`;
         
         try {
             await db.collection('poortjie').doc('applications').collection('listings').doc(appId).update({
-                business_ref: business_ref,
+                businessRef: businessRef,
                 // Strip redundant data to match new structure
-                owner_name: firebase.firestore.FieldValue.delete(),
+                ownerName: firebase.firestore.FieldValue.delete(),
                 email: firebase.firestore.FieldValue.delete(),
                 phone: firebase.firestore.FieldValue.delete(),
-                business_name: firebase.firestore.FieldValue.delete(),
-                sub_heading: firebase.firestore.FieldValue.delete(),
+                businessName: firebase.firestore.FieldValue.delete(),
+                subHeading: firebase.firestore.FieldValue.delete(),
                 address: firebase.firestore.FieldValue.delete(),
                 latitude: firebase.firestore.FieldValue.delete(),
                 longitude: firebase.firestore.FieldValue.delete(),
@@ -668,7 +655,7 @@
                 services: firebase.firestore.FieldValue.delete()
             });
             console.log("Data fixed for application:", appId);
-            alert("Data fixed! business_ref added and redundant fields removed.");
+            alert("Data fixed! businessRef added and redundant fields removed.");
         } catch (error) {
             console.error("Error fixing data:", error);
             alert("Failed to fix data: " + error);
@@ -685,7 +672,7 @@
             if (!appDoc.exists) throw "Application does not exist!";
             const appData = appDoc.data();
 
-            let finalCategory = appData.business_type;
+            let finalCategory = appData.businessType;
 
             if (finalCategory === 'Other') {
                 const selectVal = document.getElementById(`category-select-${appId}`).value;
@@ -705,7 +692,6 @@
                 const servicesDoc = await transaction.get(servicesRef);
                 const servicesData = servicesDoc.data() || {};
                 const homeScreen = servicesData.homeScreen || {};
-                firebase.firestore.FieldValue.serverTimestamp();
                 const updateData = {};
 
                 // If category doesn't exist, we need to initialize it
@@ -730,24 +716,24 @@
                 const liveServiceRef = db.doc(`poortjie/services/${finalCategory}/${appId}`);
                 transaction.set(liveServiceRef, {
                     ...appData,
-                    business_type: finalCategory,
+                    businessType: finalCategory,
                     status: 'active',
-                    approved_at: firebase.firestore.FieldValue.serverTimestamp(),
-                    approved_by: currentUserId
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    approvedBy: currentUserId
                 }, { merge: true });
 
                 transaction.update(appRef, {
                     status: 'approved',
-                    business_type: finalCategory, // Update the app record too
-                    approved_by: currentUserId,
-                    approved_at: firebase.firestore.FieldValue.serverTimestamp(),
-                    business_ref: `poortjie/services/${finalCategory}/${appId}`,
+                    businessType: finalCategory, // Update the app record too
+                    approvedBy: currentUserId,
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    businessRef: `poortjie/services/${finalCategory}/${appId}`,
                     // Strip data
-                    owner_name: firebase.firestore.FieldValue.delete(),
+                    ownerName: firebase.firestore.FieldValue.delete(),
                     email: firebase.firestore.FieldValue.delete(),
                     phone: firebase.firestore.FieldValue.delete(),
-                    business_name: firebase.firestore.FieldValue.delete(),
-                    sub_heading: firebase.firestore.FieldValue.delete(),
+                    businessName: firebase.firestore.FieldValue.delete(),
+                    subHeading: firebase.firestore.FieldValue.delete(),
                     address: firebase.firestore.FieldValue.delete(),
                     latitude: firebase.firestore.FieldValue.delete(),
                     longitude: firebase.firestore.FieldValue.delete(),
@@ -775,8 +761,8 @@
             const currentUserId = firebase.auth().currentUser?.uid;
             db.doc(`poortjie/applications/listings/${appId}`).update({
                 status: 'rejected',
-                rejected_by: currentUserId,
-                rejected_at: firebase.firestore.FieldValue.serverTimestamp()
+                rejectedBy: currentUserId,
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 console.log("Application rejected!");
             }).catch(error => {
@@ -790,7 +776,7 @@
             const currentUserId = firebase.auth().currentUser?.uid;
             db.doc(`poortjie/applications/listings/${appId}`).update({
                 status: 'update',
-                update_requested_by: currentUserId
+                updateRequestedBy: currentUserId
             }).then(() => {
                 console.log("Update requested!");
             }).catch(error => {

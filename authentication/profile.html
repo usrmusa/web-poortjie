@@ -68,10 +68,12 @@
             <div class="mb-4">
                 <label class="block text-xs opacity-50 mb-1 pl-1">Full Name (max 3 names)</label>
                 <input type="text" id="display-name" name="display-name" placeholder="Full Name" class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition" required pattern="^[A-Za-z]+(\s[A-Za-z]+){0,2}$" title="Please enter your full name (max 3 names).">
+                <p class="text-[11px] opacity-50 mt-1 pl-1">Required for LaynFleet ride booking.</p>
             </div>
             <div class="mb-4">
                 <label class="block text-xs opacity-50 mb-1 pl-1">Phone Number (10 digits)</label>
                 <input type="tel" id="phone-number" name="phone-number" placeholder="e.g. 0123456789" maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                <p class="text-[11px] opacity-50 mt-1 pl-1">Optional for general account, but required for LaynFleet ride booking.</p>
             </div>
             <div class="mb-6">
                 <div class="flex justify-between items-center mb-1 pl-1">
@@ -213,11 +215,11 @@
         };
 
         const hasChanged =
-            currentData.displayName !== initialData.display_name ||
+            currentData.displayName !== initialData.displayName ||
             currentData.phone !== initialData.phone ||
             currentData.bio !== initialData.bio ||
-            currentData.photoUrl !== initialData.photo_url ||
-            currentData.listForSupport !== initialData.list_for_support;
+            currentData.photoUrl !== initialData.photoUrl ||
+            currentData.listForSupport !== initialData.listForSupport;
 
         if (hasChanged) {
             saveBtn.disabled = false;
@@ -322,35 +324,57 @@
         );
     }
 
+    // Image error fallback
+    profilePicture.addEventListener('error', () => {
+        profilePicture.src = DEFAULT_AVATAR;
+    });
+
     // Load profile
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            emailInput.value = user.email;
+            emailInput.value = user.email || '';
+            const defaultUsername = user.email ? user.email.split('@')[0] : '';
+            usernameInput.value = defaultUsername;
+
+            // Immediately set from Auth record if present (prevents blank field flash)
+            if (user.displayName) {
+                displayNameInput.value = user.displayName;
+            }
+            if (user.photoURL) {
+                photoUrlInput.value = user.photoURL;
+                profilePicture.src = user.photoURL;
+            }
+
             firebase.firestore().collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists) {
-                    const userData = doc.data();
-                    usernameInput.value = userData.username || '';
-                    displayNameInput.value = userData.display_name || '';
-                    phoneNumberInput.value = userData.phone || '';
-                    bioInput.value = userData.bio || '';
-                    photoUrlInput.value = userData.photo_url || '';
-                    profilePicture.src = userData.photo_url || DEFAULT_AVATAR;
+                const userData = doc.exists ? (doc.data() || {}) : {};
 
-                    if (userData.roles?.poortjie?.is_admin === true) {
-                        adminToggleSection.classList.remove('hidden');
-                        listForSupportToggle.checked = userData.roles?.poortjie?.list_for_support === true;
-                    }
+                const resolvedDisplayName = userData.displayName || user.displayName || '';
+                const resolvedPhone = userData.phone || user.phoneNumber || '';
+                const resolvedBio = userData.bio || '';
+                const resolvedPhotoUrl = userData.photoUrl || user.photoURL || '';
+                const resolvedUsername = userData.username || defaultUsername;
 
-                    initialData = {
-                        display_name: displayNameInput.value.trim(),
-                        phone: phoneNumberInput.value.trim(),
-                        bio: bioInput.value.trim(),
-                        photo_url: photoUrlInput.value,
-                        list_for_support: listForSupportToggle.checked
-                    };
-                    bioCounter.textContent = `${bioInput.value.length}/100`;
-                    checkChanges();
+                usernameInput.value = resolvedUsername;
+                displayNameInput.value = resolvedDisplayName;
+                phoneNumberInput.value = resolvedPhone;
+                bioInput.value = resolvedBio;
+                photoUrlInput.value = resolvedPhotoUrl;
+                profilePicture.src = resolvedPhotoUrl || DEFAULT_AVATAR;
+
+                if (userData.roles?.poortjie?.isAdmin === true) {
+                    adminToggleSection.classList.remove('hidden');
+                    listForSupportToggle.checked = userData.roles?.poortjie?.listForSupport === true;
                 }
+
+                initialData = {
+                    displayName: displayNameInput.value.trim(),
+                    phone: phoneNumberInput.value.trim(),
+                    bio: bioInput.value.trim(),
+                    photoUrl: photoUrlInput.value,
+                    listForSupport: listForSupportToggle.checked
+                };
+                bioCounter.textContent = `${bioInput.value.length}/100`;
+                checkChanges();
             }).catch(error => {
                 console.error("Error fetching user data:", error);
                 showStatus("Error loading profile data.", true);
@@ -386,7 +410,7 @@
         reader.readAsDataURL(file);
     });
 
-    // ---- FIXED: Apply crop uploads to Storage, saves URL (NO base64 in Firestore) ----
+    // ---- Android Spec: user-photos/{uid}/profile-{timestamp}.jpg (< 1MB) ----
     applyCropBtn.addEventListener('click', async () => {
         if (!cropper) return;
 
@@ -406,7 +430,8 @@
             if (!blob) throw new Error("Could not convert image");
 
             const storageRef = firebase.storage().ref();
-            const fileRef = storageRef.child(`users/${user.uid}/profile.jpg`);
+            const time = Date.now();
+            const fileRef = storageRef.child(`user-photos/${user.uid}/profile-${time}.jpg`);
 
             await fileRef.put(blob, {
                 contentType: "image/jpeg",
@@ -458,27 +483,33 @@
         const newDisplayName = displayNameInput.value.trim();
         const newPhoneNumber = phoneNumberInput.value.trim();
         const newBio = bioInput.value.trim();
-
-        // IMPORTANT: now this is a URL (Storage download URL), not base64
         const newPhotoUrl = photoUrlInput.value;
-
         const newListForSupport = listForSupportToggle.checked;
 
-        firebase.firestore().collection('users').doc(user.uid).update({
-            display_name: newDisplayName,
+        firebase.firestore().collection('users').doc(user.uid).set({
+            displayName: newDisplayName,
             phone: newPhoneNumber,
             bio: newBio,
-            photo_url: newPhotoUrl,
-            "roles.poortjie.list_for_support": newListForSupport,
-            updated_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
+            photoUrl: newPhotoUrl,
+            username: usernameInput.value || '',
+            roles: {
+                poortjie: {
+                    listForSupport: newListForSupport
+                }
+            },
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => {
+            try {
+                sessionStorage.removeItem('authUserCache');
+            } catch (e) {}
+
             showStatus("Profile updated successfully!");
             initialData = {
-                display_name: newDisplayName,
+                displayName: newDisplayName,
                 phone: newPhoneNumber,
                 bio: newBio,
-                photo_url: newPhotoUrl,
-                list_for_support: newListForSupport
+                photoUrl: newPhotoUrl,
+                listForSupport: newListForSupport
             };
             checkChanges();
 

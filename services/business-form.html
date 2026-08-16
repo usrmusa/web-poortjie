@@ -102,7 +102,7 @@
                     <div class="form-group mb-4">
                         <label for="owner-name" class="block mb-1 font-bold text-sm uppercase tracking-wider">Full Name</label>
                         <div class="relative">
-                            <input type="text" id="owner-name" name="owner_name" maxlength="50"
+                            <input type="text" id="owner-name" name="ownerName" maxlength="50"
                                    placeholder="Enter your full name"
                                    class="w-full p-3 rounded-lg bg-gray-100 dark:bg-slate-700 cursor-not-allowed text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition"
                                    readonly>
@@ -132,7 +132,7 @@
                     <div class="form-group mb-4">
                         <label for="business-name" class="block mb-1 font-bold text-sm uppercase tracking-wider">Business Name</label>
                         <div class="relative">
-                            <input type="text" id="business-name" name="business_name" maxlength="50"
+                            <input type="text" id="business-name" name="businessName" maxlength="50"
                                    placeholder="What is your business called?"
                                    class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
                         </div>
@@ -141,7 +141,7 @@
 
                     <div class="form-group mb-4">
                         <label for="sub-heading" class="block mb-1 font-bold text-sm uppercase tracking-wider">Sub Heading</label>
-                        <input type="text" id="sub-heading" name="sub_heading" maxlength="100"
+                        <input type="text" id="sub-heading" name="subHeading" maxlength="100"
                                placeholder="e.g. Your slogan"
                                class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
                     </div>
@@ -149,7 +149,7 @@
                     <div class="form-group mb-4">
                         <label for="business-type" class="block mb-1 font-bold text-sm uppercase tracking-wider">Type of Business</label>
                         <div class="relative">
-                            <select id="business-type" name="business_type"
+                            <select id="business-type" name="businessType"
                                     class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
                                 <option value="" disabled selected>Select a category</option>
                             </select>
@@ -186,7 +186,7 @@
                     <div class="form-group mb-4">
                         <label for="hours-type" class="block mb-1 font-bold text-sm uppercase tracking-wider">Operating Hours</label>
                         <div class="space-y-3">
-                            <select id="hours-type" name="hours_type"
+                            <select id="hours-type" name="hoursType"
                                     class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
                                 <option value="always">Always Open</option>
                                 <option value="selected">Selected Hours</option>
@@ -441,12 +441,12 @@
 
     function getCurrentDraftData() {
         return {
-            owner_name: ownerNameInput.value.trim(),
+            ownerName: ownerNameInput.value.trim(),
             email: emailInput.value.trim(),
             phone: phoneInput.value.trim(),
-            business_name: businessNameInput.value.trim(),
-            sub_heading: subHeadingInput.value.trim(),
-            business_type: businessTypeInput.value,
+            businessName: businessNameInput.value.trim(),
+            subHeading: subHeadingInput.value.trim(),
+            businessType: businessTypeInput.value,
             address: addressInput.value.trim() || null,
             latitude: latitudeInput.value ? parseFloat(latitudeInput.value) : null,
             longitude: longitudeInput.value ? parseFloat(longitudeInput.value) : null,
@@ -454,7 +454,7 @@
             whatsapp: whatsappInput.value.trim(),
             facebook: facebookInput.value.trim(),
             services: getServicesData(),
-            hours_type: hoursTypeSelect.value,
+            hoursType: hoursTypeSelect.value,
             hours: hoursInput.value.trim(),
             photos: uploadedPhotos,
             description: descInput.value.trim()
@@ -509,12 +509,12 @@
         const data = getSavedDraft();
         if (!data) return;
 
-        ownerNameInput.value = data.owner_name || ownerNameInput.value || '';
-        emailInput.value = data.email || emailInput.value || '';
-        phoneInput.value = data.phone || phoneInput.value || '';
-        businessNameInput.value = data.business_name || '';
-        subHeadingInput.value = data.sub_heading || '';
-        businessTypeInput.value = data.business_type || '';
+        ownerNameInput.value = data.ownerName || '';
+        emailInput.value = data.email || '';
+        phoneInput.value = data.phone || '';
+        businessNameInput.value = data.businessName || '';
+        subHeadingInput.value = data.subHeading || '';
+        businessTypeInput.value = data.businessType || '';
         addressInput.value = data.address || 'Poortjie';
         latitudeInput.value = data.latitude || '';
         longitudeInput.value = data.longitude || '';
@@ -523,7 +523,7 @@
         websiteInput.value = data.website || '';
         whatsappInput.value = data.whatsapp || '';
         facebookInput.value = data.facebook || '';
-        hoursTypeSelect.value = data.hours_type || 'always';
+        hoursTypeSelect.value = data.hoursType || 'always';
         hoursInput.value = data.hours || '';
         descInput.value = data.description || '';
         uploadedPhotos = Array.isArray(data.photos) ? data.photos : [];
@@ -550,18 +550,18 @@
         return db.collection('users').doc(user.uid).get().then((userDoc) => {
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                ownerNameInput.value = userData.display_name || user.displayName || '';
-                phoneInput.value = userData.phone || user.phoneNumber || '';
-                emailInput.value = userData.email || user.email || '';
+                ownerNameInput.value = userData.displayName || '';
+                phoneInput.value = userData.phone || '';
+                emailInput.value = userData.email || '';
             } else {
                 ownerNameInput.value = user.displayName || '';
-                phoneInput.value = user.phoneNumber || '';
+                phoneInput.value = '';
                 emailInput.value = user.email || '';
             }
         }).catch((error) => {
             console.error("Error loading user profile:", error);
             ownerNameInput.value = user.displayName || '';
-            phoneInput.value = user.phoneNumber || '';
+            phoneInput.value = '';
             emailInput.value = user.email || '';
         });
     }
@@ -609,14 +609,14 @@
 
                 if (app && app.status === 'pending') {
                     try {
-                        if (app.business_ref) {
+                        if (app.businessRef) {
                             await appRef.update({
-                                owner_name: firebase.firestore.FieldValue.delete(),
+                                ownerName: firebase.firestore.FieldValue.delete(),
                                 email: firebase.firestore.FieldValue.delete(),
                                 phone: firebase.firestore.FieldValue.delete(),
-                                business_name: firebase.firestore.FieldValue.delete(),
-                                sub_heading: firebase.firestore.FieldValue.delete(),
-                                business_type: firebase.firestore.FieldValue.delete(),
+                                businessName: firebase.firestore.FieldValue.delete(),
+                                subHeading: firebase.firestore.FieldValue.delete(),
+                                businessType: firebase.firestore.FieldValue.delete(),
                                 address: firebase.firestore.FieldValue.delete(),
                                 latitude: firebase.firestore.FieldValue.delete(),
                                 longitude: firebase.firestore.FieldValue.delete(),
@@ -628,7 +628,7 @@
                                 photos: firebase.firestore.FieldValue.delete(),
                                 services: firebase.firestore.FieldValue.delete(),
                                 status: 'approved',
-                                updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                             });
                         } else {
                             await appRef.delete();
@@ -660,14 +660,14 @@
             const appRef = db.collection('poortjie').doc('applications').collection('listings').doc(appId);
 
             if (app && app.status === 'pending') {
-                if (app.business_ref) {
+                if (app.businessRef) {
                     await appRef.update({
-                        owner_name: firebase.firestore.FieldValue.delete(),
+                        ownerName: firebase.firestore.FieldValue.delete(),
                         email: firebase.firestore.FieldValue.delete(),
                         phone: firebase.firestore.FieldValue.delete(),
-                        business_name: firebase.firestore.FieldValue.delete(),
-                        sub_heading: firebase.firestore.FieldValue.delete(),
-                        business_type: firebase.firestore.FieldValue.delete(),
+                        businessName: firebase.firestore.FieldValue.delete(),
+                        subHeading: firebase.firestore.FieldValue.delete(),
+                        businessType: firebase.firestore.FieldValue.delete(),
                         address: firebase.firestore.FieldValue.delete(),
                         latitude: firebase.firestore.FieldValue.delete(),
                         longitude: firebase.firestore.FieldValue.delete(),
@@ -679,7 +679,7 @@
                         photos: firebase.firestore.FieldValue.delete(),
                         services: firebase.firestore.FieldValue.delete(),
                         status: 'approved',
-                        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
                     await appRef.delete();
@@ -698,33 +698,45 @@
         }
     };
 
-    const renderPendingApplications = (pendingApplications) => {
-        if (!pendingApplications || pendingApplications.length === 0) {
-            pendingStatusContainer.innerHTML = '';
+    const renderPendingApplications = (pendingApps) => {
+        if (!pendingApps || pendingApps.length === 0) {
             pendingStatusContainer.classList.add('hidden');
             return;
         }
 
-        pendingStatusContainer.classList.remove('hidden');
-        pendingStatusContainer.innerHTML = pendingApplications.map(app => `
-            <div class="p-6 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 text-center lg:text-left">
-                <div class="flex flex-col items-center lg:items-start gap-4">
-                    <div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
-                        <i class="fa-solid fa-clock-rotate-left text-xl animate-pulse"></i>
+        pendingStatusContainer.innerHTML = pendingApps.map(app => `
+            <div class="p-6 rounded-2xl bg-yellow-50 dark:bg-yellow-900/10 border-2 border-yellow-200 dark:border-yellow-900/30 text-yellow-800 dark:text-yellow-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+                            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Application Under Review</h3>
+                            <p class="text-xs opacity-75">Submitted for verification</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-yellow-800 dark:text-yellow-300">Application Pending</h3>
-                        <p class="text-sm text-yellow-700 dark:text-yellow-400 opacity-90 mt-1">
-                            Your application for <span class="font-bold">${app.business_name || 'this business'}</span> is currently being reviewed.
-                        </p>
-                    </div>
-                    <button onclick="cancelPendingApplication('${app.id}')" class="px-6 py-2 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 font-bold rounded-xl border border-red-100 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-trash-can"></i>
-                        Cancel Application
+                    <span class="text-xs font-bold px-3 py-1 bg-yellow-200 dark:bg-yellow-800 rounded-full text-yellow-900 dark:text-yellow-100">
+                        Pending Approval
+                    </span>
+                </div>
+
+                <div class="bg-white/60 dark:bg-slate-900/60 p-4 rounded-xl mb-4 border border-yellow-100 dark:border-yellow-900/20">
+                    <p class="text-sm leading-relaxed">
+                        Your application for <span class="font-bold">${app.businessName || 'this business'}</span> is currently being reviewed.
+                    </p>
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick="cancelPendingApplication('${app.id}')"
+                            class="px-4 py-2 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition font-bold text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-trash-can"></i> Cancel Application
                     </button>
                 </div>
             </div>
         `).join('');
+
+        pendingStatusContainer.classList.remove('hidden');
     };
 
     function resetFormState() {
@@ -1134,7 +1146,7 @@
     };
 
     const renderUserApplications = async (apps) => {
-        userCategories = apps.map(app => app.business_type).filter(Boolean);
+        userCategories = apps.map(app => app.businessType).filter(Boolean);
 
         if (!apps || apps.length === 0) {
             applicationsSection.classList.add('hidden');
@@ -1166,9 +1178,9 @@
 
             let displayData = {...app};
 
-            if (app.business_ref && app.status === 'approved') {
+            if (app.businessRef && app.status === 'approved') {
                 try {
-                    const docSnap = await db.doc(app.business_ref).get();
+                    const docSnap = await db.doc(app.businessRef).get();
                     if (docSnap.exists) {
                         displayData = {...app, ...docSnap.data()};
                     }
@@ -1180,8 +1192,8 @@
             return `
                 <div class="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-700 flex justify-between items-center">
                     <div>
-                        <h4 class="font-bold text-sm">${displayData.business_name || 'Untitled business'}</h4>
-                        <p class="text-xs opacity-60">${displayData.business_type || ''}</p>
+                        <h4 class="font-bold text-sm">${displayData.businessName || 'Untitled business'}</h4>
+                        <p class="text-xs opacity-60">${displayData.businessType || ''}</p>
                     </div>
                     <div class="flex items-center gap-3">
                         ${getStatusBadge(app.status)}
@@ -1221,14 +1233,14 @@
 
             let displayData = app;
 
-            if (app.business_ref && (!app.business_name || app.status === 'approved')) {
+            if (app.businessRef && (!app.businessName || app.status === 'approved')) {
                 try {
-                    const docSnap = await db.doc(app.business_ref).get();
+                    const docSnap = await db.doc(app.businessRef).get();
                     if (docSnap.exists) {
                         displayData = {...app, ...docSnap.data(), id: appId};
                     }
                 } catch (error) {
-                    console.error("Error pulling data from business_ref:", error);
+                    console.error("Error pulling data from businessRef:", error);
                 }
             }
 
@@ -1239,15 +1251,15 @@
             applicationsSection.classList.add('hidden');
             newListingBtn.classList.add('hidden');
             cancelFormBtn.classList.remove('hidden');
-            formTitle.textContent = `Editing: ${displayData.business_name || 'Business Listing'}`;
+            formTitle.textContent = `Editing: ${displayData.businessName || 'Business Listing'}`;
             businessForm.scrollIntoView({behavior: 'smooth'});
 
-            ownerNameInput.value = displayData.owner_name || '';
+            ownerNameInput.value = displayData.ownerName || '';
             emailInput.value = displayData.email || '';
             phoneInput.value = displayData.phone || '';
-            businessNameInput.value = displayData.business_name || '';
-            subHeadingInput.value = displayData.sub_heading || '';
-            businessTypeInput.value = displayData.business_type || '';
+            businessNameInput.value = displayData.businessName || '';
+            subHeadingInput.value = displayData.subHeading || '';
+            businessTypeInput.value = displayData.businessType || '';
             addressInput.value = displayData.address || '';
             websiteInput.value = displayData.website || '';
             whatsappInput.value = displayData.whatsapp || '';
@@ -1381,9 +1393,9 @@
         if (currentEditingAppId && originalAppData) {
             const currentData = {
                 phone: phoneInput.value.trim(),
-                business_name: businessNameInput.value.trim(),
-                sub_heading: subHeadingInput.value.trim(),
-                business_type: businessTypeInput.value,
+                businessName: businessNameInput.value.trim(),
+                subHeading: subHeadingInput.value.trim(),
+                businessType: businessTypeInput.value,
                 address: addressInput.value.trim() || null,
                 latitude: latitudeInput.value ? parseFloat(latitudeInput.value) : null,
                 longitude: longitudeInput.value ? parseFloat(longitudeInput.value) : null,
@@ -1396,9 +1408,9 @@
 
             const fieldsToCompare = [
                 'phone',
-                'business_name',
-                'sub_heading',
-                'business_type',
+                'businessName',
+                'subHeading',
+                'businessType',
                 'address',
                 'latitude',
                 'longitude',
@@ -1625,8 +1637,8 @@
             const applicationsRef = db.collection('poortjie')
                 .doc('applications')
                 .collection('listings')
-                .where('user_id', '==', user.uid)
-                .orderBy('created_at', 'desc');
+                .where('userId', '==', user.uid)
+                .orderBy('createdAt', 'desc');
 
             applicationsRef.onSnapshot(snapshot => {
                 applications = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
@@ -1754,14 +1766,14 @@
         </span>`;
 
         const businessData = {
-            user_id: user.uid,
-            user_email: user.email,
-            owner_name: ownerNameInput.value.trim(),
+            userId: user.uid,
+            userEmail: user.email,
+            ownerName: ownerNameInput.value.trim(),
             email: emailInput.value.trim(),
             phone: phoneInput.value.trim(),
-            business_name: businessNameInput.value.trim(),
-            sub_heading: subHeadingInput.value.trim(),
-            business_type: businessTypeInput.value,
+            businessName: businessNameInput.value.trim(),
+            subHeading: subHeadingInput.value.trim(),
+            businessType: businessTypeInput.value,
             address: addressInput.value.trim() || null,
             latitude: latitudeInput.value ? parseFloat(latitudeInput.value) : null,
             longitude: longitudeInput.value ? parseFloat(longitudeInput.value) : null,
@@ -1773,11 +1785,11 @@
             photos: uploadedPhotos,
             description: descInput.value.trim(),
             status: 'pending',
-            updated_at: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         if (!currentEditingAppId) {
-            businessData.created_at = firebase.firestore.FieldValue.serverTimestamp();
+            businessData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         }
 
         const appPromise = currentEditingAppId
