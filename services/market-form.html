@@ -520,7 +520,7 @@
                 document.getElementById('item-price').value = data.price;
                 document.getElementById('item-category').value = data.category;
                 descInput.value = data.description;
-                addressInput.value = data.location || data.address || 'Poortjie';
+                addressInput.value = data.location || 'Poortjie';
                 selectedLat = data.latitude || null;
                 selectedLng = data.longitude || null;
                 latitudeInput.value = selectedLat;
@@ -555,16 +555,32 @@
         submitBtn.disabled = true;
         submitBtnText.textContent = editingId ? 'Updating...' : 'Posting...';
 
+        let sellerPhone = user.phoneNumber || '';
+        let sellerName = user.displayName || 'Seller';
+        let sellerPhoto = user.photoURL || '';
+
+        try {
+            const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                const uData = userDoc.data();
+                if (uData.phone) sellerPhone = uData.phone;
+                if (uData.displayName) sellerName = uData.displayName;
+                if (uData.photoUrl) sellerPhoto = uData.photoUrl;
+            }
+        } catch (err) {
+            console.warn("Could not fetch user profile details:", err);
+        }
+
         const data = {
             userId: user.uid,
-            sellerName: user.displayName || 'Anonymous',
-            sellerPhone: user.phoneNumber || user.phone || '',
-            sellerPhoto: user.photoUrl || user.photoURL || '',
+            sellerName: sellerName,
+            sellerPhone: sellerPhone,
+            sellerPhoto: sellerPhoto,
             title: document.getElementById('item-title').value.trim(),
             price: document.getElementById('item-price').value,
             category: document.getElementById('item-category').value,
             description: descInput.value.trim(),
-            location: addressInput.value.trim(),
+            location: addressInput.value.trim() || 'Poortjie',
             latitude: selectedLat,
             longitude: selectedLng,
             images: uploadedPhotos,
@@ -577,12 +593,6 @@
         }
 
         try {
-            const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-            if (userDoc.exists) {
-                data.sellerPhone = userDoc.data().phone || '';
-                data.sellerName = userDoc.data().displayName || data.sellerName;
-            }
-
             if (editingId) {
                 await firebase.firestore().collection('poortjie').doc('market').collection('items').doc(editingId).update(data);
             } else {

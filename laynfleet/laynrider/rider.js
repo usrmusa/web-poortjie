@@ -86,7 +86,7 @@
   let bookingState = {
     type: 'ASAP', // 'ASAP' | 'SCHEDULED'
     pickup: {
-      address: 'Poortjie Taxi Rank',
+      address: '',
       lat: SERVICE_AREA.center.lat,
       lng: SERVICE_AREA.center.lng
     },
@@ -993,7 +993,16 @@
     }
 
     setBookingType('ASAP');
-    setPickupLocation('Poortjie Taxi Rank', SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
+    if (bookingState.pickup && bookingState.pickup.address) {
+      setPickupLocation(bookingState.pickup.address, bookingState.pickup.lat, bookingState.pickup.lng);
+    } else {
+      if (pickupAddressInput) pickupAddressInput.value = '';
+      if (pickupGeofenceBadge) {
+        pickupGeofenceBadge.className = 'geofence-badge';
+        pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
+      }
+      if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+    }
     if (dropoffAddressInput) dropoffAddressInput.value = bookingState.dropoff.address || '';
     if (bookingNoteInput) bookingNoteInput.value = '';
     if (bookingNoteCount) bookingNoteCount.textContent = '0/64';

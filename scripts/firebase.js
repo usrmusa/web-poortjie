@@ -1,3 +1,10 @@
+/**
+ * firebase.js — Universal Firebase Configuration & Initialization
+ * 
+ * Single source of truth for Firebase across the entire Poortjie & LaynFleet web app.
+ * Exports db (Firestore), auth (Authentication), storage (Cloud Storage),
+ * functions (Cloud Functions), and rtdb (Realtime Database).
+ */
 const firebaseConfig = {
   apiKey: "AIzaSyANCpYHeLyWkgVtWL06xpI7XsP08xu9GPA",
   authDomain: "digilayn-projects.firebaseapp.com",
@@ -5,16 +12,25 @@ const firebaseConfig = {
   storageBucket: "digilayn-projects.firebasestorage.app",
   messagingSenderId: "95485356681",
   appId: "1:95485356681:web:3cf619a266961009e17458",
-  measurementId: "G-27H9WZSCGQ"
+  measurementId: "G-27H9WZSCGQ",
+  // Realtime Database instance for Europe West (LaynFleet presence)
+  databaseURL: "https://digilayn-projects-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase once globally
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const db = firebase.firestore();
 const auth = firebase.auth();
-let analytics;
+const storage = typeof firebase.storage === 'function' ? firebase.storage() : null;
+const functions = typeof firebase.functions === 'function' ? firebase.app().functions('us-central1') : null;
+const rtdb = typeof firebase.database === 'function' ? firebase.database() : null;
+
+let analytics = null;
 try {
-  if (location.protocol !== 'file:') {
+  if (typeof firebase.analytics === 'function' && location.protocol !== 'file:') {
     analytics = firebase.analytics();
   }
 } catch (e) {
@@ -22,20 +38,15 @@ try {
 }
 
 // Enable offline persistence with multi-tab support
-if (location.protocol !== 'file:') {
-  // Use a more robust check for Firestore before calling methods
-  if (typeof firebase.firestore === 'function') {
-    // Newer settings object to avoid deprecation warnings.
-    // In SDK v9 compat, we use the older method but with settings if needed.
-    // Actually, v9 compat STILL uses enablePersistence.
-    db.enablePersistence({synchronizeTabs: true})
-      .catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn('Firebase persistence failed: multiple tabs open.');
-        } else if (err.code === 'unimplemented') {
-          console.warn('Firebase persistence failed: browser does not support it.');
-        }
-      });
-  }
+if (location.protocol !== 'file:' && typeof firebase.firestore === 'function') {
+  db.enablePersistence({ synchronizeTabs: true })
+    .catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Firebase persistence warning: multiple tabs open.');
+      } else if (err.code === 'unimplemented') {
+        console.warn('Firebase persistence warning: browser does not support it.');
+      }
+    });
 }
+
 
