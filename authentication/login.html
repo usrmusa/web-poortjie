@@ -288,12 +288,26 @@
 
         AuthStore.signIn(email, password)
             .then(async (userCredential) => {
-                const redirectUrl = sessionStorage.getItem('redirectUrl');
-                if (redirectUrl && !redirectUrl.includes('login.html') && !redirectUrl.includes('register.html')) {
-                    sessionStorage.removeItem('redirectUrl');
-                    window.top.location.replace(redirectUrl);
+                const urlParams = new URLSearchParams(window.location.search);
+                const queryRedirect = urlParams.get('redirect') || urlParams.get('returnUrl');
+                let targetUrl = queryRedirect || sessionStorage.getItem('redirectUrl');
+
+                if (!targetUrl && document.referrer) {
+                    try {
+                        const refUrl = new URL(document.referrer);
+                        if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login.html') && !refUrl.pathname.includes('register.html')) {
+                            targetUrl = document.referrer;
+                        }
+                    } catch (e) {}
+                }
+
+                sessionStorage.removeItem('redirectUrl');
+
+                if (targetUrl && !targetUrl.includes('login.html') && !targetUrl.includes('register.html')) {
+                    window.top.location.replace(targetUrl);
+                } else if (window.history.length > 1 && document.referrer && !document.referrer.includes('login.html') && !document.referrer.includes('register.html')) {
+                    window.history.back();
                 } else {
-                    sessionStorage.removeItem('redirectUrl');
                     window.top.location.replace('../index.html');
                 }
             })
@@ -305,6 +319,22 @@
                 validateForm();
             });
     });
+
+    // Capture referrer on page load if not already set in sessionStorage
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryRedirect = urlParams.get('redirect') || urlParams.get('returnUrl');
+        if (queryRedirect && !queryRedirect.includes('login.html') && !queryRedirect.includes('register.html')) {
+            sessionStorage.setItem('redirectUrl', queryRedirect);
+        } else if (!sessionStorage.getItem('redirectUrl') && document.referrer) {
+            try {
+                const refUrl = new URL(document.referrer);
+                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login.html') && !refUrl.pathname.includes('register.html')) {
+                    sessionStorage.setItem('redirectUrl', document.referrer);
+                }
+            } catch (e) {}
+        }
+    })();
 </script>
 
 </body>
