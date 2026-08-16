@@ -17,18 +17,48 @@
   }
   const auth = firebase.auth();
   const db = firebase.firestore();
+  // Cloud Functions in the dispatch region — mirrors Android DispatchGateway
+  // (FirebaseFunctions.getInstance("us-central1")). All post-creation booking
+  // transitions go through these callables so the server stays authoritative.
+  const functions = firebase.app().functions(global.FUNCTIONS_REGION || 'us-central1');
+  // Realtime Database for driver presence cross-check (europe-west1 instance).
+  const rtdb = firebase.database();
+  // Cloud Storage for profile photo uploads (users/{uid}/profile/{ts}.jpg — mirrors Android StorageRepository).
+  const storage = firebase.storage();
 
   const FS = global.FS;
+  const RTDB_LOCATIONS = global.RTDB_LOCATIONS || 'driverLocations';
+  const HEARTBEAT_FRESHNESS_WINDOW_MS = global.HEARTBEAT_FRESHNESS_WINDOW_MS || 60000;
   const SERVICE_AREA = global.SERVICE_AREA || {
     center: { lat: -26.45600, lng: 27.77087 },
     radiusMeters: 1637
   };
 
+  /**
+   * Invoke a dispatch Cloud Function callable (server-authoritative). Mirrors
+   * DispatchGateway.call() on Android. Never mutate booking status directly.
+   */
+  async function callFn(name, payload) {
+    const callable = functions.httpsCallable(name);
+    const res = await callable(payload || {});
+    return res && res.data;
+  }
+
+  /** Reads an epoch-millis field stored as a Firestore Timestamp or a Long. */
+  function readEpochMillis(value) {
+    if (value == null) return null;
+    if (typeof value === 'number') return value;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.seconds === 'number') return value.seconds * 1000;
+    return null;
+  }
+
   // Collections
   const driversCol = db.collection(FS.laynfleet).doc(FS.laynfleetDoc).collection(FS.drivers);
   const ridersCol = db.collection(FS.laynfleet).doc(FS.laynfleetDoc).collection(FS.riders);
   const bookingsCol = db.collection(FS.laynfleet).doc(FS.laynfleetDoc).collection(FS.bookings);
-  const ratingsCol = db.collection(FS.laynfleet).doc(FS.laynfleetDoc).collection('ratings');
+  const ratingsCol = db.collection(FS.laynfleet).doc(FS.laynfleetDoc).collection(FS.ratings || 'ratings');
+  const reviewLikesCol = db.collection(FS.laynfleet).doc(FS.laynfleetDoc).collection(FS.reviewLikes || 'reviewLikes');
   const usersCol = db.collection(FS.users);
 
   // State
@@ -216,6 +246,28 @@
   // Toast
   const toastEl = document.getElementById('toast');
 
+  // Profile Completion Modal
+  const profileModal = document.getElementById('profile-modal');
+  const profileModalClose = document.getElementById('profile-modal-close');
+  const profileAvatarRing = document.getElementById('profile-avatar-ring');
+  const profileAvatarPreview = document.getElementById('profile-avatar-preview');
+  const profilePhotoInput = document.getElementById('profile-photo-input');
+  const profilePhotoHint = document.getElementById('profile-photo-hint');
+  const profileNameInput = document.getElementById('profile-name-input');
+  const profilePhoneInput = document.getElementById('profile-phone-input');
+  const profileNameField = document.getElementById('field-name');
+  const profilePhoneField = document.getElementById('field-phone');
+  const profileModalError = document.getElementById('profile-modal-error');
+  const profileSaveBtn = document.getElementById('profile-save-btn');
+  const heroNameEl = document.getElementById('hero-name');
+  const checkNameEl = document.getElementById('check-name');
+  const checkPhoneEl = document.getElementById('check-phone');
+  const checkPhotoEl = document.getElementById('check-photo');
+
+  // Profile completion working state
+  let selectedProfilePhotoFile = null;
+  let pendingBookingDriverId = undefined; // undefined = none; null = Quick Ride; string = specific driver
+
   /** Web Audio Chime Notification on Quote Received */
   function playQuoteChime() {
     try {
@@ -325,6 +377,159 @@
     };
   }
 
+  /** ============================================================
+   * INLINE PROFILE COMPLETION (fill missing details to request)
+   * ============================================================ */
+
+  /** Reflect completeness onto the dashboard checklist + hero greeting. */
+  function updateProfileChecklist(completeness) {
+    const setDone = (el, done) => {
+      if (!el) return;
+      el.classList.toggle('is-done', !!done);
+    };
+    setDone(checkNameEl, completeness.nameOk);
+    setDone(checkPhoneEl, completeness.phoneOk);
+    setDone(checkPhotoEl, completeness.photoOk);
+  }
+
+  /**
+   * Open the inline completion modal. `resumeDriverId` remembers what the rider
+   * was trying to book (null = Quick Ride, string = specific driver) so we can
+   * continue straight into booking once the profile is valid.
+   */
+  function openProfileModal(resumeDriverId) {
+    pendingBookingDriverId = resumeDriverId;
+    if (profileModalError) profileModalError.classList.add('is-hidden');
+    selectedProfilePhotoFile = null;
+
+    const completeness = checkProfileCompleteness(userProfile, currentUser || {});
+
+    if (profileNameInput) profileNameInput.value = completeness.name || '';
+    if (profilePhoneInput) profilePhoneInput.value = (completeness.phone || '').replace(/\D/g, '').slice(0, 10);
+
+    const photo = completeness.photo || (currentUser && currentUser.photoURL) || '';
+    if (profileAvatarPreview) {
+      profileAvatarPreview.src = photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(completeness.name || 'R')}&background=22c55e&color=fff&size=160`;
+    }
+    if (profilePhotoHint) {
+      profilePhotoHint.textContent = completeness.photoOk ? 'Looks good — tap to change' : 'Tap the camera to add a photo';
+    }
+
+    markMissingFields(completeness);
+    if (profileModal) profileModal.classList.remove('is-hidden');
+  }
+
+  function closeProfileModal() {
+    if (profileModal) profileModal.classList.add('is-hidden');
+    selectedProfilePhotoFile = null;
+  }
+
+  /** Highlight which fields still need attention. */
+  function markMissingFields(completeness) {
+    if (profileNameField) profileNameField.classList.toggle('is-missing', !completeness.nameOk);
+    if (profilePhoneField) profilePhoneField.classList.toggle('is-missing', !completeness.phoneOk);
+    if (profileAvatarRing) profileAvatarRing.classList.toggle('is-missing', !completeness.photoOk);
+  }
+
+  /** Preview a picked photo locally before upload. */
+  function handleProfilePhotoPick(e) {
+    const file = e && e.target && e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please choose an image file.');
+      return;
+    }
+    selectedProfilePhotoFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (profileAvatarPreview) profileAvatarPreview.src = ev.target.result;
+      if (profileAvatarRing) profileAvatarRing.classList.remove('is-missing');
+      if (profilePhotoHint) profilePhotoHint.textContent = 'Photo ready — tap Save';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /** Upload the profile photo to users/{uid}/profile/{ts}.jpg (mirrors Android). */
+  async function uploadProfilePhoto(file, uid) {
+    const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'jpg';
+    const path = `users/${uid}/profile/${Date.now()}.${ext}`;
+    const ref = storage.ref().child(path);
+    await ref.put(file, { contentType: file.type || 'image/jpeg' });
+    return ref.getDownloadURL();
+  }
+
+  /** Validate + persist the profile, then resume the pending booking if valid. */
+  async function handleProfileSave() {
+    if (!currentUser) return;
+    if (profileModalError) profileModalError.classList.add('is-hidden');
+
+    const name = (profileNameInput ? profileNameInput.value : '').trim();
+    const phone = (profilePhoneInput ? profilePhoneInput.value : '').replace(/\D/g, '');
+    const hasExistingPhoto = Boolean((userProfile && userProfile.photoUrl) || (currentUser && currentUser.photoURL));
+
+    if (!isValidName(name)) {
+      return showProfileError('Enter your full name (1–3 words, letters only).');
+    }
+    if (!isValidPhone(phone)) {
+      return showProfileError('Enter a valid 10-digit phone number.');
+    }
+    if (!selectedProfilePhotoFile && !hasExistingPhoto) {
+      return showProfileError('Add a profile photo so drivers can recognise you.');
+    }
+
+    try {
+      if (profileSaveBtn) {
+        profileSaveBtn.disabled = true;
+        profileSaveBtn.innerHTML = '<div class="spinner"></div> Saving…';
+      }
+
+      let photoUrl = (userProfile && userProfile.photoUrl) || (currentUser && currentUser.photoURL) || '';
+      if (selectedProfilePhotoFile) {
+        photoUrl = await uploadProfilePhoto(selectedProfilePhotoFile, currentUser.uid);
+      }
+
+      // Persist to shared identity doc (camelCase, merge) — matches Android upsertUser.
+      await usersCol.doc(currentUser.uid).set({
+        displayName: name,
+        phone: phone,
+        photoUrl: photoUrl,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // Refresh local profile + UI.
+      userProfile = Object.assign({}, userProfile, { displayName: name, phone: phone, photoUrl: photoUrl });
+      userCache.set(currentUser.uid, userProfile);
+      renderUserState(currentUser, userProfile);
+
+      showToast('Profile saved!');
+      closeProfileModal();
+
+      // Resume whatever the rider was trying to book.
+      if (isProfileComplete && pendingBookingDriverId !== undefined) {
+        const resume = pendingBookingDriverId;
+        pendingBookingDriverId = undefined;
+        setTimeout(() => openBookingForm(resume), 150);
+      }
+    } catch (err) {
+      console.error('Failed to save profile:', err);
+      showProfileError('Could not save your profile. Please try again.');
+    } finally {
+      if (profileSaveBtn) {
+        profileSaveBtn.disabled = false;
+        profileSaveBtn.textContent = 'Save & Continue';
+      }
+    }
+  }
+
+  function showProfileError(msg) {
+    if (profileModalError) {
+      profileModalError.textContent = msg;
+      profileModalError.classList.remove('is-hidden');
+    } else {
+      showToast(msg);
+    }
+  }
+
   /** Switch primary UI views */
   function showView(viewName) {
     if (bootView) bootView.classList.add('is-hidden');
@@ -359,7 +564,7 @@
       case 'MINI_BUS': return 'Mini Bus';
       case 'BAKKIE': return 'Bakkie';
       case 'MOTORBIKE': return 'Motorbike';
-      case 'TUKTUK': return 'TukTuk';
+      case 'TUK_TUK': return 'TukTuk';
       default: return type ? type.replace(/_/g, ' ') : 'Private Car';
     }
   }
@@ -393,8 +598,13 @@
     }
   }
 
-  /** Fetch driver ratings and reviews from Firestore */
+  /**
+   * Fetch a driver's real ratings/reviews from Firestore. Mirrors Android
+   * FirestoreRatingRepository.observeDriverReviews (targetUid + RIDER_TO_DRIVER).
+   * STRICT: no synthetic/sample fallback data — returns [] when there are none.
+   */
   async function getDriverReviews(driverUid) {
+    if (!driverUid) return [];
     if (driverReviewsCache.has(driverUid)) {
       return driverReviewsCache.get(driverUid);
     }
@@ -402,46 +612,24 @@
       const snap = await ratingsCol
         .where('targetUid', '==', driverUid)
         .where('direction', '==', 'RIDER_TO_DRIVER')
-        .limit(10)
+        .limit(20)
         .get();
 
-      let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-      if (list.length === 0) {
-        // High quality default sample reviews for verified drivers
-        list = [
-          {
-            id: 'r_default_1',
-            byName: 'Sipho N.',
-            stars: 5,
-            review: 'Very punctual driver, clean vehicle and smooth ride.',
-            createdAt: Date.now() - 86400000
-          },
-          {
-            id: 'r_default_2',
-            byName: 'Nomvula M.',
-            stars: 5,
-            review: 'Safe driver, friendly and knows Poortjie very well.',
-            createdAt: Date.now() - 172800000
-          }
-        ];
-      }
+      const list = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       driverReviewsCache.set(driverUid, list);
       return list;
     } catch (e) {
       console.warn('Error fetching driver reviews:', e);
-      return [
-        {
-          id: 'r_default_1',
-          byName: 'Poortjie Passenger',
-          stars: 5,
-          review: 'Reliable and friendly service.',
-          createdAt: Date.now() - 86400000
-        }
-      ];
+      return [];
     }
+  }
+
+  /** Normalise a rating doc's reviewer name (Android writes reviewerName; older docs used byName). */
+  function reviewerNameOf(r) {
+    return (r && (r.reviewerName || r.byName)) || 'Rider';
   }
 
   /** ============================================================
@@ -493,48 +681,97 @@
     }
   };
 
-  /** Live listener for online drivers */
-  function startDriverListener() {
-    if (driverListenersUnsub) {
-      driverListenersUnsub();
-      driverListenersUnsub = null;
+  /**
+   * Live listener for online drivers with RTDB presence cross-check.
+   *
+   * Mirrors Android FirestoreDriverRepository.observeOnlineDrivers: a driver is
+   * only shown if Firestore says approved+online AND their Realtime Database
+   * heartbeat (driverLocations/{uid}) is online and fresh (≤ 60s). This prevents
+   * stale-online drivers from appearing when their app was killed without going
+   * offline. STRICT: no synthetic rating/trip/review fallbacks.
+   */
+  let firestoreDriverDocs = [];
+  let rtdbPresence = {}; // uid -> { online, updatedAt, lat, lng }
+  let presenceReevalInterval = null;
+  let rtdbPresenceRef = null;
+  let rtdbPresenceHandler = null;
+
+  /** Pure presence evaluator (mirrors Android isDriverPresenceActive). */
+  function isDriverPresenceActive(presence, now) {
+    if (!presence || presence.online !== true) return false;
+    const ts = presence.updatedAt;
+    if (typeof ts !== 'number') return false;
+    const diff = now - ts;
+    return diff >= -10000 && diff <= HEARTBEAT_FRESHNESS_WINDOW_MS;
+  }
+
+  async function reevaluateDrivers() {
+    const now = Date.now();
+    const activeDocs = firestoreDriverDocs.filter((doc) =>
+      isDriverPresenceActive(rtdbPresence[doc.uid], now)
+    );
+
+    const drivers = [];
+    for (const doc of activeDocs) {
+      const data = doc.data;
+      const userDoc = await getDriverIdentity(doc.uid);
+      const reviews = await getDriverReviews(doc.uid);
+      const latestComment = (reviews && reviews.length > 0) ? reviews[0].review : '';
+      const loc = rtdbPresence[doc.uid] || {};
+
+      drivers.push({
+        uid: doc.uid,
+        approvalStatus: data.approvalStatus,
+        online: data.online === true,
+        busy: data.busy === true,
+        ratingAvg: typeof data.ratingAvg === 'number' ? data.ratingAvg : 0,
+        ratingCount: typeof data.ratingCount === 'number' ? data.ratingCount : 0,
+        tripsCount: typeof data.tripsCount === 'number' ? data.tripsCount : 0,
+        latestComment: latestComment,
+        vehicle: data.vehicle || {},
+        lat: typeof loc.lat === 'number' ? loc.lat : 0,
+        lng: typeof loc.lng === 'number' ? loc.lng : 0,
+        user: {
+          displayName: userDoc.displayName || '',
+          photoUrl: userDoc.photoUrl || '',
+          phone: userDoc.phone || ''
+        }
+      });
     }
 
-    driverListenersUnsub = driversCol.onSnapshot(async (snapshot) => {
-      const drivers = [];
+    allOnlineDrivers = drivers;
+    renderDrivers();
+  }
 
-      for (const doc of snapshot.docs) {
-        const data = doc.data() || {};
-        if (data.approvalStatus === 'APPROVED' && data.online === true) {
-          const userDoc = await getDriverIdentity(doc.id);
-          const reviews = await getDriverReviews(doc.id);
-          const latestComment = (reviews && reviews.length > 0) ? reviews[0].review : 'Verified Poortjie Driver';
+  function startDriverListener() {
+    stopDriverListener();
 
-          drivers.push({
-            uid: doc.id,
-            approvalStatus: data.approvalStatus,
-            online: data.online === true,
-            busy: data.busy === true,
-            ratingAvg: typeof data.ratingAvg === 'number' ? data.ratingAvg : 5.0,
-            ratingCount: data.ratingCount || (reviews ? reviews.length : 12),
-            tripsCount: data.tripsCount || 18,
-            latestComment: latestComment,
-            vehicle: data.vehicle || {},
-            user: {
-              displayName: userDoc.displayName || 'Poortjie Driver',
-              photoUrl: userDoc.photoUrl || '',
-              phone: userDoc.phone || ''
-            }
-          });
-        }
-      }
+    // Firestore: approved + online drivers.
+    driverListenersUnsub = driversCol
+      .where('approvalStatus', '==', 'APPROVED')
+      .where('online', '==', true)
+      .onSnapshot((snapshot) => {
+        firestoreDriverDocs = snapshot.docs.map((doc) => ({ uid: doc.id, data: doc.data() || {} }));
+        reevaluateDrivers();
+      }, (error) => {
+        console.error('Error observing online drivers:', error);
+        showToast('Error loading online drivers.');
+      });
 
-      allOnlineDrivers = drivers;
-      renderDrivers();
-    }, (error) => {
-      console.error('Error observing online drivers:', error);
-      showToast('Error loading online drivers.');
+    // Realtime Database: driver presence heartbeats.
+    rtdbPresenceRef = rtdb.ref(RTDB_LOCATIONS);
+    rtdbPresenceHandler = rtdbPresenceRef.on('value', (snap) => {
+      rtdbPresence = snap.val() || {};
+      reevaluateDrivers();
+    }, (err) => {
+      console.warn('RTDB presence listener error:', err);
+      rtdbPresence = {};
+      reevaluateDrivers();
     });
+
+    // Periodic re-evaluation so stale heartbeats expire off the list (Android
+    // re-emits every 15s for exactly this reason).
+    presenceReevalInterval = setInterval(reevaluateDrivers, 15000);
   }
 
   function stopDriverListener() {
@@ -542,6 +779,17 @@
       driverListenersUnsub();
       driverListenersUnsub = null;
     }
+    if (rtdbPresenceRef && rtdbPresenceHandler) {
+      rtdbPresenceRef.off('value', rtdbPresenceHandler);
+    }
+    rtdbPresenceRef = null;
+    rtdbPresenceHandler = null;
+    if (presenceReevalInterval) {
+      clearInterval(presenceReevalInterval);
+      presenceReevalInterval = null;
+    }
+    firestoreDriverDocs = [];
+    rtdbPresence = {};
   }
 
   /** Render drivers list partitioned into Available and Busy */
@@ -591,11 +839,19 @@
     const vehicleTypeFormatted = formatVehicleType(v.type);
     const makeModel = `${v.make || 'Vehicle'} ${v.model || ''}`.trim();
     const colour = v.colour ? ` · ${v.colour}` : '';
-    const plate = v.plate || 'Verified';
-    const seats = v.seats ? `${v.seats} seats` : '4 seats';
-    const avatar = u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || 'D')}&background=22c55e&color=fff&size=128`;
-    const ratingFormatted = driver.ratingAvg ? driver.ratingAvg.toFixed(1) : '5.0';
-    const comment = driver.latestComment || 'Reliable and punctual';
+    const plate = v.plate || '—';
+    const seats = v.seats ? `${v.seats} seats` : '—';
+    const name = u.displayName || 'Driver';
+    const avatar = u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=22c55e&color=fff&size=128`;
+    const hasRating = driver.ratingCount > 0;
+    const ratingFormatted = hasRating ? driver.ratingAvg.toFixed(1) : '—';
+    const ratingMeta = hasRating
+      ? `(${driver.ratingCount} review${driver.ratingCount === 1 ? '' : 's'} · ${driver.tripsCount} trip${driver.tripsCount === 1 ? '' : 's'})`
+      : 'New driver';
+    const comment = driver.latestComment || '';
+    const reviewSnippet = comment
+      ? `<div class="driver-review-snippet"><span>💬</span><span>"${escapeHtml(comment)}"</span></div>`
+      : '';
 
     return `
       <article class="driver-card ${driver.busy ? 'is-busy' : ''}" data-driver-id="${driver.uid}">
@@ -607,28 +863,24 @@
         </div>
 
         <div>
-          <div class="vehicle-desc">${makeModel}${colour}</div>
+          <div class="vehicle-desc">${escapeHtml(makeModel)}${escapeHtml(colour)}</div>
           <div class="vehicle-meta">
             <span>💺 ${seats}</span>
             <span>·</span>
-            <span>🏷️ ${plate}</span>
+            <span>🏷️ ${escapeHtml(plate)}</span>
           </div>
         </div>
 
-        <!-- Rating & Recent Comment Snippet -->
-        <div class="driver-review-snippet">
-          <span>💬</span>
-          <span>"${escapeHtml(comment)}"</span>
-        </div>
+        ${reviewSnippet}
 
         <div class="driver-profile-row">
-          <img class="driver-avatar" src="${avatar}" alt="${u.displayName || 'Driver'}" onerror="this.src='https://placehold.co/80x80/22c55e/ffffff?text=D'" />
+          <img class="driver-avatar" src="${avatar}" alt="${escapeHtml(name)}" onerror="this.src='https://placehold.co/80x80/22c55e/ffffff?text=D'" />
           <div class="driver-info">
-            <div class="driver-name">${u.displayName || 'Driver'}</div>
+            <div class="driver-name">${escapeHtml(name)}</div>
             <div class="driver-rating">
               <span class="star">★</span>
               <strong>${ratingFormatted}</strong>
-              <span>(${driver.ratingCount || 12} reviews · ${driver.tripsCount || 18} trips)</span>
+              <span>${ratingMeta}</span>
             </div>
           </div>
         </div>
@@ -662,18 +914,18 @@
     if (driverModalAvatar) {
       driverModalAvatar.src = u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || 'D')}&background=22c55e&color=fff&size=128`;
     }
-    if (driverModalName) driverModalName.textContent = u.displayName || 'Poortjie Driver';
+    if (driverModalName) driverModalName.textContent = u.displayName || 'Driver';
     if (driverModalVehicleType) driverModalVehicleType.textContent = formatVehicleType(v.type);
     if (driverModalStatus) {
       driverModalStatus.textContent = driver.busy ? '🟡 Currently on a trip (Queue available)' : '🟢 Available now for pickup';
     }
-    if (driverModalRating) driverModalRating.textContent = `★ ${driver.ratingAvg ? driver.ratingAvg.toFixed(1) : '5.0'}`;
-    if (driverModalTrips) driverModalTrips.textContent = `${driver.tripsCount || 18}`;
-    if (driverModalSeats) driverModalSeats.textContent = `${v.seats || 4} Seats`;
+    if (driverModalRating) driverModalRating.textContent = driver.ratingCount > 0 ? `★ ${driver.ratingAvg.toFixed(1)}` : '★ —';
+    if (driverModalTrips) driverModalTrips.textContent = `${driver.tripsCount || 0}`;
+    if (driverModalSeats) driverModalSeats.textContent = v.seats ? `${v.seats} Seats` : '—';
     if (driverModalVehicleDesc) driverModalVehicleDesc.textContent = `${v.make || 'Vehicle'} ${v.model || ''} (${v.colour || 'Standard'})`;
-    if (driverModalPlate) driverModalPlate.textContent = `Plate: ${v.plate || 'Verified'}`;
+    if (driverModalPlate) driverModalPlate.textContent = `Plate: ${v.plate || '—'}`;
 
-    // Load and render real reviews
+    // Load and render real reviews (no synthetic fallback).
     if (driverModalReviewsList) {
       driverModalReviewsList.innerHTML = '<div style="font-size:12px;color:var(--text-dim);">Loading passenger reviews…</div>';
       const reviews = await getDriverReviews(driver.uid);
@@ -681,10 +933,10 @@
         driverModalReviewsList.innerHTML = reviews.map(r => `
           <div class="review-item-card">
             <div class="review-item-header">
-              <span>${escapeHtml(r.byName || 'Passenger')}</span>
-              <span style="color:var(--brand-gold);">★ ${r.stars || 5}</span>
+              <span>${escapeHtml(reviewerNameOf(r))}</span>
+              <span style="color:var(--brand-gold);">★ ${r.stars || 0}</span>
             </div>
-            <p class="review-item-comment">"${escapeHtml(r.review || 'Great trip!')}"</p>
+            ${r.review ? `<p class="review-item-comment">"${escapeHtml(r.review)}"</p>` : ''}
           </div>
         `).join('');
       } else {
@@ -707,8 +959,8 @@
   /** Open Booking Form */
   function openBookingForm(driverId) {
     if (!isProfileComplete) {
-      showToast('Please complete your profile (name, phone & photo) to request a ride.');
-      setTimeout(navigateToProfile, 1200);
+      showToast('Add your details to request a ride.');
+      openProfileModal(driverId === undefined ? null : driverId);
       return;
     }
 
@@ -865,8 +1117,9 @@
     }
 
     if (!isProfileComplete) {
-      showToast('Full name, 10-digit phone, and photo are required.');
-      navigateToProfile();
+      showToast('Add your details to request a ride.');
+      closeBookingModal();
+      openProfileModal(bookingTargetDriver ? bookingTargetDriver.uid : null);
       return;
     }
 
@@ -964,6 +1217,10 @@
         status: 'PENDING',
         driverId: null,
         requestedDriverId: requestedDriverId,
+        currentDriverId: null,
+        offerExpiresAt: null,
+        attemptedDriverIds: [],
+        dispatchMessage: 'Finding your ride…',
         deliveredAt: null,
         quotedPrice: null,
         availabilityEtaMinutes: null,
@@ -1089,7 +1346,7 @@
     }
 
     if (activeBookingStatusText) {
-      activeBookingStatusText.textContent = formatBookingStatus(booking.status);
+      activeBookingStatusText.textContent = booking.dispatchMessage || formatBookingStatus(booking.status);
     }
   }
 
@@ -1193,18 +1450,19 @@
     const driverDoc = await getDriverRecord(driverUid);
 
     const v = driverDoc.vehicle || {};
-    const name = userDoc.displayName || 'Poortjie Driver';
+    const name = userDoc.displayName || 'Driver';
     const avatar = userDoc.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=22c55e&color=fff&size=128`;
-    const rating = typeof driverDoc.ratingAvg === 'number' ? driverDoc.ratingAvg.toFixed(1) : '5.0';
-    const trips = driverDoc.tripsCount || 18;
+    const hasRating = typeof driverDoc.ratingCount === 'number' && driverDoc.ratingCount > 0;
+    const rating = hasRating ? driverDoc.ratingAvg.toFixed(1) : '—';
+    const trips = typeof driverDoc.tripsCount === 'number' ? driverDoc.tripsCount : 0;
 
     if (quotedDriverAvatar) quotedDriverAvatar.src = avatar;
     if (quotedDriverName) quotedDriverName.textContent = name;
-    if (quotedDriverRating) quotedDriverRating.textContent = `★ ${rating} (${trips} trips)`;
+    if (quotedDriverRating) quotedDriverRating.textContent = `★ ${rating} (${trips} trip${trips === 1 ? '' : 's'})`;
     if (quotedDriverVehicle) {
       quotedDriverVehicle.textContent = `${formatVehicleType(booking.vehicleType)} · ${v.make || 'Vehicle'} ${v.model || ''} (${v.colour || 'Standard'})`;
     }
-    if (quotedDriverPlate) quotedDriverPlate.textContent = v.plate || 'Verified';
+    if (quotedDriverPlate) quotedDriverPlate.textContent = v.plate || '—';
   }
 
   /** Update Stepper nodes */
@@ -1232,35 +1490,32 @@
     });
   }
 
-  /** 60s Pending Countdown Timer */
+  /**
+   * Pending countdown — display only, anchored to the server deadline
+   * (booking.offerExpiresAt). The server (Cloud Tasks) owns the actual timeout
+   * and roll-to-next-driver, so the client NEVER writes a terminal status here.
+   */
   function startPendingCountdown(booking) {
-    const totalDuration = booking.type === 'SCHEDULED' ? 600 : 60;
-    const baseTime = booking.deliveredAt || booking.createdAt || Date.now();
+    const deadline = readEpochMillis(booking.offerExpiresAt);
 
     function update() {
-      const elapsed = Math.floor((Date.now() - baseTime) / 1000);
-      const remaining = Math.max(0, totalDuration - elapsed);
-
-      const formatted = formatTimerSeconds(remaining);
-
-      if (pendingCountdown) {
-        pendingCountdown.textContent = formatted;
+      if (deadline == null) {
+        // No live offer yet (still searching). Show the server's message.
+        if (pendingCountdown) pendingCountdown.textContent = '…';
+        if (activeBookingCountdownPill) activeBookingCountdownPill.classList.add('is-hidden');
+        return;
       }
+      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      const formatted = formatTimerSeconds(remaining);
+      if (pendingCountdown) pendingCountdown.textContent = formatted;
       if (activeBookingCountdownPill) {
         activeBookingCountdownPill.textContent = `⏱️ ${formatted}`;
         activeBookingCountdownPill.classList.remove('is-hidden');
       }
-
       if (remaining <= 0) {
         clearInterval(pendingTimerInterval);
         pendingTimerInterval = null;
-        if (currentBookingDoc && currentBookingDoc.id === booking.id && currentBookingDoc.status === 'PENDING') {
-          bookingsCol.doc(booking.id).update({
-            status: 'CANCELLED_NO_DRIVER',
-            cancelReason: 'No drivers available within response window.',
-            updatedAt: Date.now()
-          });
-        }
+        // Do not write status — the server transitions the booking.
       }
     }
 
@@ -1268,35 +1523,28 @@
     pendingTimerInterval = setInterval(update, 1000);
   }
 
-  /** 60s Quote Countdown Timer */
+  /**
+   * Quote countdown — display only, anchored to the server deadline
+   * (booking.offerExpiresAt, the QUOTE window). The server expires unapproved
+   * quotes; the client never writes CANCELLED_EXPIRED itself.
+   */
   function startQuoteCountdown(booking) {
-    const quoteReceivedAt = booking.updatedAt || Date.now();
-    const duration = 60;
+    const deadline = readEpochMillis(booking.offerExpiresAt);
 
     function update() {
-      const elapsed = Math.floor((Date.now() - quoteReceivedAt) / 1000);
-      const remaining = Math.max(0, duration - elapsed);
-
+      const remaining = deadline == null
+        ? 0
+        : Math.max(0, Math.round((deadline - Date.now()) / 1000));
       const formatted = formatTimerSeconds(remaining);
-
-      if (quotedCountdown) {
-        quotedCountdown.textContent = formatted;
-      }
+      if (quotedCountdown) quotedCountdown.textContent = formatted;
       if (activeBookingCountdownPill) {
         activeBookingCountdownPill.textContent = `⏱️ ${formatted}`;
         activeBookingCountdownPill.classList.remove('is-hidden');
       }
-
       if (remaining <= 0) {
         clearInterval(quoteTimerInterval);
         quoteTimerInterval = null;
-        if (currentBookingDoc && currentBookingDoc.id === booking.id && currentBookingDoc.status === 'QUOTED') {
-          bookingsCol.doc(booking.id).update({
-            status: 'CANCELLED_EXPIRED',
-            cancelReason: 'Rider quote approval timed out after 60s.',
-            updatedAt: Date.now()
-          });
-        }
+        // Do not write status — the server expires the quote.
       }
     }
 
@@ -1311,7 +1559,7 @@
     const driverDoc = await getDriverRecord(driverUid);
 
     const v = driverDoc.vehicle || {};
-    const name = userDoc.displayName || 'Poortjie Driver';
+    const name = userDoc.displayName || 'Driver';
     const phone = userDoc.phone || '';
     const avatar = userDoc.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=22c55e&color=fff&size=128`;
 
@@ -1320,7 +1568,7 @@
     if (trackVehicleDesc) {
       trackVehicleDesc.textContent = `${formatVehicleType(booking.vehicleType)} · ${v.make || 'Vehicle'} ${v.model || ''} (${v.colour || 'Standard'})`;
     }
-    if (trackVehiclePlate) trackVehiclePlate.textContent = v.plate || 'Verified';
+    if (trackVehiclePlate) trackVehiclePlate.textContent = v.plate || '—';
 
     if (trackCallBtn) {
       trackCallBtn.href = phone ? `tel:${phone}` : '#';
@@ -1328,7 +1576,7 @@
     }
     if (trackWhatsappBtn) {
       const cleanPhone = phone.startsWith('0') ? '27' + phone.substring(1) : phone;
-      trackWhatsappBtn.href = phone ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(name)}%2C%20this%20is%20your%20LaynFleet%20rider.` : '#';
+      trackWhatsappBtn.href = phone ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(name)}%2C%20this%20is%20your%20LaynRider%20passenger.` : '#';
       trackWhatsappBtn.classList.toggle('is-hidden', !phone);
     }
 
@@ -1364,22 +1612,15 @@
     }
   }
 
-  /** Cancel Pending Request */
+  /** Cancel Pending Request → server (cancelBookingCallable). */
   async function handleCancelPending() {
     if (!currentBookingDoc) return;
     try {
       if (cancelPendingBtn) cancelPendingBtn.disabled = true;
-      const now = Date.now();
-      await bookingsCol.doc(currentBookingDoc.id).update({
-        status: 'CANCELLED',
-        cancelReason: 'Cancelled by rider before dispatch confirmation.',
-        updatedAt: now,
-        events: firebase.firestore.FieldValue.arrayUnion({
-          event: 'CANCELLED_BY_RIDER',
-          actorUid: currentUser.uid,
-          detail: 'Rider cancelled request',
-          timestamp: now
-        })
+      await callFn('cancelBookingCallable', {
+        bookingId: currentBookingDoc.id,
+        reason: 'Cancelled by rider before dispatch confirmation.',
+        byDriver: false
       });
       showToast('Ride request cancelled.');
     } catch (err) {
@@ -1390,23 +1631,12 @@
     }
   }
 
-  /** Approve Quote */
+  /** Approve Quote → server (approveQuoteCallable; QUOTED → EN_ROUTE). */
   async function handleApproveQuote() {
     if (!currentBookingDoc) return;
     try {
       if (approveQuoteBtn) approveQuoteBtn.disabled = true;
-      const now = Date.now();
-      await bookingsCol.doc(currentBookingDoc.id).update({
-        status: 'ACCEPTED',
-        priceApproved: true,
-        updatedAt: now,
-        events: firebase.firestore.FieldValue.arrayUnion({
-          event: 'PRICE_APPROVED',
-          actorUid: currentUser.uid,
-          detail: `Rider approved quote of R ${currentBookingDoc.quotedPrice}`,
-          timestamp: now
-        })
-      });
+      await callFn('approveQuoteCallable', { bookingId: currentBookingDoc.id });
       showToast('Quote approved! Driver confirmed.');
     } catch (err) {
       console.error('Failed to approve quote:', err);
@@ -1416,24 +1646,16 @@
     }
   }
 
-  /** Decline Quote */
+  /** Decline Quote → server (rejectQuoteCallable; Quick Ride rolls on, specific driver ends). */
   async function handleDeclineQuote() {
     if (!currentBookingDoc) return;
     try {
       if (declineQuoteBtn) declineQuoteBtn.disabled = true;
-      const now = Date.now();
-      await bookingsCol.doc(currentBookingDoc.id).update({
-        status: 'CANCELLED',
-        cancelReason: 'Rider declined driver price quote.',
-        updatedAt: now,
-        events: firebase.firestore.FieldValue.arrayUnion({
-          event: 'CANCELLED_BY_RIDER',
-          actorUid: currentUser.uid,
-          detail: 'Rider declined quote',
-          timestamp: now
-        })
+      await callFn('rejectQuoteCallable', {
+        bookingId: currentBookingDoc.id,
+        reason: 'Rider declined driver price quote.'
       });
-      showToast('Quote declined. Request cancelled.');
+      showToast('Quote declined.');
     } catch (err) {
       console.error('Failed to decline quote:', err);
       showToast('Could not decline quote.');
@@ -1442,29 +1664,47 @@
     }
   }
 
-  /** Submit Rating and Done */
+  /** Submit Rating and Done (mirrors Android FirestoreRatingRepository). */
   async function handleCompletedDone() {
     if (completedDoneBtn) completedDoneBtn.disabled = true;
 
-    if (currentBookingDoc) {
+    if (currentBookingDoc && currentBookingDoc.status === 'COMPLETED') {
       const driverUid = currentBookingDoc.driverId || currentBookingDoc.requestedDriverId;
       const comment = tripReviewComment ? tripReviewComment.value.trim() : '';
 
-      try {
-        const ratingId = `r_${Date.now()}_${currentUser.uid.substring(0, 6)}`;
-        await ratingsCol.doc(ratingId).set({
-          tripId: currentBookingDoc.id,
-          byUid: currentUser.uid,
-          byName: userProfile.displayName || currentUser.displayName || 'Passenger',
-          targetUid: driverUid,
-          direction: 'RIDER_TO_DRIVER',
-          stars: selectedStars,
-          review: comment,
-          likes: 0,
-          createdAt: Date.now()
-        });
-      } catch (e) {
-        console.warn('Error saving rating:', e);
+      if (driverUid) {
+        try {
+          // Dedupe: one rating per trip per rider (Android hasRated).
+          const existing = await ratingsCol
+            .where('tripId', '==', currentBookingDoc.id)
+            .where('byUid', '==', currentUser.uid)
+            .limit(1)
+            .get();
+
+          if (existing.empty) {
+            const now = Date.now();
+            const ratingId = `r_${now}_${currentUser.uid.substring(0, 6)}`;
+            const reviewerName = (userProfile && userProfile.displayName) || currentUser.displayName || 'Rider';
+
+            await ratingsCol.doc(ratingId).set({
+              id: ratingId,
+              tripId: currentBookingDoc.id,
+              byUid: currentUser.uid,
+              targetUid: driverUid,
+              direction: 'RIDER_TO_DRIVER',
+              stars: selectedStars,
+              review: comment,
+              reviewerName: reviewerName,
+              likes: 0,
+              createdAt: now
+            }, { merge: true });
+
+            await updateDriverRatingAggregates(driverUid);
+            driverReviewsCache.delete(driverUid);
+          }
+        } catch (e) {
+          console.warn('Error saving rating:', e);
+        }
       }
     }
 
@@ -1473,6 +1713,29 @@
       if (completedDoneBtn) completedDoneBtn.disabled = false;
       closeActiveTripModal();
     }, 1000);
+  }
+
+  /**
+   * Recompute a driver's ratingAvg/ratingCount from all RIDER_TO_DRIVER ratings
+   * (mirrors Android updateRatingAggregates). STRICT: derived only from real
+   * rating docs — no defaults.
+   */
+  async function updateDriverRatingAggregates(driverUid) {
+    const snap = await ratingsCol
+      .where('targetUid', '==', driverUid)
+      .where('direction', '==', 'RIDER_TO_DRIVER')
+      .get();
+
+    const stars = snap.docs
+      .map(d => d.data().stars)
+      .filter(s => typeof s === 'number');
+    if (stars.length === 0) return;
+
+    const avg = stars.reduce((a, b) => a + b, 0) / stars.length;
+    await driversCol.doc(driverUid).set(
+      { ratingAvg: avg, ratingCount: stars.length },
+      { merge: true }
+    );
   }
 
   /** Render user state */
@@ -1505,7 +1768,9 @@
     isProfileComplete = completeness.isComplete;
 
     const displayName = completeness.name || authUser.email || 'Rider';
-    if (headerUserName) headerUserName.textContent = displayName.split(' ')[0];
+    const firstName = (displayName.split(' ')[0]) || 'Rider';
+    if (headerUserName) headerUserName.textContent = firstName;
+    if (heroNameEl) heroNameEl.textContent = firstName;
     if (headerAvatar) {
       if (completeness.photo) {
         headerAvatar.src = completeness.photo;
@@ -1515,6 +1780,7 @@
       }
     }
 
+    updateProfileChecklist(completeness);
     if (profileIncompleteBanner) {
       profileIncompleteBanner.classList.toggle('is-hidden', isProfileComplete);
     }
@@ -1621,8 +1887,29 @@
       });
     }
 
-    if (completeProfileBtn) completeProfileBtn.addEventListener('click', navigateToProfile);
-    if (headerUserBtn) headerUserBtn.addEventListener('click', navigateToProfile);
+    if (completeProfileBtn) completeProfileBtn.addEventListener('click', () => openProfileModal(undefined));
+    if (headerUserBtn) headerUserBtn.addEventListener('click', () => openProfileModal(undefined));
+
+    // Profile Completion Modal
+    if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
+    if (profilePhotoInput) profilePhotoInput.addEventListener('change', handleProfilePhotoPick);
+    if (profileSaveBtn) profileSaveBtn.addEventListener('click', handleProfileSave);
+    if (profilePhoneInput) {
+      profilePhoneInput.addEventListener('input', () => {
+        profilePhoneInput.value = profilePhoneInput.value.replace(/\D/g, '').slice(0, 10);
+        if (profilePhoneField) profilePhoneField.classList.toggle('is-missing', !isValidPhone(profilePhoneInput.value));
+      });
+    }
+    if (profileNameInput) {
+      profileNameInput.addEventListener('input', () => {
+        if (profileNameField) profileNameField.classList.toggle('is-missing', !isValidName(profileNameInput.value.trim()));
+      });
+    }
+    if (profileModal) {
+      profileModal.addEventListener('click', (e) => {
+        if (e.target === profileModal) closeProfileModal();
+      });
+    }
 
     // Quick Ride
     if (quickRideBtn) quickRideBtn.addEventListener('click', () => openBookingForm(null));

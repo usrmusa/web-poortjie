@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>LaynFleet — Book a Fleet | Poortjie</title>
-  <meta name="description" content="LaynFleet ride booking for the Poortjie community." />
+  <title>LaynRider — Book a Ride in Poortjie</title>
+  <meta name="description" content="LaynRider — request a local ride from verified Poortjie drivers." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,10 +20,10 @@
   <header class="header-nav">
     <div class="header-content">
       <a href="../../home.html" class="brand-wrap" title="Back to Poortjie Home">
-        <img src="laynrider.png" alt="LaynFleet Logo" class="brand-logo" />
+        <img src="laynrider.png" alt="LaynRider" class="brand-logo" />
         <div class="brand-text">
-          <h1>LaynFleet <span style="color: var(--brand); font-weight: 800;">Rider</span></h1>
-          <span class="brand-sub">Poortjie Community</span>
+          <h1>Layn<span class="brand-accent">Rider</span></h1>
+          <span class="brand-sub">Poortjie Rides</span>
         </div>
       </a>
 
@@ -37,7 +37,7 @@
           Sign In
         </a>
 
-        <button id="header-signout-btn" class="btn btn-sm btn-ghost is-hidden" title="Sign out of LaynFleet">
+        <button id="header-signout-btn" class="btn btn-sm btn-ghost is-hidden" title="Sign out of LaynRider">
           Sign Out
         </button>
       </div>
@@ -53,7 +53,7 @@
         <span class="nudge-icon">📱</span>
         <div>
           <div class="nudge-title">Get the LaynRider Android App</div>
-          <div class="nudge-desc">Receive real-time push notifications & live map tracking on Android.</div>
+          <div class="nudge-desc">Real-time push notifications & live map tracking on Android.</div>
         </div>
       </div>
       <a href="https://github.com/usrmusa/LaynFleet/releases" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">
@@ -63,17 +63,16 @@
 
     <!-- BOOT / LOADING VIEW (Centered visible before any context) -->
     <div id="boot-view" class="boot-loader">
-      <img src="laynrider.png" alt="LaynRider Logo" class="boot-logo" />
+      <img src="laynrider.png" alt="LaynRider" class="boot-logo" />
       <div class="spinner"></div>
-      <p class="boot-text">Connecting to LaynFleet…</p>
+      <p class="boot-text">Starting LaynRider…</p>
     </div>
 
     <!-- SUSPENDED VIEW -->
     <div id="suspended-view" class="suspended-view is-hidden">
       <div class="suspended-icon">⚠️</div>
       <h2 class="suspended-title">Account Suspended</h2>
-      <p style="font-size: 13px; color: var(--text-dim);">Your account has been suspended from requesting rides.</p>
-      <div class="suspended-reason-box">
+      <p style="font-size: 13px; color: var(--text-dim);">Your account has been suspended from requesting rides.</p>      <div class="suspended-reason-box">
         <strong>Reason:</strong> <span id="suspended-reason-text">—</span>
       </div>
       <button id="suspended-signout-btn" class="btn btn-danger btn-block">Sign out</button>
@@ -82,9 +81,9 @@
     <!-- AUTH GATE VIEW (When not logged in) -->
     <div id="auth-gate-view" class="auth-gate-card is-hidden">
       <div class="auth-gate-header">
-        <img src="laynrider.png" alt="LaynRider Logo" class="auth-gate-img" />
-        <h2 class="auth-gate-title">Welcome to LaynFleet</h2>
-        <p class="auth-gate-desc">Sign in with your Poortjie account to book local rides and see online drivers.</p>
+        <img src="laynrider.png" alt="LaynRider" class="auth-gate-img" />
+        <h2 class="auth-gate-title">Welcome to LaynRider</h2>
+        <p class="auth-gate-desc">Sign in with your Poortjie account to book local rides and see online drivers near you.</p>
       </div>
 
       <button id="auth-google-btn" type="button" class="btn btn-primary btn-block">
@@ -129,16 +128,31 @@
     <!-- MAIN APP / RIDER DASHBOARD (When authenticated) -->
     <div id="app-view" class="is-hidden" style="display: flex; flex-direction: column; gap: 20px;">
 
-      <!-- PROFILE INCOMPLETE BANNER -->
-      <div id="profile-incomplete-banner" class="alert-banner alert-banner-warn is-hidden">
-        <div class="alert-content">
-          <span class="alert-icon">⚠️</span>
-          <div class="alert-text">
-            <strong>Complete your profile</strong>
-            <p>Full name (1–3 words), phone number (10 digits), and profile photo are essential before requesting a ride.</p>
+      <!-- HERO GREETING -->
+      <section class="hero-card">
+        <div class="hero-glow"></div>
+        <div class="hero-content">
+          <span class="hero-eyebrow">🟢 Poortjie · Live</span>
+          <h2 class="hero-title">Where to, <span id="hero-name">rider</span>?</h2>
+          <p class="hero-sub">Book a verified local driver in seconds. Pickup inside Poortjie, drop-off anywhere.</p>
+        </div>
+      </section>
+
+      <!-- PROFILE INCOMPLETE CHECKLIST -->
+      <div id="profile-incomplete-banner" class="profile-gate-card is-hidden">
+        <div class="profile-gate-head">
+          <span class="profile-gate-icon">👤</span>
+          <div>
+            <strong>Finish your profile to request rides</strong>
+            <p>Drivers need to know who they're picking up. Add the details below.</p>
           </div>
         </div>
-        <button id="complete-profile-btn" class="btn btn-sm btn-primary">Complete Profile</button>
+        <ul class="profile-gate-list">
+          <li id="check-name" class="profile-check"><span class="check-dot"></span> Full name (1–3 words)</li>
+          <li id="check-phone" class="profile-check"><span class="check-dot"></span> Phone number (10 digits)</li>
+          <li id="check-photo" class="profile-check"><span class="check-dot"></span> Profile photo</li>
+        </ul>
+        <button id="complete-profile-btn" class="btn btn-primary btn-block">Complete Profile</button>
       </div>
 
       <!-- ACTIVE BOOKING WIDGET (If rider has a live booking) -->
@@ -175,7 +189,7 @@
         <button class="filter-chip" data-type="MINI_BUS">🚐 Mini Bus</button>
         <button class="filter-chip" data-type="BAKKIE">🛻 Bakkie</button>
         <button class="filter-chip" data-type="MOTORBIKE">🏍️ Motorbike</button>
-        <button class="filter-chip" data-type="TUKTUK">🛺 TukTuk</button>
+        <button class="filter-chip" data-type="TUK_TUK">🛺 TukTuk</button>
       </div>
 
       <!-- AVAILABLE DRIVERS SECTION -->
@@ -214,9 +228,9 @@
   <!-- ===================== BOOKING FORM MODAL ===================== -->
   <div id="booking-modal" class="modal-overlay is-hidden">
     <div class="modal-card booking-modal-card">
-      <img src="laynrider.png" alt="LaynRider Logo" class="booking-top-logo" />
+      <img src="laynrider.png" alt="LaynRider" class="booking-top-logo" />
       <div class="modal-header">
-        <h3 class="modal-title">Book a Fleet</h3>
+        <h3 class="modal-title">Book a Ride</h3>
         <button id="booking-modal-close" class="modal-close" aria-label="Close">&times;</button>
       </div>
 
@@ -441,7 +455,7 @@
       <div id="track-completed-section" class="is-hidden" style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 12px 0;">
         <span style="font-size: 40px;">🎉</span>
         <h4 style="font-size: 18px; font-weight: 800;">Trip Completed!</h4>
-        <p style="font-size: 13px; color: var(--text-dim);">Thank you for riding with LaynFleet in Poortjie.</p>
+        <p style="font-size: 13px; color: var(--text-dim);">Thank you for riding with LaynRider in Poortjie.</p>
 
         <div style="background: var(--panel-2); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
           <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Total Fare Paid</div>
@@ -526,6 +540,46 @@
     </div>
   </div>
 
+  <!-- ===================== COMPLETE PROFILE MODAL ===================== -->
+  <div id="profile-modal" class="modal-overlay is-hidden">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Complete your profile</h3>
+        <button id="profile-modal-close" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-dim); margin-top: -6px;">
+        Add the details drivers need to accept your ride. Missing items are highlighted.
+      </p>
+
+      <!-- Avatar uploader -->
+      <div class="avatar-upload">
+        <div class="avatar-ring" id="profile-avatar-ring">
+          <img id="profile-avatar-preview" class="avatar-preview" src="" alt="Your photo" />
+          <label for="profile-photo-input" class="avatar-edit" title="Upload a photo">📷</label>
+        </div>
+        <input type="file" id="profile-photo-input" accept="image/*" class="is-hidden" />
+        <span id="profile-photo-hint" class="avatar-hint">Tap the camera to add a photo</span>
+      </div>
+
+      <label class="field" id="field-name">
+        <span class="field-label">Full name <span class="field-req">required</span></span>
+        <input id="profile-name-input" type="text" class="field-input" placeholder="e.g. Thabo Mokoena" autocomplete="name" />
+        <span class="field-hint">1–3 words, letters only.</span>
+      </label>
+
+      <label class="field" id="field-phone">
+        <span class="field-label">Phone number <span class="field-req">required</span></span>
+        <input id="profile-phone-input" type="tel" inputmode="numeric" maxlength="10" class="field-input" placeholder="0123456789" autocomplete="tel" />
+        <span class="field-hint">Exactly 10 digits. Not shared publicly.</span>
+      </label>
+
+      <div id="profile-modal-error" class="form-error is-hidden"></div>
+
+      <button id="profile-save-btn" class="btn btn-primary btn-block">Save & Continue</button>
+    </div>
+  </div>
+
   <!-- ===================== TOAST ===================== -->
   <div id="toast" class="toast is-hidden"></div>
 
@@ -533,6 +587,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <!-- App scripts -->
   <script src="firebase-config.js"></script>
