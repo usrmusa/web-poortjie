@@ -324,35 +324,57 @@
         );
     }
 
+    // Image error fallback
+    profilePicture.addEventListener('error', () => {
+        profilePicture.src = DEFAULT_AVATAR;
+    });
+
     // Load profile
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            emailInput.value = user.email;
+            emailInput.value = user.email || '';
+            const defaultUsername = user.email ? user.email.split('@')[0] : '';
+            usernameInput.value = defaultUsername;
+
+            // Immediately set from Auth record if present (prevents blank field flash)
+            if (user.displayName) {
+                displayNameInput.value = user.displayName;
+            }
+            if (user.photoURL) {
+                photoUrlInput.value = user.photoURL;
+                profilePicture.src = user.photoURL;
+            }
+
             firebase.firestore().collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists) {
-                    const userData = doc.data();
-                    usernameInput.value = userData.username || '';
-                    displayNameInput.value = userData.displayName || '';
-                    phoneNumberInput.value = userData.phone || '';
-                    bioInput.value = userData.bio || '';
-                    photoUrlInput.value = userData.photoUrl || '';
-                    profilePicture.src = userData.photoUrl || DEFAULT_AVATAR;
+                const userData = doc.exists ? (doc.data() || {}) : {};
 
-                    if (userData.roles?.poortjie?.isAdmin === true) {
-                        adminToggleSection.classList.remove('hidden');
-                        listForSupportToggle.checked = userData.roles?.poortjie?.listForSupport === true;
-                    }
+                const resolvedDisplayName = userData.displayName || user.displayName || '';
+                const resolvedPhone = userData.phone || user.phoneNumber || '';
+                const resolvedBio = userData.bio || '';
+                const resolvedPhotoUrl = userData.photoUrl || user.photoURL || '';
+                const resolvedUsername = userData.username || defaultUsername;
 
-                    initialData = {
-                        displayName: displayNameInput.value.trim(),
-                        phone: phoneNumberInput.value.trim(),
-                        bio: bioInput.value.trim(),
-                        photoUrl: photoUrlInput.value,
-                        listForSupport: listForSupportToggle.checked
-                    };
-                    bioCounter.textContent = `${bioInput.value.length}/100`;
-                    checkChanges();
+                usernameInput.value = resolvedUsername;
+                displayNameInput.value = resolvedDisplayName;
+                phoneNumberInput.value = resolvedPhone;
+                bioInput.value = resolvedBio;
+                photoUrlInput.value = resolvedPhotoUrl;
+                profilePicture.src = resolvedPhotoUrl || DEFAULT_AVATAR;
+
+                if (userData.roles?.poortjie?.isAdmin === true) {
+                    adminToggleSection.classList.remove('hidden');
+                    listForSupportToggle.checked = userData.roles?.poortjie?.listForSupport === true;
                 }
+
+                initialData = {
+                    displayName: displayNameInput.value.trim(),
+                    phone: phoneNumberInput.value.trim(),
+                    bio: bioInput.value.trim(),
+                    photoUrl: photoUrlInput.value,
+                    listForSupport: listForSupportToggle.checked
+                };
+                bioCounter.textContent = `${bioInput.value.length}/100`;
+                checkChanges();
             }).catch(error => {
                 console.error("Error fetching user data:", error);
                 showStatus("Error loading profile data.", true);
@@ -469,6 +491,7 @@
             phone: newPhoneNumber,
             bio: newBio,
             photoUrl: newPhotoUrl,
+            username: usernameInput.value || '',
             roles: {
                 poortjie: {
                     listForSupport: newListForSupport
@@ -476,6 +499,10 @@
             },
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }).then(() => {
+            try {
+                sessionStorage.removeItem('authUserCache');
+            } catch (e) {}
+
             showStatus("Profile updated successfully!");
             initialData = {
                 displayName: newDisplayName,
