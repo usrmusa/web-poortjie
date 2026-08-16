@@ -33,7 +33,8 @@
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
 <header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center">
-    <a href="../index.html" onclick="window.location.replace('../index.html'); return false;"
+    <a href="../index.html"
+       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
        class="text-6xl font-extrabold mb-4 tracking-tight text-slate-900 dark:text-white">Poortjie</a>
 </header>
 
@@ -487,17 +488,31 @@
                         sessionStorage.removeItem('authUserCache');
                     } catch (e) {}
 
-                    const redirectUrl = sessionStorage.getItem('redirectUrl');
-                    if (redirectUrl && !redirectUrl.includes('login.html') && !redirectUrl.includes('register.html')) {
-                        sessionStorage.removeItem('redirectUrl');
-                        window.top.location.replace(redirectUrl);
+                    // Determine previous page / target redirect URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const queryRedirect = urlParams.get('redirect') || urlParams.get('returnUrl');
+                    let targetUrl = queryRedirect || sessionStorage.getItem('redirectUrl');
+
+                    if (!targetUrl && document.referrer) {
+                        try {
+                            const refUrl = new URL(document.referrer);
+                            if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login.html') && !refUrl.pathname.includes('register.html')) {
+                                targetUrl = document.referrer;
+                            }
+                        } catch (e) {}
+                    }
+
+                    sessionStorage.removeItem('redirectUrl');
+
+                    if (targetUrl && !targetUrl.includes('login.html') && !targetUrl.includes('register.html')) {
+                        window.top.location.replace(targetUrl);
+                    } else if (window.history.length > 1 && document.referrer && !document.referrer.includes('login.html') && !document.referrer.includes('register.html')) {
+                        window.history.back();
                     } else {
-                        sessionStorage.removeItem('redirectUrl');
                         window.top.location.replace('../index.html');
                     }
                 } catch (transactionError) {
-                    await user.delete().catch(deleteError => {
-                    });
+                    await user.delete().catch(deleteError => {});
                     throw transactionError;
                 }
             })
@@ -509,6 +524,22 @@
                 validateForm();
             });
     });
+
+    // Capture referrer on page load if not already set in sessionStorage
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryRedirect = urlParams.get('redirect') || urlParams.get('returnUrl');
+        if (queryRedirect && !queryRedirect.includes('login.html') && !queryRedirect.includes('register.html')) {
+            sessionStorage.setItem('redirectUrl', queryRedirect);
+        } else if (!sessionStorage.getItem('redirectUrl') && document.referrer) {
+            try {
+                const refUrl = new URL(document.referrer);
+                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login.html') && !refUrl.pathname.includes('register.html')) {
+                    sessionStorage.setItem('redirectUrl', document.referrer);
+                }
+            } catch (e) {}
+        }
+    })();
 </script>
 
 </body>
