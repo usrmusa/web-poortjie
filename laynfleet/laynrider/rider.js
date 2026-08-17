@@ -103,6 +103,7 @@
   // User cache for driver identities & reviews
   const userCache = new Map();
   const driverReviewsCache = new Map();
+  const driverTripsCache = new Map();
 
   // DOM Elements - App Views
   const bootView = document.getElementById('boot-view');
@@ -621,6 +622,48 @@
   }
 
   /**
+   * Fetch a driver's real completed trips count from Firestore bookings collection.
+   * Cross-checks with driver document and keeps tripsCount aggregate updated.
+   * STRICT: Real count from bookings (status == 'COMPLETED').
+   */
+  async function getDriverTripsCount(driverUid) {
+    if (!driverUid) return 0;
+    if (driverTripsCache.has(driverUid)) {
+      return driverTripsCache.get(driverUid);
+    }
+    try {
+      const snap = await bookingsCol
+        .where('driverId', '==', driverUid)
+        .get();
+
+      const completedCount = snap.docs.filter((d) => {
+        const b = d.data() || {};
+        return b.status === 'COMPLETED';
+      }).length;
+
+      const driverDoc = await getDriverRecord(driverUid);
+      const docCount = typeof driverDoc.tripsCount === 'number' ? driverDoc.tripsCount : 0;
+      const realTrips = Math.max(completedCount, docCount);
+
+      if (completedCount > docCount && currentUser) {
+        driversCol.doc(driverUid).set(
+          { tripsCount: realTrips },
+          { merge: true }
+        ).catch((err) => console.warn('Could not sync driver tripsCount:', err));
+      }
+
+      driverTripsCache.set(driverUid, realTrips);
+      return realTrips;
+    } catch (e) {
+      console.warn('Failed to count trips for driver:', driverUid, e);
+      const driverDoc = await getDriverRecord(driverUid);
+      const docCount = typeof driverDoc.tripsCount === 'number' ? driverDoc.tripsCount : 0;
+      driverTripsCache.set(driverUid, docCount);
+      return docCount;
+    }
+  }
+
+  /**
    * Fetch a driver's real ratings/reviews from Firestore. Mirrors Android
    * FirestoreRatingRepository.observeDriverReviews (targetUid + RIDER_TO_DRIVER).
    * STRICT: no synthetic/sample fallback data — returns [] when there are none.
@@ -1103,6 +1146,7 @@
       const data = doc.data;
       const userDoc = await getDriverIdentity(doc.uid);
       const reviews = await getDriverReviews(doc.uid);
+      const realTrips = await getDriverTripsCount(doc.uid);
       const latestComment = (reviews && reviews.length > 0) ? reviews[0].review : '';
       const loc = rtdbPresence[doc.uid] || {};
 
@@ -1113,7 +1157,7 @@
         busy: data.busy === true,
         ratingAvg: typeof data.ratingAvg === 'number' ? data.ratingAvg : 0,
         ratingCount: typeof data.ratingCount === 'number' ? data.ratingCount : 0,
-        tripsCount: typeof data.tripsCount === 'number' ? data.tripsCount : 0,
+        tripsCount: realTrips,
         latestComment: latestComment,
         vehicle: data.vehicle || {},
         lat: typeof loc.lat === 'number' ? loc.lat : 0,
@@ -1314,6 +1358,12 @@
     if (driverModalSeats) driverModalSeats.textContent = v.seats ? `${v.seats} Seats` : '—';
     if (driverModalVehicleDesc) driverModalVehicleDesc.textContent = `${v.make || 'Vehicle'} ${v.model || ''} (${v.colour || 'Standard'})`;
     if (driverModalPlate) driverModalPlate.textContent = `Plate: ${v.plate || '—'}`;
+
+    // Refresh real trips count dynamically
+    getDriverTripsCount(driver.uid).then((realTrips) => {
+      driver.tripsCount = realTrips;
+      if (driverModalTrips) driverModalTrips.textContent = `${realTrips}`;
+    });
 
     // Load and render real reviews (no synthetic fallback).
     if (driverModalReviewsList) {
@@ -1869,7 +1919,11 @@
       if (quotedPriceAmount) quotedPriceAmount.textContent = `R ${price}`;
       if (approveBtnPrice) approveBtnPrice.textContent = price;
       if (quotedEtaText) {
-        quotedEtaText.textContent = `Est. Pickup ETA: ~${booking.availabilityEtaMinutes || 5} mins`;
+        const etaMins = booking.availabilityEtaMinutes || 5;
+        const arrivalDate = new Date(Date.now() + etaMins * 60 * 1000);
+        const hh = String(arrivalDate.getHours()).padStart(2, '0');
+        const mm = String(arrivalDate.getMinutes()).padStart(2, '0');
+        quotedEtaText.textContent = `Est. Pickup ETA: ~${etaMins} mins (Arrival at ${hh}:${mm})`;
       }
       startQuoteCountdown(booking);
     } else if (['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'].includes(status)) {
@@ -1904,13 +1958,14 @@
     const driverUid = booking.driverId || booking.requestedDriverId;
     const userDoc = await getDriverIdentity(driverUid);
     const driverDoc = await getDriverRecord(driverUid);
+    const realTrips = await getDriverTripsCount(driverUid);
 
     const v = driverDoc.vehicle || {};
     const name = userDoc.displayName || 'Driver';
     const avatar = userDoc.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=22c55e&color=fff&size=128`;
     const hasRating = typeof driverDoc.ratingCount === 'number' && driverDoc.ratingCount > 0;
     const rating = hasRating ? driverDoc.ratingAvg.toFixed(1) : '—';
-    const trips = typeof driverDoc.tripsCount === 'number' ? driverDoc.tripsCount : 0;
+    const trips = realTrips;
 
     if (quotedDriverAvatar) quotedDriverAvatar.src = avatar;
     if (quotedDriverName) quotedDriverName.textContent = name;
@@ -2042,8 +2097,12 @@
         trackStatusTitle.textContent = 'Driver Accepted';
         trackStatusDesc.textContent = `${name} is preparing to head your way.`;
       } else if (booking.status === 'EN_ROUTE') {
+        const etaMins = booking.availabilityEtaMinutes || 5;
+        const arrivalDate = new Date(Date.now() + etaMins * 60 * 1000);
+        const hh = String(arrivalDate.getHours()).padStart(2, '0');
+        const mm = String(arrivalDate.getMinutes()).padStart(2, '0');
         trackStatusIcon.textContent = '🚗';
-        trackStatusTitle.textContent = 'Driver is En Route';
+        trackStatusTitle.textContent = `Driver is En Route (ETA ~${etaMins}m · ${hh}:${mm})`;
         trackStatusDesc.textContent = `${name} is on the way to pickup.`;
       } else if (booking.status === 'ARRIVED') {
         trackStatusIcon.textContent = '📍';
@@ -2162,6 +2221,8 @@
 
             await updateDriverRatingAggregates(driverUid);
             driverReviewsCache.delete(driverUid);
+            driverTripsCache.delete(driverUid);
+            await getDriverTripsCount(driverUid);
           } else {
             const existingDoc = existing.docs[0];
             const existingData = existingDoc.data();
