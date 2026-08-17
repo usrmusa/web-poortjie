@@ -157,6 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
         resetUserRatingUI();
     };
 
+    const maskUserName = (name) => {
+        if (!name || !name.trim()) return '***';
+        const parts = name.trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return '***';
+        return parts.map(p => `${p.charAt(0)}***`).join(' ');
+    };
+
     // --- UI Rendering ---
     const renderCommentsList = (commentsToRender) => {
         const commentsList = document.getElementById('comments-list');
@@ -184,15 +191,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const likesCount = c.likes ? Object.keys(c.likes).length : 0;
             const isLiked = currentUser && c.likes && c.likes[currentUser.uid];
             const likeIconClass = isLiked ? 'fas fa-heart text-red-500' : 'far fa-heart';
+            const isMe = c.userId === currentUser?.uid;
+            const displayName = isMe ? 'You' : maskUserName(c.userName || 'Anonymous');
+            const commentTime = c.timestamp?.toMillis ? c.timestamp.toMillis() : (c.timestamp ? new Date(c.timestamp).getTime() : 0);
+            const elapsed = Date.now() - commentTime;
+            const canEdit = isMe && (commentTime > 0) && (elapsed < 60000);
 
             return `
             <div class="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 mb-2 relative group">
                 <div class="flex justify-between items-start mb-1">
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-sm">${c.userId === currentUser?.uid ? 'You' : 'Anonymous'}</span>
+                        <span class="font-bold text-sm">${displayName}</span>
                         <div class="text-amber-500 text-xs">
                             ${'★'.repeat(c.rating)}${'☆'.repeat(5 - c.rating)}
                         </div>
+                        ${canEdit ? `<button class="edit-my-comment-btn text-xs text-blue-500 hover:underline ml-1" data-comment="${c.comment || ''}">Edit</button>` : ''}
                     </div>
                     <button class="like-comment-btn flex items-center gap-1 text-xs transition-colors hover:text-red-500 ${isLiked ? 'text-red-500' : 'opacity-60'}" 
                             data-comment-uid="${c.userId}" 
@@ -205,6 +218,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${c.comment ? `<p class="text-sm text-slate-800 dark:text-slate-200 italic">"${c.comment}"</p>` : ''}
             </div>
         `;}).join('') : '<p class="text-sm text-center text-slate-500">No ratings yet.</p>';
+
+        commentsList.querySelectorAll('.edit-my-comment-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const commentInput = document.getElementById('comment-input');
+                if (commentInput) {
+                    commentInput.value = btn.dataset.comment || '';
+                    commentInput.focus();
+                    const submitBtn = document.getElementById('submit-rating');
+                    if (submitBtn) {
+                        submitBtn.textContent = 'Update Feedback';
+                        submitBtn.disabled = false;
+                    }
+                }
+            });
+        });
     };
 
     const handleStarClick = (e) => {

@@ -237,6 +237,34 @@
   const cancelledReasonText = document.getElementById('cancelled-reason-text');
   const cancelledDismissBtn = document.getElementById('cancelled-dismiss-btn');
 
+  // Map Elements
+  const bookingMapCard = document.getElementById('booking-map-card');
+  const bookingMapEl = document.getElementById('booking-map');
+  const bookingMapRouteInfo = document.getElementById('booking-map-route-info');
+  const bookingMapDistance = document.getElementById('booking-map-distance');
+  const bookingMapDuration = document.getElementById('booking-map-duration');
+
+  const trackingMapCard = document.getElementById('tracking-map-card');
+  const trackingMapEl = document.getElementById('tracking-map');
+  const trackingMapRouteInfo = document.getElementById('tracking-map-route-info');
+  const trackingMapDistance = document.getElementById('tracking-map-distance');
+  const trackingMapDuration = document.getElementById('tracking-map-duration');
+
+  // Google Maps State
+  let bookingGoogleMap = null;
+  let bookingDirectionsService = null;
+  let bookingDirectionsRenderer = null;
+  let bookingPickupMarker = null;
+  let bookingDropoffMarker = null;
+  let bookingPoortjieCircle = null;
+
+  let trackingGoogleMap = null;
+  let trackingDirectionsService = null;
+  let trackingDirectionsRenderer = null;
+  let trackingPickupMarker = null;
+  let trackingDropoffMarker = null;
+  let trackingDriverMarker = null;
+
   // Toast
   const toastEl = document.getElementById('toast');
 
@@ -609,8 +637,28 @@
         .limit(20)
         .get();
 
+      let likedSet = new Set();
+      if (currentUser) {
+        try {
+          const likesSnap = await reviewLikesCol
+            .where('byUid', '==', currentUser.uid)
+            .get();
+          likedSet = new Set(likesSnap.docs.map(d => d.data().ratingId));
+        } catch (err) {
+          console.warn('Error fetching review likes:', err);
+        }
+      }
+
       const list = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
+        .map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            likes: Math.max(0, data.likes || 0),
+            likedByCurrentUser: likedSet.has(d.id),
+          };
+        })
         .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       driverReviewsCache.set(driverUid, list);
@@ -621,19 +669,361 @@
     }
   }
 
+  /**
+   * Toggle social like on a driver review (mirrors Android FirestoreRatingRepository.likeReview).
+   * Atomically flips like doc and increments/decrements rating likes counter.
+   */
+  async function toggleLikeReview(ratingId, driverUid) {
+    if (!currentUser) {
+      showToast('Sign in to like reviews.');
+      return;
+    }
+    const likeDocRef = reviewLikesCol.doc(`${ratingId}_${currentUser.uid}`);
+    const ratingDocRef = ratingsCol.doc(ratingId);
+    try {
+      await db.runTransaction(async (transaction) => {
+        const likeDoc = await transaction.get(likeDocRef);
+        if (likeDoc.exists) {
+          transaction.delete(likeDocRef);
+          transaction.update(ratingDocRef, {
+            likes: firebase.firestore.FieldValue.increment(-1)
+          });
+        } else {
+          transaction.set(likeDocRef, {
+            ratingId: ratingId,
+            byUid: currentUser.uid,
+            createdAt: Date.now()
+          });
+          transaction.update(ratingDocRef, {
+            likes: firebase.firestore.FieldValue.increment(1)
+          });
+        }
+      });
+      driverReviewsCache.delete(driverUid);
+      if (activeDriverModal && activeDriverModal.uid === driverUid) {
+        openDriverModal(activeDriverModal);
+      }
+    } catch (err) {
+      console.warn('Error toggling like:', err);
+      showToast('Could not update like.');
+    }
+  }
+
+  /** Mask reviewer/user names with asterisks (e.g. "John Doe" -> "J*** D***") for privacy. */
+  function maskUserName(name) {
+    if (!name || !name.trim()) return '***';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '***';
+    return parts.map(part => `${part.charAt(0)}***`).join(' ');
+  }
+
   /** Normalise a rating doc's reviewer name (Android writes reviewerName; older docs used byName). */
   function reviewerNameOf(r) {
     return (r && (r.reviewerName || r.byName)) || 'Rider';
   }
 
   /** ============================================================
-   * GOOGLE PLACES SEARCH INTEGRATION
+   * GOOGLE MAPS & DIRECTIONS INTEGRATION
    * ============================================================ */
+  function initBookingMap() {
+    if (bookingGoogleMap || !bookingMapEl || !global.google || !global.google.maps) return;
+
+    try {
+      console.log('[LaynRider Map] 🗺️ Initializing Booking Google Map...');
+      const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
+      bookingGoogleMap = new google.maps.Map(bookingMapEl, {
+        center: poortjieCenter,
+        zoom: 14,
+        disableDefaultUI: true,
+        zoomControl: true,
+        clickableIcons: false
+      });
+
+      bookingPoortjieCircle = new google.maps.Circle({
+        center: poortjieCenter,
+        radius: SERVICE_AREA.radiusMeters,
+        strokeColor: '#0288D1',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#0288D1',
+        fillOpacity: 0.12,
+        map: bookingGoogleMap
+      });
+
+      bookingDirectionsService = new google.maps.DirectionsService();
+      bookingDirectionsRenderer = new google.maps.DirectionsRenderer({
+        map: bookingGoogleMap,
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: '#0288D1',
+          strokeWeight: 5,
+          strokeOpacity: 0.9
+        }
+      });
+      console.log('[LaynRider Map] ✅ Booking Google Map initialized successfully.');
+    } catch (err) {
+      console.error('[LaynRider Map] ❌ Error initializing booking map:', err);
+    }
+  }
+
+  function updateBookingMap() {
+    if (!bookingGoogleMap) {
+      initBookingMap();
+    }
+    if (!bookingGoogleMap) return;
+
+    const hasPickup = bookingState.pickup && typeof bookingState.pickup.lat === 'number' && typeof bookingState.pickup.lng === 'number' && bookingState.pickup.lat !== 0;
+    const hasDropoff = bookingState.dropoff && typeof bookingState.dropoff.lat === 'number' && typeof bookingState.dropoff.lng === 'number' && bookingState.dropoff.lat !== 0;
+
+    console.log('[LaynRider Map] 🗺️ [BOOKING MAP UPDATE] hasPickup=' + hasPickup + ', hasDropoff=' + hasDropoff);
+
+    // Update Pickup Marker
+    if (hasPickup) {
+      const pos = new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng);
+      if (!bookingPickupMarker) {
+        bookingPickupMarker = new google.maps.Marker({
+          position: pos,
+          map: bookingGoogleMap,
+          title: 'Pickup: ' + (bookingState.pickup.address || 'Pickup'),
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
+      } else {
+        bookingPickupMarker.setPosition(pos);
+        bookingPickupMarker.setMap(bookingGoogleMap);
+      }
+    } else if (bookingPickupMarker) {
+      bookingPickupMarker.setMap(null);
+    }
+
+    // Update Dropoff Marker
+    if (hasDropoff) {
+      const pos = new google.maps.LatLng(bookingState.dropoff.lat, bookingState.dropoff.lng);
+      if (!bookingDropoffMarker) {
+        bookingDropoffMarker = new google.maps.Marker({
+          position: pos,
+          map: bookingGoogleMap,
+          title: 'Drop-off: ' + (bookingState.dropoff.address || 'Destination'),
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
+      } else {
+        bookingDropoffMarker.setPosition(pos);
+        bookingDropoffMarker.setMap(bookingGoogleMap);
+      }
+    } else if (bookingDropoffMarker) {
+      bookingDropoffMarker.setMap(null);
+    }
+
+    // Calculate Driving Route Directions if both endpoints are set
+    if (hasPickup && hasDropoff) {
+      const origin = new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng);
+      const destination = new google.maps.LatLng(bookingState.dropoff.lat, bookingState.dropoff.lng);
+
+      console.log('[LaynRider Map] 🗺️ [DIRECTIONS START] Origin: (' + bookingState.pickup.lat + ', ' + bookingState.pickup.lng + ') -> Dest: (' + bookingState.dropoff.lat + ', ' + bookingState.dropoff.lng + ')');
+
+      const request = {
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING
+      };
+
+      bookingDirectionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          bookingDirectionsRenderer.setDirections(result);
+          const route = result.routes[0];
+          const leg = route.legs[0];
+          console.log('[LaynRider Map] ✅ [DIRECTIONS SUCCESS] Route: ' + leg.distance.text + ', duration: ' + leg.duration.text + ', path points: ' + route.overview_path.length);
+
+          if (bookingMapRouteInfo) {
+            if (bookingMapDistance) bookingMapDistance.textContent = leg.distance.text;
+            if (bookingMapDuration) bookingMapDuration.textContent = leg.duration.text;
+            bookingMapRouteInfo.classList.remove('is-hidden');
+          }
+
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(origin);
+          bounds.extend(destination);
+          bookingGoogleMap.fitBounds(bounds, { top: 30, right: 30, bottom: 30, left: 30 });
+        } else {
+          console.warn('[LaynRider Map] ⚠️ [DIRECTIONS WARN] Directions request failed with status: ' + status);
+          if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(origin);
+          bounds.extend(destination);
+          bookingGoogleMap.fitBounds(bounds, { top: 30, right: 30, bottom: 30, left: 30 });
+        }
+      });
+    } else {
+      if (bookingDirectionsRenderer) {
+        bookingDirectionsRenderer.set('directions', null);
+      }
+      if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
+
+      if (hasPickup) {
+        bookingGoogleMap.setCenter(new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng));
+        bookingGoogleMap.setZoom(15);
+      } else if (hasDropoff) {
+        bookingGoogleMap.setCenter(new google.maps.LatLng(bookingState.dropoff.lat, bookingState.dropoff.lng));
+        bookingGoogleMap.setZoom(14);
+      } else {
+        bookingGoogleMap.setCenter(new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng));
+        bookingGoogleMap.setZoom(14);
+      }
+    }
+  }
+
+  function initTrackingMap() {
+    if (trackingGoogleMap || !trackingMapEl || !global.google || !global.google.maps) return;
+
+    try {
+      console.log('[LaynRider Map] 🗺️ Initializing Tracking Google Map...');
+      const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
+      trackingGoogleMap = new google.maps.Map(trackingMapEl, {
+        center: poortjieCenter,
+        zoom: 14,
+        disableDefaultUI: true,
+        zoomControl: true,
+        clickableIcons: false
+      });
+
+      trackingDirectionsService = new google.maps.DirectionsService();
+      trackingDirectionsRenderer = new google.maps.DirectionsRenderer({
+        map: trackingGoogleMap,
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: '#0288D1',
+          strokeWeight: 5,
+          strokeOpacity: 0.9
+        }
+      });
+      console.log('[LaynRider Map] ✅ Tracking Google Map initialized successfully.');
+    } catch (err) {
+      console.error('[LaynRider Map] ❌ Error initializing tracking map:', err);
+    }
+  }
+
+  function updateTrackingMap(b) {
+    if (!b) return;
+    if (!trackingGoogleMap) {
+      initTrackingMap();
+    }
+    if (!trackingGoogleMap) return;
+
+    const p = b.pickup || {};
+    const d = b.dropoff || {};
+    const hasP = typeof p.lat === 'number' && typeof p.lng === 'number' && p.lat !== 0;
+    const hasD = typeof d.lat === 'number' && typeof d.lng === 'number' && d.lat !== 0;
+
+    if (hasP) {
+      const pPos = new google.maps.LatLng(p.lat, p.lng);
+      if (!trackingPickupMarker) {
+        trackingPickupMarker = new google.maps.Marker({
+          position: pPos,
+          map: trackingGoogleMap,
+          title: 'Pickup: ' + (p.address || 'Pickup'),
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
+      } else {
+        trackingPickupMarker.setPosition(pPos);
+        trackingPickupMarker.setMap(trackingGoogleMap);
+      }
+    }
+
+    if (hasD) {
+      const dPos = new google.maps.LatLng(d.lat, d.lng);
+      if (!trackingDropoffMarker) {
+        trackingDropoffMarker = new google.maps.Marker({
+          position: dPos,
+          map: trackingGoogleMap,
+          title: 'Drop-off: ' + (d.address || 'Destination'),
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
+      } else {
+        trackingDropoffMarker.setPosition(dPos);
+        trackingDropoffMarker.setMap(trackingGoogleMap);
+      }
+    }
+
+    // Check for Driver Location
+    const driverUid = b.driverId || b.requestedDriverId;
+    const driverPresence = driverUid ? rtdbPresence[driverUid] : null;
+    const hasDriverLoc = driverPresence && typeof driverPresence.lat === 'number' && typeof driverPresence.lng === 'number' && driverPresence.lat !== 0;
+
+    if (hasDriverLoc) {
+      const driverPos = new google.maps.LatLng(driverPresence.lat, driverPresence.lng);
+      if (!trackingDriverMarker) {
+        trackingDriverMarker = new google.maps.Marker({
+          position: driverPos,
+          map: trackingGoogleMap,
+          title: 'Driver Location',
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+            scaledSize: new google.maps.Size(32, 32)
+          }
+        });
+      } else {
+        trackingDriverMarker.setPosition(driverPos);
+        trackingDriverMarker.setMap(trackingGoogleMap);
+      }
+    } else if (trackingDriverMarker) {
+      trackingDriverMarker.setMap(null);
+    }
+
+    if (hasP && hasD) {
+      const origin = new google.maps.LatLng(p.lat, p.lng);
+      const destination = new google.maps.LatLng(d.lat, d.lng);
+
+      console.log('[LaynRider Map] 🗺️ [TRACKING DIRECTIONS START] Origin: (' + p.lat + ', ' + p.lng + ') -> Dest: (' + d.lat + ', ' + d.lng + ')');
+
+      const request = {
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING
+      };
+
+      trackingDirectionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          trackingDirectionsRenderer.setDirections(result);
+          const route = result.routes[0];
+          const leg = route.legs[0];
+          console.log('[LaynRider Map] ✅ [TRACKING DIRECTIONS SUCCESS] ' + leg.distance.text + ', ' + leg.duration.text);
+
+          if (trackingMapRouteInfo) {
+            if (trackingMapDistance) trackingMapDistance.textContent = leg.distance.text;
+            if (trackingMapDuration) trackingMapDuration.textContent = leg.duration.text;
+            trackingMapRouteInfo.classList.remove('is-hidden');
+          }
+
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(origin);
+          bounds.extend(destination);
+          if (hasDriverLoc) bounds.extend(new google.maps.LatLng(driverPresence.lat, driverPresence.lng));
+          trackingGoogleMap.fitBounds(bounds, { top: 30, right: 30, bottom: 30, left: 30 });
+        } else {
+          console.warn('[LaynRider Map] ⚠️ [TRACKING DIRECTIONS WARN] Status: ' + status);
+        }
+      });
+    }
+  }
+
   global.initGooglePlaces = function () {
     if (!global.google || !global.google.maps || !global.google.maps.places) {
       console.warn('Google Places library not yet ready.');
       return;
     }
+
+    initBookingMap();
 
     const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
     const circle = new google.maps.Circle({ center: poortjieCenter, radius: 5000 });
@@ -652,6 +1042,7 @@
           const lng = place.geometry.location.lng();
           const addr = place.formatted_address || place.name || pickupAddressInput.value;
           setPickupLocation(addr, lat, lng);
+          updateBookingMap();
         }
       });
     }
@@ -670,6 +1061,8 @@
           const addr = place.formatted_address || place.name || dropoffAddressInput.value;
           bookingState.dropoff = { address: addr, lat, lng };
           dropoffAddressInput.value = addr;
+          if (dropoffClearBtn) dropoffClearBtn.classList.remove('is-hidden');
+          updateBookingMap();
         }
       });
     }
@@ -900,7 +1293,8 @@
 
   /** Open Driver Detail Modal with Ratings and Passenger Reviews */
   async function openDriverModal(driverId) {
-    const driver = allOnlineDrivers.find((d) => d.uid === driverId);
+    const uid = (driverId && typeof driverId === 'object') ? driverId.uid : driverId;
+    const driver = allOnlineDrivers.find((d) => d.uid === uid);
     if (!driver) return;
 
     activeDriverModal = driver;
@@ -926,15 +1320,59 @@
       driverModalReviewsList.innerHTML = '<div style="font-size:12px;color:var(--text-dim);">Loading passenger reviews…</div>';
       const reviews = await getDriverReviews(driver.uid);
       if (reviews && reviews.length > 0) {
-        driverModalReviewsList.innerHTML = reviews.map(r => `
+        driverModalReviewsList.innerHTML = reviews.map(r => {
+          const isAuthor = currentUser && r.byUid === currentUser.uid;
+          const elapsed = Date.now() - (r.createdAt || 0);
+          const canEdit = isAuthor && (r.createdAt > 0) && (elapsed < 60000);
+          const editBtnHtml = canEdit ? `<button type="button" class="btn btn-ghost btn-sm edit-review-btn" data-id="${r.id}" data-comment="${escapeHtml(r.review || '')}" style="font-size:11px;padding:2px 8px;cursor:pointer;">Edit</button>` : '';
+
+          return `
           <div class="review-item-card">
             <div class="review-item-header">
-              <span>${escapeHtml(reviewerNameOf(r))}</span>
+              <span>${escapeHtml(maskUserName(reviewerNameOf(r)))}</span>
               <span style="color:var(--brand-gold);">★ ${r.stars || 0}</span>
             </div>
             ${r.review ? `<p class="review-item-comment">"${escapeHtml(r.review)}"</p>` : ''}
+            <div class="review-item-footer">
+              <button type="button" class="like-review-btn ${r.likedByCurrentUser ? 'is-liked' : ''}" data-id="${r.id}" title="Like review">
+                <span class="like-icon">${r.likedByCurrentUser ? '♥' : '♡'}</span>
+                <span class="like-count">${r.likes || 0}</span>
+              </button>
+              ${editBtnHtml}
+            </div>
           </div>
-        `).join('');
+        `;}).join('');
+
+        driverModalReviewsList.querySelectorAll('.like-review-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const ratingId = btn.dataset.id;
+            await toggleLikeReview(ratingId, driver.uid);
+          });
+        });
+
+        driverModalReviewsList.querySelectorAll('.edit-review-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const ratingId = btn.dataset.id;
+            const currentComment = btn.dataset.comment || '';
+            const newComment = prompt('Edit your review message (within 1 minute):', currentComment);
+            if (newComment !== null && newComment.trim() !== currentComment) {
+              try {
+                await ratingsCol.doc(ratingId).update({
+                  review: newComment.trim(),
+                  updatedAt: Date.now()
+                });
+                driverReviewsCache.delete(driver.uid);
+                showToast('Review updated!');
+                openDriverModal(driver.uid);
+              } catch (err) {
+                console.warn('Failed to update review:', err);
+                showToast('Could not update review.');
+              }
+            }
+          });
+        });
       } else {
         driverModalReviewsList.innerHTML = '<div style="font-size:12px;color:var(--text-dim);">No reviews yet. Be the first to rate!</div>';
       }
@@ -1008,7 +1446,11 @@
     if (bookingNoteCount) bookingNoteCount.textContent = '0/64';
     if (bookingFormError) bookingFormError.classList.add('is-hidden');
 
-    if (bookingModal) bookingModal.classList.remove('is-hidden');
+    if (bookingModal) {
+      bookingModal.classList.remove('is-hidden');
+      initBookingMap();
+      setTimeout(() => updateBookingMap(), 150);
+    }
   }
 
   function closeBookingModal() {
@@ -1048,6 +1490,7 @@
     if (pickupAddressInput) pickupAddressInput.value = trimmed;
     if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !trimmed);
     validatePickupGeofence();
+    updateBookingMap();
   }
 
   /** Validate Pickup Geofence */
@@ -1623,6 +2066,11 @@
     if (activeBookingCountdownPill) {
       activeBookingCountdownPill.classList.add('is-hidden');
     }
+
+    initTrackingMap();
+    setTimeout(() => {
+      updateTrackingMap(booking);
+    }, 150);
   }
 
   /** Cancel Pending Request → server (cancelBookingCallable). */
@@ -1714,6 +2162,17 @@
 
             await updateDriverRatingAggregates(driverUid);
             driverReviewsCache.delete(driverUid);
+          } else {
+            const existingDoc = existing.docs[0];
+            const existingData = existingDoc.data();
+            const elapsed = Date.now() - (existingData.createdAt || 0);
+            if (elapsed <= 60000) {
+              await ratingsCol.doc(existingDoc.id).update({
+                review: comment,
+                updatedAt: Date.now()
+              });
+              driverReviewsCache.delete(driverUid);
+            }
           }
         } catch (e) {
           console.warn('Error saving rating:', e);
@@ -1903,6 +2362,7 @@
           pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
         }
         if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+        updateBookingMap();
       });
     }
 
@@ -1915,6 +2375,7 @@
         }
         bookingState.dropoff = { address: '', lat: null, lng: null };
         dropoffClearBtn.classList.add('is-hidden');
+        updateBookingMap();
       });
     }
 
@@ -1936,6 +2397,7 @@
             dropoffAddressInput.value = val;
             if (dropoffClearBtn) dropoffClearBtn.classList.remove('is-hidden');
           }
+          updateBookingMap();
         }
       });
     });
