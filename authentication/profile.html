@@ -106,8 +106,8 @@
         </button>
     </div>
 
-    <!-- Password & Security Card -->
-    <div id="password-section" class="card flex flex-col p-8 rounded-2xl border-l-4 border-l-blue-500 mt-6 shadow-sm">
+    <!-- Password & Security Card (Hidden by default if password linked, shown for forgot-password or unlinked accounts) -->
+    <div id="password-section" class="card hidden flex-col p-8 rounded-2xl border-l-4 border-l-blue-500 mt-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 id="password-section-title" class="text-xl font-bold text-slate-900 dark:text-slate-100">Password & Security</h3>
@@ -424,21 +424,8 @@
                 showStatus("Error loading profile data.", true);
             });
 
-            // Update Password section badge and handle set-password action
-            updatePasswordBadge(user);
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('action') === 'set-password' || urlParams.get('action') === 'change-password' || sessionStorage.getItem('openPasswordModal') === 'true') {
-                sessionStorage.removeItem('openPasswordModal');
-                const alertBanner = document.getElementById('password-alert-banner');
-                if (alertBanner) alertBanner.classList.remove('hidden');
-                const pwdSection = document.getElementById('password-section');
-                if (pwdSection) {
-                    setTimeout(() => {
-                        pwdSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        document.getElementById('new-password')?.focus();
-                    }, 400);
-                }
-            }
+            // Update Password section visibility (hidden if already linked, shown if from forgot password or unlinked)
+            updatePasswordSectionVisibility(user);
         } else {
             window.top.location.replace('login.html');
         }
@@ -633,6 +620,40 @@
             passwordStatusBadge.textContent = 'Google Only (No Password)';
             passwordStatusBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
             if (savePasswordBtn) savePasswordBtn.textContent = 'Save & Link Password';
+        }
+    }
+
+    function updatePasswordSectionVisibility(user) {
+        const passwordSection = document.getElementById('password-section');
+        const alertBanner = document.getElementById('password-alert-banner');
+        if (!passwordSection || !user) return;
+
+        const providers = (user.providerData || []).map(p => p.providerId);
+        const hasPassword = providers.includes('password');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isFromForgotPassword = urlParams.get('action') === 'set-password' ||
+                                     urlParams.get('action') === 'change-password' ||
+                                     sessionStorage.getItem('openPasswordModal') === 'true';
+
+        updatePasswordBadge(user);
+
+        // Hide if user account is already linked with password and did not come from forgot password
+        if (hasPassword && !isFromForgotPassword) {
+            passwordSection.classList.add('hidden');
+            passwordSection.classList.remove('flex');
+        } else {
+            passwordSection.classList.remove('hidden');
+            passwordSection.classList.add('flex');
+
+            if (isFromForgotPassword) {
+                sessionStorage.removeItem('openPasswordModal');
+                if (alertBanner) alertBanner.classList.remove('hidden');
+                setTimeout(() => {
+                    passwordSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('new-password')?.focus();
+                }, 400);
+            }
         }
     }
 
