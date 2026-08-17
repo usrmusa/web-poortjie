@@ -105,6 +105,50 @@
             Logout
         </button>
     </div>
+
+    <!-- Password & Security Card -->
+    <div id="password-section" class="card flex flex-col p-8 rounded-2xl border-l-4 border-l-blue-500 mt-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 id="password-section-title" class="text-xl font-bold text-slate-900 dark:text-slate-100">Password & Security</h3>
+                <p id="password-section-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set or change your password to log in with email and password.</p>
+            </div>
+            <span id="password-status-badge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300">
+                Checking...
+            </span>
+        </div>
+
+        <div id="password-alert-banner" class="hidden mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs font-medium border border-blue-200 dark:border-blue-800">
+            ✨ <strong>Google Verified!</strong> Enter your new password below to link it to your account so you can log in with either Google or your email & password next time.
+        </div>
+
+        <div id="password-status-msg" class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"></div>
+
+        <form id="password-form" class="space-y-4">
+            <div>
+                <label for="new-password" class="block text-xs font-bold uppercase tracking-wider mb-1 opacity-70">New Password</label>
+                <div class="relative">
+                    <input type="password" id="new-password" placeholder="At least 6 characters" minlength="6" required
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                    <button type="button" id="toggle-new-password" class="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white text-xs font-bold cursor-pointer">
+                        SHOW
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label for="confirm-password" class="block text-xs font-bold uppercase tracking-wider mb-1 opacity-70">Confirm New Password</label>
+                <div class="relative">
+                    <input type="password" id="confirm-password" placeholder="Re-enter new password" minlength="6" required
+                           class="w-full p-3 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-900 dark:text-white border-2 border-transparent focus:border-green-500 focus:outline-none transition">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" id="save-password-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition shadow-md cursor-pointer">
+                    Save & Link Password
+                </button>
+            </div>
+        </form>
+    </div>
 </main>
 
 <!-- Image Modal -->
@@ -379,6 +423,22 @@
                 console.error("Error fetching user data:", error);
                 showStatus("Error loading profile data.", true);
             });
+
+            // Update Password section badge and handle set-password action
+            updatePasswordBadge(user);
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'set-password' || urlParams.get('action') === 'change-password' || sessionStorage.getItem('openPasswordModal') === 'true') {
+                sessionStorage.removeItem('openPasswordModal');
+                const alertBanner = document.getElementById('password-alert-banner');
+                if (alertBanner) alertBanner.classList.remove('hidden');
+                const pwdSection = document.getElementById('password-section');
+                if (pwdSection) {
+                    setTimeout(() => {
+                        pwdSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        document.getElementById('new-password')?.focus();
+                    }, 400);
+                }
+            }
         } else {
             window.top.location.replace('login.html');
         }
@@ -545,6 +605,129 @@
         }
         checkChanges();
     });
+
+    // ── Password & Security Management ──────────────────────────────────────────
+    const passwordForm = document.getElementById('password-form');
+    const passwordStatusMsg = document.getElementById('password-status-msg');
+    const passwordStatusBadge = document.getElementById('password-status-badge');
+    const newPasswordInput = document.getElementById('new-password');
+    const confirmPasswordInput = document.getElementById('confirm-password');
+    const toggleNewPasswordBtn = document.getElementById('toggle-new-password');
+    const savePasswordBtn = document.getElementById('save-password-btn');
+
+    function updatePasswordBadge(user) {
+        if (!passwordStatusBadge || !user) return;
+        const providers = (user.providerData || []).map(p => p.providerId);
+        const hasGoogle = providers.includes('google.com');
+        const hasPassword = providers.includes('password');
+
+        if (hasPassword && hasGoogle) {
+            passwordStatusBadge.textContent = 'Linked (Google + Password)';
+            passwordStatusBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300';
+            if (savePasswordBtn) savePasswordBtn.textContent = 'Update Password';
+        } else if (hasPassword) {
+            passwordStatusBadge.textContent = 'Password Active';
+            passwordStatusBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300';
+            if (savePasswordBtn) savePasswordBtn.textContent = 'Update Password';
+        } else if (hasGoogle) {
+            passwordStatusBadge.textContent = 'Google Only (No Password)';
+            passwordStatusBadge.className = 'px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
+            if (savePasswordBtn) savePasswordBtn.textContent = 'Save & Link Password';
+        }
+    }
+
+    function showPasswordStatus(message, isError = false) {
+        if (!passwordStatusMsg) return;
+        passwordStatusMsg.textContent = message;
+        passwordStatusMsg.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'border-red-200', 'bg-green-100', 'text-green-700', 'border-green-200');
+        if (isError) {
+            passwordStatusMsg.classList.add('bg-red-100', 'text-red-700', 'border-red-200');
+        } else {
+            passwordStatusMsg.classList.add('bg-green-100', 'text-green-700', 'border-green-200');
+        }
+        passwordStatusMsg.classList.remove('hidden');
+        setTimeout(() => {
+            passwordStatusMsg.classList.add('hidden');
+        }, 7000);
+    }
+
+    if (toggleNewPasswordBtn && newPasswordInput) {
+        toggleNewPasswordBtn.addEventListener('click', () => {
+            const isPassword = newPasswordInput.type === 'password';
+            newPasswordInput.type = isPassword ? 'text' : 'password';
+            toggleNewPasswordBtn.textContent = isPassword ? 'HIDE' : 'SHOW';
+        });
+    }
+
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (newPassword.length < 6) {
+                showPasswordStatus('Password must be at least 6 characters long.', true);
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showPasswordStatus('Passwords do not match. Please re-enter your password to confirm.', true);
+                return;
+            }
+
+            savePasswordBtn.disabled = true;
+            const originalBtnText = savePasswordBtn.textContent;
+            savePasswordBtn.innerHTML = `<span class="inline-flex items-center justify-center gap-2">
+                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving Password...
+            </span>`;
+
+            try {
+                const currentUser = firebase.auth().currentUser;
+                if (!currentUser) throw new Error('Not authenticated.');
+
+                const hasPassword = (currentUser.providerData || []).some(p => p.providerId === 'password');
+
+                if (hasPassword) {
+                    await currentUser.updatePassword(newPassword);
+                } else {
+                    try {
+                        const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, newPassword);
+                        await currentUser.linkWithCredential(credential);
+                    } catch (linkErr) {
+                        if (linkErr.code === 'auth/provider-already-linked' || linkErr.code === 'auth/credential-already-in-use') {
+                            await currentUser.updatePassword(newPassword);
+                        } else {
+                            throw linkErr;
+                        }
+                    }
+                }
+
+                await firebase.firestore().collection('users').doc(currentUser.uid).set({
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                showPasswordStatus('Password saved and linked successfully! You can now log in using your email and this password next time.', false);
+                newPasswordInput.value = '';
+                confirmPasswordInput.value = '';
+                updatePasswordBadge(currentUser);
+            } catch (err) {
+                console.error('Error updating password:', err);
+                if (err.code === 'auth/requires-recent-login') {
+                    showPasswordStatus('Recent login required: Please sign in with Google again before setting your password.', true);
+                } else if (err.code === 'auth/weak-password') {
+                    showPasswordStatus('Password is too weak. Please use at least 6 characters.', true);
+                } else {
+                    showPasswordStatus(err.message || 'Could not save password. Please try again.', true);
+                }
+            } finally {
+                savePasswordBtn.disabled = false;
+                savePasswordBtn.textContent = originalBtnText;
+            }
+        });
+    }
 </script>
 </body>
 </html>

@@ -92,9 +92,12 @@
                     Login
                 </button>
             </div>
-            <a href="#" class="inline-block align-baseline font-bold text-sm text-green-500 hover:text-green-800 mt-4">
-                Forgot Password?
-            </a>
+            <div class="mt-4 text-center">
+                <button type="button" id="forgot-password-btn"
+                        class="inline-block align-baseline font-bold text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:underline transition cursor-pointer">
+                    Forgot Password?
+                </button>
+            </div>
         </form>
         <p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
             Don't have an account? <a href="register.html"
@@ -373,6 +376,60 @@
         });
     }
 
+    const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+    if (forgotPasswordBtn) {
+        forgotPasswordBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            errorMessage.classList.add('hidden');
+
+            forgotPasswordBtn.disabled = true;
+            const originalContent = forgotPasswordBtn.innerHTML;
+            forgotPasswordBtn.innerHTML = `<span class="inline-flex items-center justify-center gap-2">
+                <svg class="animate-spin h-4 w-4 text-green-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verifying with Google...
+            </span>`;
+
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const emailVal = emailInput ? emailInput.value.trim() : '';
+                if (emailVal && emailVal.includes('@')) {
+                    provider.setCustomParameters({ prompt: 'select_account', login_hint: emailVal });
+                } else {
+                    provider.setCustomParameters({ prompt: 'select_account' });
+                }
+
+                let result;
+                try {
+                    result = await firebase.auth().signInWithPopup(provider);
+                } catch (popupErr) {
+                    if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/cancelled-popup-request') {
+                        sessionStorage.setItem('openPasswordModal', 'true');
+                        return firebase.auth().signInWithRedirect(provider);
+                    }
+                    throw popupErr;
+                }
+
+                if (result && result.user) {
+                    if (AuthStore.ensureUserDoc) {
+                        await AuthStore.ensureUserDoc(result.user);
+                    }
+                    sessionStorage.setItem('openPasswordModal', 'true');
+                    window.location.replace('profile.html?action=set-password');
+                }
+            } catch (error) {
+                forgotPasswordBtn.disabled = false;
+                forgotPasswordBtn.innerHTML = originalContent;
+                if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+                    errorMessage.textContent = getFriendlyErrorMessage(error.code || error.message);
+                    errorMessage.classList.remove('hidden');
+                }
+            }
+        });
+    }
+
     // Check redirect login results if redirect mode was used
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().getRedirectResult()
@@ -380,6 +437,11 @@
                 if (result && result.user) {
                     if (AuthStore.ensureUserDoc) {
                         await AuthStore.ensureUserDoc(result.user);
+                    }
+                    if (sessionStorage.getItem('openPasswordModal') === 'true') {
+                        sessionStorage.removeItem('openPasswordModal');
+                        window.location.replace('profile.html?action=set-password');
+                        return;
                     }
                     navigateAfterAuth();
                 }
