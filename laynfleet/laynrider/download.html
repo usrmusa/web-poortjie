@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Download LaynFleet Apps — LaynRider & LaynDriver</title>
+  <meta name="description" content="Download the official LaynRider and LaynDriver Android Apps for Poortjie. Schedule rides in advance, get live push notifications, track drivers in real-time, or join as a driver." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <link rel="icon" type="image/png" href="laynrider.png" />
+  <link rel="stylesheet" href="rider.css" />
+  <script src="../../scripts/theme.js"></script>
+
+  <style>
+    /* Specialized styles for the Download & Sideload Page */
+    .dl-hero {
+      text-align: center;
+      padding: 32px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dl-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--success-bg);
+      color: var(--brand);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .dl-hero-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+      max-width: 680px;
+    }
+
+    .dl-hero-title span {
+      color: var(--brand);
+    }
+
+    .dl-hero-subtitle {
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 620px;
+      line-height: 1.5;
+    }
+
+    /* Store Review Notice Alert */
+    .store-notice-card {
+      background: var(--brand-gold-bg);
+      border: 1px solid var(--brand-gold-border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      max-width: 780px;
+      margin: 0 auto 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .store-notice-icon {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .store-notice-content {
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .store-notice-content strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--warn);
+      margin-bottom: 2px;
+    }
+
+    /* App Cards Grid */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .apps-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .app-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .app-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--brand);
+    }
+
+    .app-card-featured-tag {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: var(--brand-gold-bg);
+      color: var(--brand-gold);
+      border: 1px solid var(--brand-gold-border);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .app-card-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .app-card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .app-card-info h2 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .app-card-info p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .app-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      padding: 4px 0;
+    }
+
+    .app-features-list li {
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.4;
+    }
+
+    .app-features-list li .feat-icon {
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+
+    .app-features-list li strong {
+      color: var(--text);
+    }
+
+    .app-features-list li span.desc {
+      color: var(--text-dim);
+    }
+
+    .app-download-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .app-download-btn.primary {
+      background: var(--brand);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+    }
+
+    .app-download-btn.primary:hover {
+      background: var(--brand-hover);
+      transform: scale(1.01);
+    }
+
+    .app-download-btn.secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .app-download-btn.secondary:hover {
+      background: var(--panel-hover);
+      border-color: var(--brand);
+    }
+
+    .app-meta-text {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-align: center;
+      margin-top: -10px;
+      font-family: monospace;
+    }
+
+    /* Sideloading Instructions */
+    .guide-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 30px 24px;
+      max-width: 960px;
+      margin: 10px auto 0;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+
+    .guide-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .guide-header h3 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+    }
+
+    .guide-header p {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .steps-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .steps-grid {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+      }
+    }
+
+    .step-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .step-card h4 {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .step-card p {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    /* Comparison Table Section */
+    .compare-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 26px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .compare-table th, .compare-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table th {
+      font-weight: 800;
+      color: var(--text);
+      background: var(--panel-2);
+    }
+
+    .compare-table th:first-child {
+      border-top-left-radius: 10px;
+    }
+
+    .compare-table th:last-child {
+      border-top-right-radius: 10px;
+    }
+
+    .compare-table td:nth-child(2), .compare-table td:nth-child(3),
+    .compare-table th:nth-child(2), .compare-table th:nth-child(3) {
+      text-align: center;
+    }
+
+    /* Bottom Web Booking Return Banner */
+    .return-banner {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      max-width: 780px;
+      margin: 10px auto 20px;
+    }
+
+    @media (min-width: 600px) {
+      .return-banner {
+        flex-direction: row;
+        text-align: left;
+        justify-content: space-between;
+      }
+    }
+
+    .return-banner-text h4 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .return-banner-text p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header-nav">
+    <div class="header-content">
+      <div class="header-left">
+        <a href="index.html" class="back-link" title="Back to LaynRider Web Booking">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <a href="index.html" class="brand-wrap" title="LaynRider">
+          <div class="brand-text">
+            <h1 class="brand-title">LaynFleet <span class="brand-accent">Apps</span></h1>
+          </div>
+        </a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="index.html" class="btn btn-sm btn-ghost" title="Web Booking">
+          <span>⚡</span> Web Ride
+        </a>
+        <a href="../../home.html" class="btn btn-sm btn-ghost" title="Poortjie Home">
+          <span>🏠</span> Home
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <main class="app-container">
+
+    <!-- HERO INTRO -->
+    <section class="dl-hero">
+      <div class="dl-hero-badge">
+        <span>🚀</span> Official Android Releases · Poortjie Kasi Fleet
+      </div>
+      <h2 class="dl-hero-title">
+        Unlock All Features with <span>LaynFleet</span> Android Apps
+      </h2>
+      <p class="dl-hero-subtitle">
+        Schedule rides ahead of time, receive instant driver arrival push notifications, track turn-by-turn background GPS, or join our democratic driver community.
+      </p>
+    </section>
+
+    <!-- PLAY STORE REVIEW NOTICE -->
+    <div class="store-notice-card">
+      <span class="store-notice-icon">⏳</span>
+      <div class="store-notice-content">
+        <strong>Google Play Store Review in Progress</strong>
+        Our official apps have been submitted and are currently in Google Play Store review. In the meantime, you can directly and securely install the official release APKs below with zero waiting.
+      </div>
+    </div>
+
+    <!-- DUAL APPS GRID (RIDER & DRIVER) -->
+    <section class="apps-grid">
+
+      <!-- CARD 1: LAYNRIDER PASSENGER APP -->
+      <article class="app-card">
+        <span class="app-card-featured-tag">Passenger App</span>
+        <div class="app-card-head">
+          <div class="app-card-icon">🚖</div>
+          <div class="app-card-info">
+            <h2>LaynRider</h2>
+            <p>Fast, transparent rides in Poortjie</p>
+          </div>
+        </div>
+
+        <ul class="app-features-list">
+          <li>
+            <span class="feat-icon">📅</span>
+            <div>
+              <strong>Schedule Trips in Advance:</strong>
+              <span class="desc">Book rides hours or days ahead for appointments, work, or early-morning trips.</span>
+            </div>
+          </li>
+          <li>
+            <span class="feat-icon">🔔</span>
+            <div>
+              <strong>Instant Push Notifications:</strong>
+              <span class="desc">Receive alerts the instant your driver accepts, arrives, or messages.</span>
+            </div>
+          </li>
+          <li>
+            <span class="feat-icon">📍</span>
+            <div>
+              <strong>Background Live GPS Tracking:</strong>
+              <span class="desc">Follow your driver in real-time even with your phone locked or in your pocket.</span>
+            </div>
+          </li>
+          <li>
+            <span class="feat-icon">💵</span>
+            <div>
+              <strong>Locked Upfront Pricing:</strong>
+              <span class="desc">Know the exact fare before you ride. Pay cash or EFT on arrival.</span>
+            </div>
+          </li>
+        </ul>
+
+        <a href="laynrider-release.apk" download="laynrider-release.apk" class="app-download-btn primary">
+          <span>📥</span> Download LaynRider APK
+        </a>
+        <div class="app-meta-text">
+          Release v1.0.0 · Android 7.0+ · APK Size: ~15.4 MB
+        </div>
+      </article>
+
+      <!-- CARD 2: LAYNDRIVER DRIVER & OPERATOR APP -->
+      <article class="app-card" style="border-color: var(--brand-gold-border);">
+        <span class="app-card-featured-tag" style="background: rgba(37, 99, 235, 0.12); color: #2563eb; border-color: rgba(37, 99, 235, 0.3);">Driver App</span>
+        <div class="app-card-head">
+          <div class="app-card-icon" style="background: var(--brand-gold-bg);">🚗</div>
+          <div class="app-card-info">
+            <h2>LaynDriver</h2>
+            <p>Earn on your terms in Poortjie</p>
+          </div>
+        </div>
+
+        <ul class="app-features-list">
+          <li>
+            <span class="feat-icon">🗳️</span>
+            <div>
+              <strong>Democratic Pricing Governance:</strong>
+              <span class="desc">Vote on per-km rates and minimum fares with fellow drivers in your vehicle category.</span>
+            </div>
+          </li>
+          <li>
+            <span class="feat-icon">💰</span>
+            <div>
+              <strong>100% Direct Cash Settlement:</strong>
+              <span class="desc">Keep everything you earn. Riders pay you directly via cash or EFT on arrival.</span>
+            </div>
+          </li>
+          <li>
+            <span class="feat-icon">🧭</span>
+            <div>
+              <strong>Built-in GPS Navigation:</strong>
+              <span class="desc">Get instant turn-by-turn routing directly to pickup and drop-off locations.</span>
+            </div>
+          </li>
+          <li>
+            <span class="feat-icon">🚘</span>
+            <div>
+              <strong>All Vehicle Types Welcome:</strong>
+              <span class="desc">Private cars, mini-buses, bakkies, motorbikes, and tuk-tuks can register.</span>
+            </div>
+          </li>
+        </ul>
+
+        <a href="layndriver-release.apk" download="layndriver-release.apk" class="app-download-btn primary" style="background: #1e293b;">
+          <span>📥</span> Download LaynDriver APK
+        </a>
+        <div class="app-meta-text">
+          Release v1.0.0 · Android 7.0+ · APK Size: ~15.3 MB
+        </div>
+      </article>
+
+    </section>
+
+    <!-- STEP-BY-STEP SIDE-LOADING INSTALLATION GUIDE -->
+    <section class="guide-section">
+      <div class="guide-header">
+        <h3>📲 How to Install the APK on Your Android Device</h3>
+        <p>Installing an app outside the Play Store (side-loading) takes less than 30 seconds:</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h4>Download APK</h4>
+          <p>Tap either <strong>Download LaynRider</strong> or <strong>Download LaynDriver</strong> button above on your Android phone.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h4>Open Downloaded File</h4>
+          <p>When download finishes, tap the notification or open your phone's <strong>Downloads</strong> folder and tap the <code>.apk</code> file.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h4>Allow from This Source</h4>
+          <p>If prompted with <em>"Install unknown apps"</em>, tap <strong>Settings</strong> and enable <strong>"Allow from this source"</strong> for Chrome/Files.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <h4>Tap Install & Launch</h4>
+          <p>Tap <strong>Install</strong>. Once complete, tap <strong>Open</strong> and log in with your email to start booking or driving!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE COMPARISON TABLE (WEB vs NATIVE APP) -->
+    <section class="compare-section">
+      <h3 style="font-size: 18px; font-weight: 800; text-align: center;">Web vs. Android App Comparison</h3>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Web Browser</th>
+            <th>Android Native App</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Instant Ride Now (ASAP)</strong></td>
+            <td>✅ Available</td>
+            <td>✅ Available</td>
+          </tr>
+          <tr>
+            <td><strong>Schedule Trips in Advance</strong></td>
+            <td>❌ App Exclusive</td>
+            <td>✅ Full Support</td>
+          </tr>
+          <tr>
+            <td><strong>Push Arrival Notifications</strong></td>
+            <td>⚠️ Only with Tab Open</td>
+            <td>✅ Instant Background Alerts</td>
+          </tr>
+          <tr>
+            <td><strong>Live Background GPS Tracking</strong></td>
+            <td>⚠️ Active Tab Only</td>
+            <td>✅ High-Accuracy Live Map</td>
+          </tr>
+          <tr>
+            <td><strong>Driver Democratic Pricing Voting</strong></td>
+            <td>❌ View Rates Only</td>
+            <td>✅ Full Voting Rights (LaynDriver)</td>
+          </tr>
+          <tr>
+            <td><strong>Offline Driver Mode & Fast Dispatch</strong></td>
+            <td>❌ No</td>
+            <td>✅ Built-in Driver Radar</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- RETURN TO WEB BOOKING BANNER -->
+    <div class="return-banner">
+      <div class="return-banner-text">
+        <h4>Need a ride right now without installing?</h4>
+        <p>You can still book an instant ASAP ride directly in your mobile browser.</p>
+      </div>
+      <a href="index.html" class="btn btn-primary btn-md">
+        <span>⚡</span> Book ASAP on Web
+      </a>
+    </div>
+
+  </main>
+
+</body>
+</html>

@@ -1628,30 +1628,16 @@
     updateUpfrontFarePreview();
   }
 
-  /** Set Booking Type (ASAP or SCHEDULED) */
+  /** Set Booking Type (ASAP on Web, or Route to Download App for SCHEDULED) */
   function setBookingType(type) {
-    bookingState.type = type;
-    if (type === 'ASAP') {
-      if (toggleTypeAsap) toggleTypeAsap.classList.add('is-active');
-      if (toggleTypeScheduled) toggleTypeScheduled.classList.remove('is-active');
-      if (scheduledFields) scheduledFields.classList.add('is-hidden');
-    } else {
-      if (toggleTypeAsap) toggleTypeAsap.classList.remove('is-active');
-      if (toggleTypeScheduled) toggleTypeScheduled.classList.add('is-active');
-      if (scheduledFields) scheduledFields.classList.remove('is-hidden');
-
-      const today = new Date();
-      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-      if (scheduledDateInput && !scheduledDateInput.value) {
-        scheduledDateInput.value = tomorrow.toISOString().split('T')[0];
-        scheduledDateInput.min = today.toISOString().split('T')[0];
-      }
-      if (scheduledTimeInput && !scheduledTimeInput.value) {
-        const hh = String(today.getHours()).padStart(2, '0');
-        const mm = String(today.getMinutes()).padStart(2, '0');
-        scheduledTimeInput.value = `${hh}:${mm}`;
-      }
+    if (type === 'SCHEDULED') {
+      window.location.href = 'download.html?feature=scheduled';
+      return;
     }
+    bookingState.type = 'ASAP';
+    if (toggleTypeAsap) toggleTypeAsap.classList.add('is-active');
+    if (toggleTypeScheduled) toggleTypeScheduled.classList.remove('is-active');
+    if (scheduledFields) scheduledFields.classList.add('is-hidden');
   }
 
   /** Update pickup coordinates and validate geofence */
@@ -1937,28 +1923,8 @@
       return;
     }
 
-    let scheduledEpochMillis = null;
-    if (bookingState.type === 'SCHEDULED') {
-      const d = scheduledDateInput ? scheduledDateInput.value : '';
-      const t = scheduledTimeInput ? scheduledTimeInput.value : '';
-      if (!d || !t) {
-        if (bookingFormError) {
-          bookingFormError.textContent = 'Please provide both date and time for scheduled ride.';
-          bookingFormError.classList.remove('is-hidden');
-        }
-        return;
-      }
-      const schedDate = new Date(`${d}T${t}`);
-      scheduledEpochMillis = schedDate.getTime();
-      if (isNaN(scheduledEpochMillis) || scheduledEpochMillis < Date.now()) {
-        if (bookingFormError) {
-          bookingFormError.textContent = 'Scheduled time must be in the future.';
-          bookingFormError.classList.remove('is-hidden');
-        }
-        return;
-      }
-    }
-
+    // Web bookings are strictly ASAP dispatch
+    bookingState.type = 'ASAP';
     const note = bookingNoteInput ? bookingNoteInput.value.trim() : '';
 
     try {
@@ -1999,7 +1965,7 @@
         },
         note: note,
         vehicleType: bookingState.vehicleType,
-        scheduledTime: scheduledEpochMillis,
+        scheduledTime: null,
         status: 'PENDING',
         driverId: null,
         requestedDriverId: requestedDriverId,

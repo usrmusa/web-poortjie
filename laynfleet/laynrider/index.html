@@ -34,6 +34,10 @@
       </div>
 
       <div class="nav-actions">
+        <a href="download.html" class="btn btn-sm btn-ghost" title="Download LaynRider & LaynDriver Android Apps" style="gap: 4px;">
+          <span>📱</span> Apps
+        </a>
+
         <div id="live-driver-status-pill" class="live-pill">
           <span class="live-pulse"></span>
           <span id="header-driver-count">0</span> Drivers Live
@@ -125,8 +129,8 @@
               <span class="nudge-icon">📱</span>
               <span class="nudge-text">Get LaynRider Android App</span>
             </div>
-            <a href="laynrider-release.apk" download="laynrider-release.apk" class="btn btn-sm btn-ghost nudge-btn">
-              Download APK
+            <a href="download.html" class="btn btn-sm btn-ghost nudge-btn">
+              Get App
             </a>
           </div>
         </div>
@@ -247,29 +251,17 @@
           </div>
         </div>
 
-        <!-- RIDE TYPE TOGGLE (ASAP vs SCHEDULED) -->
+        <!-- RIDE TYPE / SCHEDULE ENTRY POINT -->
         <div class="field">
           <span class="field-label">When do you need the ride?</span>
           <div class="booking-type-toggle">
             <button type="button" id="toggle-type-asap" class="booking-type-btn is-active">
               <span>⚡</span> Ride Now (ASAP)
             </button>
-            <button type="button" id="toggle-type-scheduled" class="booking-type-btn">
-              <span>📅</span> Schedule Later
+            <button type="button" id="toggle-type-scheduled" class="booking-type-btn" title="Schedule ahead on the LaynRider Android App">
+              <span>📅</span> Schedule Ride <span class="badge-app-pill">App</span>
             </button>
           </div>
-        </div>
-
-        <!-- SCHEDULED DATE/TIME FIELDS (Hidden by default) -->
-        <div id="scheduled-fields" class="is-hidden scheduled-grid">
-          <label class="field">
-            <span class="field-label">Pickup Date</span>
-            <input id="booking-scheduled-date" type="date" class="field-input" />
-          </label>
-          <label class="field">
-            <span class="field-label">Pickup Time</span>
-            <input id="booking-scheduled-time" type="time" class="field-input" />
-          </label>
         </div>
 
         <!-- PICKUP LOCATION FIELD -->
