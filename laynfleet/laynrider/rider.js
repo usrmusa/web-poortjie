@@ -99,6 +99,7 @@
     vehicleType: 'PRIVATE_CAR',
     isReturnTrip: true,
     scheduledEpoch: null,
+    actualOneWayDistanceKm: null, // Populated ONLY when actual driving road distance is measured by Google Directions
     upfrontPrice: null,
     estimatedDistanceKm: null,
     ratePerKmSnapshot: null,
@@ -385,7 +386,7 @@
     return dist <= SERVICE_AREA.radiusMeters;
   }
 
-  /** Calculate and update upfront fare preview card and submit button */
+  /** Calculate and update upfront fare preview card and submit button ONLY with actual driving road distance */
   function updateUpfrontFarePreview(overrideDistanceKm = null) {
     const vType = (bookingState.vehicleType || 'PRIVATE_CAR').toUpperCase();
     const rateInfo = activePricingRates[vType] || DEFAULT_PRICING_RATES[vType] || { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0 };
@@ -402,7 +403,12 @@
     const hasPickup = hasPickupAddress && hasPickupCoords;
     const hasDropoff = hasDropoffAddress && hasDropoffCoords;
 
+    if (overrideDistanceKm != null && typeof overrideDistanceKm === 'number' && !isNaN(overrideDistanceKm) && overrideDistanceKm > 0) {
+      bookingState.actualOneWayDistanceKm = overrideDistanceKm;
+    }
+
     if (!hasPickup || !hasDropoff) {
+      bookingState.actualOneWayDistanceKm = null;
       bookingState.estimatedDistanceKm = null;
       bookingState.upfrontPrice = null;
       bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
@@ -425,11 +431,28 @@
       return;
     }
 
-    let oneWayDistKm = overrideDistanceKm;
+    // Both pickup & drop-off locations are set. Check if actual road distance has been computed.
+    const oneWayDistKm = bookingState.actualOneWayDistanceKm;
+
     if (oneWayDistKm == null || isNaN(oneWayDistKm) || oneWayDistKm <= 0) {
-      oneWayDistKm = distanceMeters(bookingState.pickup.lat, bookingState.pickup.lng, bookingState.dropoff.lat, bookingState.dropoff.lng) / 1000.0;
+      // Actual road distance is still being computed by Google Directions
+      bookingState.estimatedDistanceKm = null;
+      bookingState.upfrontPrice = null;
+      bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
+      bookingState.minimumFareSnapshot = rateInfo.minimumFare;
+      bookingState.returnPercentSnapshot = bookingState.isReturnTrip !== false ? rateInfo.returnTripPercent : null;
+
+      if (fareAmountEl) fareAmountEl.textContent = 'R ...';
+      if (fareBreakdownEl) {
+        fareBreakdownEl.textContent = 'Calculating route distance & fare…';
+      }
+      if (submitBtn) {
+        submitBtn.innerHTML = '<span>⚡</span> Calculating Route…';
+      }
+      return;
     }
 
+    // We have the actual measured driving distance from Google Maps!
     const isReturn = bookingState.isReturnTrip !== false;
     const displayDistKm = isReturn ? (oneWayDistKm * 2.0) : oneWayDistKm;
     const returnPercent = typeof rateInfo.returnTripPercent === 'number' ? rateInfo.returnTripPercent : 80.0;
@@ -445,7 +468,9 @@
 
     if (fareAmountEl) fareAmountEl.textContent = `R ${fare}`;
     if (fareBreakdownEl) {
-      fareBreakdownEl.textContent = isReturn ? `~${bookingState.estimatedDistanceKm} km (${(oneWayDistKm).toFixed(1)} km return)` : `~${bookingState.estimatedDistanceKm} km`;
+      fareBreakdownEl.textContent = isReturn
+        ? `~${bookingState.estimatedDistanceKm} km (${oneWayDistKm.toFixed(1)} km return) · R${rateInfo.ratePerKm}/km`
+        : `~${bookingState.estimatedDistanceKm} km · R${rateInfo.ratePerKm}/km`;
     }
     if (submitBtn) {
       submitBtn.innerHTML = `<span>⚡</span> Request Ride · R ${fare}`;
@@ -973,6 +998,10 @@
 
       console.log('[LaynRider Map] 🗺️ [DIRECTIONS START] Origin: (' + bookingState.pickup.lat + ', ' + bookingState.pickup.lng + ') -> Dest: (' + bookingState.dropoff.lat + ', ' + bookingState.dropoff.lng + ')');
 
+      // Clear existing distance/price while calculating so the UI displays calculating state
+      bookingState.actualOneWayDistanceKm = null;
+      updateUpfrontFarePreview(null);
+
       const request = {
         origin: origin,
         destination: destination,
@@ -994,6 +1023,7 @@
 
           if (leg.distance && typeof leg.distance.value === 'number') {
             const distKm = leg.distance.value / 1000.0;
+            bookingState.actualOneWayDistanceKm = distKm;
             updateUpfrontFarePreview(distKm);
           }
 
@@ -1003,8 +1033,11 @@
           bookingGoogleMap.fitBounds(bounds, { top: 30, right: 30, bottom: 30, left: 30 });
         } else {
           console.warn('[LaynRider Map] ⚠️ [DIRECTIONS WARN] Directions request failed with status: ' + status);
+          bookingState.actualOneWayDistanceKm = null;
           if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
-          updateUpfrontFarePreview();
+          updateUpfrontFarePreview(null);
+          const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
+          if (fareBreakdownEl) fareBreakdownEl.textContent = 'Could not determine driving route. Check addresses.';
           const bounds = new google.maps.LatLngBounds();
           bounds.extend(origin);
           bounds.extend(destination);
@@ -1012,11 +1045,12 @@
         }
       });
     } else {
+      bookingState.actualOneWayDistanceKm = null;
       if (bookingDirectionsRenderer) {
         bookingDirectionsRenderer.set('directions', null);
       }
       if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
-      updateUpfrontFarePreview();
+      updateUpfrontFarePreview(null);
 
       if (hasPickup) {
         bookingGoogleMap.setCenter(new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng));
@@ -1590,6 +1624,9 @@
     setReturnTrip(true);
     setBookingType('ASAP');
 
+    bookingState.actualOneWayDistanceKm = null;
+    bookingState.upfrontPrice = null;
+    bookingState.estimatedDistanceKm = null;
     bookingState.pickup = { address: '', lat: null, lng: null };
     bookingState.dropoff = { address: '', lat: null, lng: null };
 
@@ -1610,7 +1647,7 @@
 
     if (bookingModal) {
       bookingModal.classList.remove('is-hidden');
-      updateUpfrontFarePreview();
+      updateUpfrontFarePreview(null);
       initBookingMap();
       setTimeout(() => updateBookingMap(), 150);
     }
@@ -1643,6 +1680,9 @@
   /** Update pickup coordinates and validate geofence */
   function setPickupLocation(address, lat, lng) {
     const trimmed = (address || '').trim();
+    bookingState.actualOneWayDistanceKm = null;
+    bookingState.upfrontPrice = null;
+    bookingState.estimatedDistanceKm = null;
     bookingState.pickup = { address: trimmed, lat, lng };
     if (pickupAddressInput) pickupAddressInput.value = trimmed;
     if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !trimmed);
@@ -1918,6 +1958,14 @@
     if (!validatePickupGeofence()) {
       if (bookingFormError) {
         bookingFormError.textContent = 'Pickup must be inside Poortjie service area (within 1.64 km of town center).';
+        bookingFormError.classList.remove('is-hidden');
+      }
+      return;
+    }
+
+    if (bookingState.actualOneWayDistanceKm == null || bookingState.upfrontPrice == null) {
+      if (bookingFormError) {
+        bookingFormError.textContent = 'Calculating driving route distance and fare. Please wait a moment.';
         bookingFormError.classList.remove('is-hidden');
       }
       return;
@@ -2807,6 +2855,9 @@
           pickupAddressInput.value = '';
           pickupAddressInput.focus();
         }
+        bookingState.actualOneWayDistanceKm = null;
+        bookingState.upfrontPrice = null;
+        bookingState.estimatedDistanceKm = null;
         bookingState.pickup = { address: '', lat: null, lng: null };
         pickupClearBtn.classList.add('is-hidden');
         if (pickupGeofenceBadge) {
@@ -2825,6 +2876,9 @@
           dropoffAddressInput.value = '';
           dropoffAddressInput.focus();
         }
+        bookingState.actualOneWayDistanceKm = null;
+        bookingState.upfrontPrice = null;
+        bookingState.estimatedDistanceKm = null;
         bookingState.dropoff = { address: '', lat: null, lng: null };
         dropoffClearBtn.classList.add('is-hidden');
         updateBookingMap();
@@ -2844,6 +2898,9 @@
           setPickupLocation(val, lat, lng);
           if (pickupClearBtn) pickupClearBtn.classList.remove('is-hidden');
         } else if (target === 'dropoff') {
+          bookingState.actualOneWayDistanceKm = null;
+          bookingState.upfrontPrice = null;
+          bookingState.estimatedDistanceKm = null;
           bookingState.dropoff = { address: val, lat, lng };
           if (dropoffAddressInput) {
             dropoffAddressInput.value = val;
@@ -2873,6 +2930,9 @@
         geocoder.geocode({ address: addr, componentRestrictions: { country: 'za' } }, (results, status) => {
           if (status === 'OK' && results && results[0] && results[0].geometry) {
             const loc = results[0].geometry.location;
+            bookingState.actualOneWayDistanceKm = null;
+            bookingState.upfrontPrice = null;
+            bookingState.estimatedDistanceKm = null;
             bookingState.dropoff = { address: results[0].formatted_address || addr, lat: loc.lat(), lng: loc.lng() };
             updateBookingMap();
           }
@@ -2884,6 +2944,9 @@
     if (pickupAddressInput) {
       pickupAddressInput.addEventListener('input', () => {
         const val = pickupAddressInput.value;
+        bookingState.actualOneWayDistanceKm = null;
+        bookingState.upfrontPrice = null;
+        bookingState.estimatedDistanceKm = null;
         bookingState.pickup.address = val;
         if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !val.trim());
         bookingState.pickup.lat = null;
@@ -2910,6 +2973,9 @@
     if (dropoffAddressInput) {
       dropoffAddressInput.addEventListener('input', () => {
         const val = dropoffAddressInput.value;
+        bookingState.actualOneWayDistanceKm = null;
+        bookingState.upfrontPrice = null;
+        bookingState.estimatedDistanceKm = null;
         bookingState.dropoff.address = val;
         if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !val.trim());
         bookingState.dropoff.lat = null;
