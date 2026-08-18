@@ -2129,6 +2129,46 @@
       });
   }
 
+  function formatDeclineReason(raw) {
+    if (!raw) return '';
+    const clean = String(raw)
+      .replace(/^Driver declined:\s*/i, '')
+      .replace(/^Declined:\s*/i, '')
+      .replace(/^Cancelled by driver:\s*/i, '')
+      .replace(/^Cancelled by rider:\s*/i, '')
+      .replace(/^Cancelled:\s*/i, '')
+      .trim();
+
+    switch (clean.toUpperCase()) {
+      case 'TOO_FAR':
+        return 'Driver was too far from pickup';
+      case 'UNKNOWN_RIDER':
+        return 'Unrecognized rider / safety concern';
+      case 'VEHICLE_FULL':
+        return 'Vehicle is currently full';
+      case 'SCHEDULED_CONFLICT':
+        return 'Scheduled ride conflict';
+      case 'OTHER':
+        return 'Driver is currently unavailable';
+      case 'NO DRIVERS AVAILABLE':
+      case 'NO_DRIVERS_AVAILABLE':
+      case 'NO_DRIVER':
+        return 'No drivers available right now';
+      case 'QUOTE APPROVAL TIMED OUT':
+      case 'QUOTE_TIMEOUT':
+      case 'QUOTE EXPIRED':
+        return 'Quote approval timed out';
+      case 'RIDER CHANGED PLANS':
+      case 'RIDER_CHANGED_PLANS':
+        return 'Rider changed plans';
+      case 'RIDER NO-SHOW (WAITED 5 MINS)':
+      case 'RIDER_NO_SHOW':
+        return 'Rider did not show up';
+      default:
+        return clean;
+    }
+  }
+
   /**
    * Resolves the exact human-readable cancellation title, explanation, and badge icon
    * by inspecting booking status, cancelReason, cancelledByDriver, events, and dispatchMessage.
@@ -2155,9 +2195,10 @@
 
     // 1. Driver cancelled after accepting (Post-Acceptance / En Route / Arrived / In Trip)
     if (byDriver) {
+      const readable = formatDeclineReason(rawReason);
       return {
         title: 'Driver Cancelled Ride',
-        reason: rawReason ? `The driver had to cancel: "${rawReason}"` : 'The driver cancelled this ride after acceptance.',
+        reason: readable ? `The driver had to cancel: "${readable}"` : 'The driver cancelled this ride after acceptance.',
         icon: '⚠️'
       };
     }
@@ -2173,7 +2214,8 @@
 
     // 3. Driver Declined during review
     if (declineEvent || rawReason.toLowerCase().startsWith('declined:') || rawReason.toLowerCase().includes('declined')) {
-      const declineDetail = declineEvent?.detail ? declineEvent.detail.replace(/^Declined:\s*/i, '') : rawReason.replace(/^Declined:\s*/i, '');
+      const rawDetail = declineEvent?.detail ? declineEvent.detail.replace(/^Declined:\s*/i, '') : rawReason.replace(/^Declined:\s*/i, '');
+      const declineDetail = formatDeclineReason(rawDetail);
       return {
         title: 'Driver Declined Request',
         reason: declineDetail ? `The driver was unable to take your trip: "${declineDetail}".` : 'The driver declined this trip request.',
