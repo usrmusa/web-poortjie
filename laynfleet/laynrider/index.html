@@ -394,11 +394,11 @@
       <div id="track-pending-section" class="is-hidden" style="display: flex; flex-direction: column; gap: 14px; text-align: center; padding: 12px 0;">
         <div class="spinner" style="margin: 0 auto; width: 36px; height: 36px;"></div>
         <div>
-          <h4 style="font-size: 16px; font-weight: 800;">Finding your ride…</h4>
-          <p style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Drivers are reviewing your request. Please hold on.</p>
+          <h4 id="pending-section-title" style="font-size: 16px; font-weight: 800;">Finding your ride…</h4>
+          <p id="pending-section-desc" style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">Driver is reviewing your request. Please hold on.</p>
         </div>
         <div class="countdown-timer-wrap" style="justify-content: center;">
-          <span>⏱️ Request timeout in:</span>
+          <span id="pending-countdown-label">⏱️ Request timeout in:</span>
           <span id="pending-countdown" style="font-size: 15px; font-weight: 900; color: var(--brand);">60s</span>
         </div>
         <button id="cancel-pending-btn" class="btn btn-ghost btn-sm" style="color: var(--danger); border-color: var(--danger); margin-top: 8px;">

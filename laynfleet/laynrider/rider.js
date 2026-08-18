@@ -214,6 +214,9 @@
 
   // Trip State Sections
   const trackPendingSection = document.getElementById('track-pending-section');
+  const pendingSectionTitle = document.getElementById('pending-section-title');
+  const pendingSectionDesc = document.getElementById('pending-section-desc');
+  const pendingCountdownLabel = document.getElementById('pending-countdown-label');
   const pendingCountdown = document.getElementById('pending-countdown');
   const cancelPendingBtn = document.getElementById('cancel-pending-btn');
 
@@ -2087,19 +2090,31 @@
     const status = booking.status || 'PENDING';
 
     if (status === 'PENDING') {
-      // 1. Pending Section (60s countdown timer)
+      // 1. Pending Section (Searching / Driver reviewing / Scheduled waiting)
       if (trackPendingSection) trackPendingSection.classList.remove('is-hidden');
-      startPendingCountdown(booking);
 
-      if (cancelPendingBtn) {
-        if (booking.deliveredAt != null) {
-          cancelPendingBtn.disabled = true;
-          cancelPendingBtn.textContent = 'Driver reviewing (cannot cancel)';
-        } else {
-          cancelPendingBtn.disabled = false;
-          cancelPendingBtn.textContent = 'Cancel Request';
+      const isScheduled = booking.type === 'SCHEDULED';
+      if (isScheduled) {
+        if (pendingSectionTitle) pendingSectionTitle.textContent = 'Scheduled Ride Waiting';
+        if (pendingSectionDesc) {
+          if (booking.scheduledTime) {
+            const schedDate = new Date(booking.scheduledTime);
+            const dateStr = schedDate.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
+            const timeStr = schedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            pendingSectionDesc.textContent = `Scheduled for ${dateStr} at ${timeStr}. Waiting in dispatch queue.`;
+          } else {
+            pendingSectionDesc.textContent = 'Your ride request is scheduled. Waiting for driver assignment.';
+          }
+        }
+      } else {
+        if (pendingSectionTitle) pendingSectionTitle.textContent = 'Finding your ride…';
+        if (pendingSectionDesc) {
+          pendingSectionDesc.textContent = booking.dispatchMessage || 'Driver is reviewing your request. Please hold on.';
         }
       }
+
+      startPendingCountdown(booking);
+      updateCancelPendingButton(booking);
     } else if (status === 'QUOTED') {
       // 2. Quote Handshake (Shows who the driver is + 60s countdown)
       if (trackQuotedSection) trackQuotedSection.classList.remove('is-hidden');
@@ -2193,31 +2208,90 @@
   }
 
   /**
+   * Update Pending Cancel Button state:
+   * - ASAP: users CANNOT cancel when a driver is reviewing the request (deliveredAt != null, currentDriverId != null, or offerExpiresAt != null).
+   * - SCHEDULED: users can ONLY cancel when 1 minute (60s) has passed on waiting.
+   */
+  function updateCancelPendingButton(booking) {
+    if (!cancelPendingBtn || !booking) return;
+
+    const isScheduled = booking.type === 'SCHEDULED';
+
+    if (isScheduled) {
+      const createdAt = readEpochMillis(booking.createdAt) || Date.now();
+      const elapsedSec = Math.floor(Math.max(0, Date.now() - createdAt) / 1000);
+      const waitThresholdSec = 60;
+
+      if (elapsedSec < waitThresholdSec) {
+        const remainingSec = waitThresholdSec - elapsedSec;
+        cancelPendingBtn.disabled = true;
+        cancelPendingBtn.textContent = `Cancel available in ${remainingSec}s`;
+        cancelPendingBtn.title = `Scheduled requests can only be cancelled after waiting 1 minute. (${remainingSec}s remaining)`;
+      } else {
+        cancelPendingBtn.disabled = false;
+        cancelPendingBtn.textContent = 'Cancel Request';
+        cancelPendingBtn.title = 'Cancel this scheduled ride request';
+      }
+    } else {
+      const isDriverReviewing = Boolean(
+        booking.deliveredAt != null ||
+        booking.currentDriverId != null ||
+        booking.offerExpiresAt != null
+      );
+
+      if (isDriverReviewing) {
+        cancelPendingBtn.disabled = true;
+        cancelPendingBtn.textContent = 'Driver reviewing (cannot cancel)';
+        cancelPendingBtn.title = 'A driver is currently reviewing your request. Please wait for their response or 60s timeout.';
+      } else {
+        cancelPendingBtn.disabled = false;
+        cancelPendingBtn.textContent = 'Cancel Request';
+        cancelPendingBtn.title = 'Cancel ride request';
+      }
+    }
+  }
+
+  /**
    * Pending countdown — display only, anchored to the server deadline
-   * (booking.offerExpiresAt). The server (Cloud Tasks) owns the actual timeout
-   * and roll-to-next-driver, so the client NEVER writes a terminal status here.
+   * (booking.offerExpiresAt) or scheduled waiting elapsed time.
+   * Also updates the cancel button countdown every second.
    */
   function startPendingCountdown(booking) {
     const deadline = readEpochMillis(booking.offerExpiresAt);
+    const isScheduled = booking.type === 'SCHEDULED';
+    const createdAt = readEpochMillis(booking.createdAt) || Date.now();
 
     function update() {
-      if (deadline == null) {
+      // Dynamically update the cancel button (e.g. countdown 60s for scheduled, driver reviewing for ASAP)
+      updateCancelPendingButton(booking);
+
+      if (deadline != null) {
+        const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+        const formatted = formatTimerSeconds(remaining);
+        if (pendingCountdown) pendingCountdown.textContent = formatted;
+        if (pendingCountdownLabel) pendingCountdownLabel.textContent = '⏱️ Request timeout in:';
+        if (activeBookingCountdownPill) {
+          activeBookingCountdownPill.textContent = `⏱️ ${formatted}`;
+          activeBookingCountdownPill.classList.remove('is-hidden');
+        }
+        if (remaining <= 0) {
+          clearInterval(pendingTimerInterval);
+          pendingTimerInterval = null;
+          // Do not write status — the server transitions the booking.
+        }
+      } else if (isScheduled) {
+        const elapsedSec = Math.floor(Math.max(0, Date.now() - createdAt) / 1000);
+        if (pendingCountdownLabel) pendingCountdownLabel.textContent = '⏱️ Waiting time:';
+        if (pendingCountdown) pendingCountdown.textContent = formatTimerSeconds(elapsedSec);
+        if (activeBookingCountdownPill) {
+          activeBookingCountdownPill.textContent = `📅 Waiting (${formatTimerSeconds(elapsedSec)})`;
+          activeBookingCountdownPill.classList.remove('is-hidden');
+        }
+      } else {
         // No live offer yet (still searching). Show the server's message.
+        if (pendingCountdownLabel) pendingCountdownLabel.textContent = '⏱️ Finding driver:';
         if (pendingCountdown) pendingCountdown.textContent = '…';
         if (activeBookingCountdownPill) activeBookingCountdownPill.classList.add('is-hidden');
-        return;
-      }
-      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
-      const formatted = formatTimerSeconds(remaining);
-      if (pendingCountdown) pendingCountdown.textContent = formatted;
-      if (activeBookingCountdownPill) {
-        activeBookingCountdownPill.textContent = `⏱️ ${formatted}`;
-        activeBookingCountdownPill.classList.remove('is-hidden');
-      }
-      if (remaining <= 0) {
-        clearInterval(pendingTimerInterval);
-        pendingTimerInterval = null;
-        // Do not write status — the server transitions the booking.
       }
     }
 
@@ -2326,11 +2400,35 @@
   /** Cancel Pending Request → server (cancelBookingCallable). */
   async function handleCancelPending() {
     if (!currentBookingDoc) return;
+
+    const isScheduled = currentBookingDoc.type === 'SCHEDULED';
+    if (isScheduled) {
+      const createdAt = readEpochMillis(currentBookingDoc.createdAt) || Date.now();
+      const elapsedSec = Math.floor(Math.max(0, Date.now() - createdAt) / 1000);
+      if (elapsedSec < 60) {
+        const remaining = 60 - elapsedSec;
+        showToast(`Scheduled rides can only be cancelled after waiting 1 minute (${remaining}s remaining).`);
+        return;
+      }
+    } else {
+      const isDriverReviewing = Boolean(
+        currentBookingDoc.deliveredAt != null ||
+        currentBookingDoc.currentDriverId != null ||
+        currentBookingDoc.offerExpiresAt != null
+      );
+      if (isDriverReviewing) {
+        showToast('Cannot cancel while a driver is reviewing your request.');
+        return;
+      }
+    }
+
     try {
       if (cancelPendingBtn) cancelPendingBtn.disabled = true;
       await callFn('cancelBookingCallable', {
         bookingId: currentBookingDoc.id,
-        reason: 'Cancelled by rider before dispatch confirmation.',
+        reason: isScheduled
+          ? 'Cancelled by rider after 1 min scheduled wait.'
+          : 'Cancelled by rider before dispatch confirmation.',
         byDriver: false
       });
       showToast('Ride request cancelled.');
@@ -2338,7 +2436,9 @@
       console.error('Failed to cancel ride:', err);
       showToast('Could not cancel ride.');
     } finally {
-      if (cancelPendingBtn) cancelPendingBtn.disabled = false;
+      if (cancelPendingBtn && currentBookingDoc) {
+        updateCancelPendingButton(currentBookingDoc);
+      }
     }
   }
 
