@@ -67,10 +67,17 @@ html.dark {
 }
 
 /* Reset & Base */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -78,11 +85,21 @@ body {
   background-color: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.25s ease, color 0.25s ease;
   line-height: 1.5;
+}
+
+img, svg, video, canvas, audio, iframe, embed, object {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .is-hidden {
@@ -94,10 +111,12 @@ body {
   width: 100%;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 20px 24px 80px;
+  padding: 20px 20px 80px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  align-items: stretch;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
 /* Header & Navigation */
@@ -109,22 +128,28 @@ body {
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  width: 100%;
+  max-width: 100%;
 }
 
 .header-content {
   max-width: 1080px;
+  width: 100%;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .back-link {
@@ -1619,6 +1644,181 @@ body {
   line-height: 1;
 }
 
+/* Auth Gate Card */
+.auth-gate-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 24px;
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+  margin: 30px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+}
+
+.auth-gate-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.auth-gate-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  object-fit: contain;
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.22);
+  margin-bottom: 4px;
+}
+
+.auth-gate-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.4px;
+}
+
+.auth-gate-desc {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+/* Profile Gate Card (Incomplete profile checklist banner) */
+.profile-gate-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--warn);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile-gate-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.profile-gate-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.profile-gate-head strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.profile-gate-head p {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.profile-gate-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  padding-left: 2px;
+}
+
+.profile-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.check-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.profile-check.is-done {
+  color: var(--brand);
+}
+
+.profile-check.is-done .check-dot {
+  background: var(--brand);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+
+/* Active Booking Widget Banner */
+.active-booking-widget {
+  background: var(--panel);
+  border: 1.5px solid var(--brand);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.active-booking-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.countdown-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Responsive Table Wrapper */
+.compare-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Suspended View */
 .suspended-view {
   background: var(--panel);
@@ -1627,10 +1827,13 @@ body {
   padding: 32px 24px;
   text-align: center;
   max-width: 440px;
+  width: 100%;
   margin: 30px auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 16px;
+  box-sizing: border-box;
 }
 
 .suspended-icon {
@@ -1649,6 +1852,7 @@ body {
   padding: 12px;
   font-size: 13px;
   color: var(--text);
+  width: 100%;
 }
 
 /* Google Places Dropdown Styling */
@@ -1689,6 +1893,7 @@ body {
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
   background: var(--panel-2, #1e293b);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
 }
 
 .map-container {
@@ -1718,23 +1923,29 @@ body {
 }
 
 /* ============================================================
-   RESPONSIVE DESIGN (Mobile < 680px & Desktop >= 900px)
+   RESPONSIVE DESIGN (Mobile < 768px, < 540px, < 480px, < 380px)
    ============================================================ */
 
 @media (max-width: 768px) {
   .app-container {
-    padding: 14px 16px 90px;
-    gap: 18px;
+    padding: 14px 14px 80px;
+    gap: 16px;
+  }
+
+  .header-content {
+    padding: 10px 14px;
   }
 
   .dashboard-hero-grid {
     grid-template-columns: 1fr;
     gap: 14px;
+    width: 100%;
   }
 
   .hero-main-card {
-    padding: 20px;
+    padding: 20px 18px;
     gap: 14px;
+    width: 100%;
   }
 
   .hero-title {
@@ -1746,12 +1957,14 @@ body {
   }
 
   .hero-info-card {
-    padding: 18px 20px;
+    padding: 18px 16px;
+    width: 100%;
   }
 
   .driver-list {
     grid-template-columns: 1fr;
     gap: 12px;
+    width: 100%;
   }
 
   /* Bottom-Sheet Modals on Mobile */
@@ -1761,17 +1974,24 @@ body {
   }
 
   .modal-card {
-    max-width: 100%;
-    width: 100%;
+    max-width: 100% !important;
+    width: 100% !important;
     border-radius: 24px 24px 0 0;
     max-height: 88vh;
-    padding: 20px 18px 28px;
+    padding: 18px 16px 28px;
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
     border-bottom: none;
+    margin: 0;
   }
 
   .modal-drag-handle {
     display: block;
+    width: 40px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--border);
+    margin: -4px auto 10px;
+    flex-shrink: 0;
   }
 
   .live-pill {
@@ -1780,9 +2000,33 @@ body {
   }
 }
 
+@media (max-width: 540px) {
+  .active-booking-widget {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .active-booking-widget .btn {
+    width: 100%;
+  }
+
+  .nudge-compact {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+}
+
 @media (max-width: 480px) {
+  .app-container {
+    padding: 12px 12px 70px;
+    gap: 14px;
+  }
+
   .header-content {
-    padding: 10px 16px;
+    padding: 8px 12px;
+    gap: 8px;
   }
 
   .brand-title {
@@ -1795,6 +2039,82 @@ body {
 
   .btn-hero {
     font-size: 14px;
-    padding: 12px 18px;
+    padding: 12px 16px;
+  }
+
+  .driver-card {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .auth-gate-card {
+    padding: 24px 16px;
+    margin: 16px auto;
+  }
+
+  .suspended-view {
+    padding: 24px 16px;
+    margin: 16px auto;
+  }
+
+  .modal-card {
+    padding: 16px 14px 24px;
+  }
+
+  .user-menu-btn {
+    padding: 3px 8px 3px 3px;
+    font-size: 12px;
+  }
+
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-container {
+    padding: 10px 10px 60px;
+    gap: 12px;
+  }
+
+  .header-content {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .back-link {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-title {
+    font-size: 14.5px;
+  }
+
+  #header-user-name {
+    display: none;
+  }
+
+  .user-menu-btn {
+    padding: 2px;
+    border-radius: 50%;
+  }
+
+  .live-pill-text {
+    display: none;
+  }
+
+  .nav-btn-text {
+    display: none;
+  }
+
+  .nav-actions {
+    gap: 4px;
+  }
+
+  .nav-actions .btn-sm {
+    padding: 4px 6px;
+    font-size: 11.5px;
   }
 }
