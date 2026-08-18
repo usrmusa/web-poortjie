@@ -97,8 +97,21 @@
     },
     note: '',
     vehicleType: 'PRIVATE_CAR',
-    scheduledEpoch: null
+    scheduledEpoch: null,
+    upfrontPrice: null,
+    estimatedDistanceKm: null,
+    ratePerKmSnapshot: null,
+    minimumFareSnapshot: null
   };
+
+  const DEFAULT_PRICING_RATES = {
+    PRIVATE_CAR: { ratePerKm: 10.0, minimumFare: 25.0 },
+    MINI_BUS: { ratePerKm: 12.0, minimumFare: 30.0 },
+    BAKKIE: { ratePerKm: 12.0, minimumFare: 30.0 },
+    MOTORBIKE: { ratePerKm: 7.0, minimumFare: 18.0 },
+    TUK_TUK: { ratePerKm: 6.0, minimumFare: 15.0 }
+  };
+  let activePricingRates = { ...DEFAULT_PRICING_RATES };
 
   // User cache for driver identities & reviews
   const userCache = new Map();
@@ -376,6 +389,61 @@
     if (lat == null || lng == null) return false;
     const dist = distanceMeters(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng, lat, lng);
     return dist <= SERVICE_AREA.radiusMeters;
+  }
+
+  /** Calculate and update upfront fare preview card and submit button */
+  function updateUpfrontFarePreview(overrideDistanceKm = null) {
+    const vType = (bookingState.vehicleType || 'PRIVATE_CAR').toUpperCase();
+    const rateInfo = activePricingRates[vType] || DEFAULT_PRICING_RATES[vType] || { ratePerKm: 10.0, minimumFare: 25.0 };
+
+    let distKm = overrideDistanceKm;
+    if (distKm == null || isNaN(distKm) || distKm <= 0) {
+      if (bookingState.pickup && bookingState.pickup.lat && bookingState.dropoff && bookingState.dropoff.lat) {
+        distKm = distanceMeters(bookingState.pickup.lat, bookingState.pickup.lng, bookingState.dropoff.lat, bookingState.dropoff.lng) / 1000.0;
+      } else {
+        distKm = 3.0; // fallback preview estimate
+      }
+    }
+
+    const fare = Math.max(distKm * rateInfo.ratePerKm, rateInfo.minimumFare);
+    bookingState.estimatedDistanceKm = Number(distKm.toFixed(1));
+    bookingState.upfrontPrice = Number(fare.toFixed(2));
+    bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
+    bookingState.minimumFareSnapshot = rateInfo.minimumFare;
+
+    const fareAmountEl = document.getElementById('booking-fare-amount');
+    const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
+    const submitBtn = document.getElementById('booking-submit-btn');
+
+    if (fareAmountEl) fareAmountEl.textContent = `R ${fare.toFixed(2)}`;
+    if (fareBreakdownEl) {
+      fareBreakdownEl.textContent = `${bookingState.estimatedDistanceKm} km`;
+    }
+    if (submitBtn) {
+      submitBtn.innerHTML = `<span>⚡</span> Request Ride · R ${fare.toFixed(2)}`;
+    }
+  }
+
+  /** Listen for dynamic democratic pricing rates from Firestore */
+  function initPricingRatesListener() {
+    try {
+      const pricingCol = db.collection('laynfleet').doc('main').collection('pricing');
+      pricingCol.onSnapshot((snapshot) => {
+        snapshot.forEach((doc) => {
+          const data = doc.data() || {};
+          const vType = (data.vehicleType || doc.id).toUpperCase();
+          activePricingRates[vType] = {
+            ratePerKm: typeof data.ratePerKm === 'number' ? data.ratePerKm : (DEFAULT_PRICING_RATES[vType]?.ratePerKm || 10.0),
+            minimumFare: typeof data.minimumFare === 'number' ? data.minimumFare : (DEFAULT_PRICING_RATES[vType]?.minimumFare || 25.0)
+          };
+        });
+        updateUpfrontFarePreview();
+      }, (err) => {
+        console.warn('[LaynRider] Pricing rates listener warning:', err);
+      });
+    } catch (err) {
+      console.warn('[LaynRider] Failed to init pricing rates listener:', err);
+    }
   }
 
   /** Evaluate profile completeness strictly against Android spec */
@@ -886,6 +954,11 @@
             if (bookingMapDistance) bookingMapDistance.textContent = leg.distance.text;
             if (bookingMapDuration) bookingMapDuration.textContent = leg.duration.text;
             bookingMapRouteInfo.classList.remove('is-hidden');
+          }
+
+          if (leg.distance && typeof leg.distance.value === 'number') {
+            const distKm = leg.distance.value / 1000.0;
+            updateUpfrontFarePreview(distKm);
           }
 
           const bounds = new google.maps.LatLngBounds();
@@ -1498,6 +1571,7 @@
 
     if (bookingModal) {
       bookingModal.classList.remove('is-hidden');
+      updateUpfrontFarePreview();
       initBookingMap();
       setTimeout(() => updateBookingMap(), 150);
     }
@@ -1734,6 +1808,10 @@
         cancelReason: '',
         cancelledByDriver: false,
         events: [initialEvent],
+        upfrontPrice: bookingState.upfrontPrice || null,
+        ratePerKmSnapshot: bookingState.ratePerKmSnapshot || null,
+        minimumFareSnapshot: bookingState.minimumFareSnapshot || null,
+        estimatedDistanceKm: bookingState.estimatedDistanceKm || null,
         createdAt: now,
         updatedAt: now
       };
@@ -2530,6 +2608,7 @@
   /** Main App Boot */
   function boot() {
     initListeners();
+    initPricingRatesListener();
 
     auth.onAuthStateChanged(async (authUser) => {
       if (!authUser) {

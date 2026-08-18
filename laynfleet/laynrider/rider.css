@@ -1123,6 +1123,49 @@ body {
   transform: scale(0.96);
 }
 
+/* Upfront Fare Estimate Card */
+.fare-preview-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+
+.fare-preview-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fare-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fare-preview-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--brand);
+}
+
+.fare-preview-breakdown {
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.fare-preview-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
 /* Payment Notice */
 .payment-notice {
   background: var(--panel-2);

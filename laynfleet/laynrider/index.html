@@ -259,7 +259,7 @@
           </label>
         </div>
 
-        <!-- PICKUP LOCATION FIELD & QUICK CHIPS -->
+        <!-- PICKUP LOCATION FIELD -->
         <div class="field">
           <div class="field-label-row">
             <span class="field-label">📍 Pickup Location</span>
@@ -267,30 +267,16 @@
           </div>
 
           <div class="input-with-tools">
-            <input id="booking-pickup-address" type="text" class="field-input address-field" placeholder="Search address or tap GPS / preset..." required autocomplete="off" />
+            <input id="booking-pickup-address" type="text" class="field-input address-field" placeholder="Search address or tap GPS..." required autocomplete="off" />
             <button type="button" id="pickup-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear pickup address" title="Clear address">✕</button>
             <button type="button" id="pickup-gps-btn" class="btn-input-action" title="Use Current GPS Location">
               <span>📍</span> GPS
             </button>
           </div>
-
-          <!-- Quick Pickup Preset Chips -->
-          <div class="preset-chips-wrap">
-            <span class="preset-label">Quick Pick:</span>
-            <div class="preset-chips-scroll">
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Taxi Rank" data-lat="-26.45520" data-lng="27.77150">🚖 Taxi Rank</button>
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Clinic" data-lat="-26.45480" data-lng="27.76920">🏥 Clinic</button>
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Secondary School" data-lat="-26.45710" data-lng="27.77310">🏫 High School</button>
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Shopping Complex" data-lat="-26.45600" data-lng="27.77087">🛒 Complex</button>
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Ext 1" data-lat="-26.45350" data-lng="27.76800">📍 Ext 1</button>
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Ext 2" data-lat="-26.45650" data-lng="27.77450">📍 Ext 2</button>
-              <button type="button" class="preset-chip" data-target="pickup" data-val="Poortjie Ext 3" data-lat="-26.45890" data-lng="27.77200">📍 Ext 3</button>
-            </div>
-          </div>
           <div id="pickup-error" class="form-error is-hidden"></div>
         </div>
 
-        <!-- DROP-OFF LOCATION FIELD & QUICK CHIPS -->
+        <!-- DROP-OFF LOCATION FIELD -->
         <div class="field">
           <div class="field-label-row">
             <span class="field-label">🏁 Drop-off Destination</span>
@@ -300,18 +286,6 @@
           <div class="input-with-tools">
             <input id="booking-dropoff-address" type="text" class="field-input address-field" placeholder="Search destination address anywhere..." required autocomplete="off" />
             <button type="button" id="dropoff-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear drop-off address" title="Clear address">✕</button>
-          </div>
-
-          <!-- Quick Dropoff Preset Chips -->
-          <div class="preset-chips-wrap">
-            <span class="preset-label">Popular:</span>
-            <div class="preset-chips-scroll">
-              <button type="button" class="preset-chip" data-target="dropoff" data-val="Poortjie Taxi Rank" data-lat="-26.45520" data-lng="27.77150">🚖 Taxi Rank</button>
-              <button type="button" class="preset-chip" data-target="dropoff" data-val="Poortjie Clinic" data-lat="-26.45480" data-lng="27.76920">🏥 Clinic</button>
-              <button type="button" class="preset-chip" data-target="dropoff" data-val="Jabulani Mall, Soweto" data-lat="-26.2483" data-lng="27.8601">🛒 Jabulani Mall</button>
-              <button type="button" class="preset-chip" data-target="dropoff" data-val="Orange Farm Eyethu Mall" data-lat="-26.4842" data-lng="27.8694">🛍️ Eyethu Mall</button>
-              <button type="button" class="preset-chip" data-target="dropoff" data-val="Sebokeng Plaza" data-lat="-26.5772" data-lng="27.8347">🏢 Sebokeng</button>
-            </div>
           </div>
         </div>
 
@@ -332,11 +306,22 @@
           </div>
         </div>
 
+        <!-- UPFRONT FARE ESTIMATE CARD -->
+        <div id="booking-fare-card" class="fare-preview-card">
+          <div class="fare-preview-main">
+            <div class="fare-preview-info">
+              <span class="fare-preview-title">Upfront Fare</span>
+              <span id="booking-fare-breakdown" class="fare-preview-breakdown">Calculating distance…</span>
+            </div>
+            <div id="booking-fare-amount" class="fare-preview-amount">R --.--</div>
+          </div>
+        </div>
+
         <!-- OFFLINE PAYMENT NOTICE -->
         <div class="payment-notice">
           <div class="payment-notice-icon">💵</div>
           <div class="payment-notice-text">
-            <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival. The driver quotes the price when receiving your request.
+            <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival. Pricing is transparent and democratically locked upfront.
           </div>
         </div>
 
