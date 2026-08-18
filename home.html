@@ -204,6 +204,65 @@
 <script src="scripts/card-renderer.js" defer></script>
 <script src="scripts/rating.js" defer></script>
 <script>
+    const LAYN_RIDER_SERVICE = {
+        category: 'Transport',
+        title: 'Layn Rider',
+        description: 'Request a ride from verified local Poortjie drivers instantly. Safe, fast, and affordable township transport.',
+        list: [
+            'Instant local ride booking',
+            'Verified community drivers',
+            'Affordable upfront pricing',
+            'Live ride tracking & fast pickup'
+        ],
+        isTransport: true,
+        url: 'laynfleet/laynrider/index.html',
+        btnText: 'Book a Ride'
+    };
+
+    const DEFAULT_SERVICES = [
+        LAYN_RIDER_SERVICE,
+        {
+            category: 'Creative',
+            title: 'Design & Digital Media',
+            description: 'Graphic design, branding, videography, photography, and creative content creation for businesses and events.',
+            list: ['Logo & Branding Design', 'Flyers, Posters & Menus', 'Event Photography & Video', 'Social Media Management'],
+            url: 'services/creative.html',
+            btnText: 'Explore Creative'
+        },
+        {
+            category: 'Information Technology',
+            title: 'Tech & Digital Solutions',
+            description: 'Web development, computer repairs, network setup, and software solutions to keep your business running.',
+            list: ['Website Design & Hosting', 'Computer & Laptop Repairs', 'Software & WiFi Installation', 'POS & Business Systems'],
+            url: 'services/information%20technology.html',
+            btnText: 'Explore Information Technology'
+        },
+        {
+            category: 'Food & Catering',
+            title: 'Kasi Flavors & Events',
+            description: 'Delicious local food, catering for functions, fast food takeaways, and baking for celebrations in Poortjie.',
+            list: ['Event & Wedding Catering', 'Township Street Food', 'Custom Cakes & Pastries', 'Platters & Family Meals'],
+            url: 'services/food%20&%20catering.html',
+            btnText: 'Explore Food & Catering'
+        },
+        {
+            category: 'Beauty & Freshness',
+            title: 'Personal Care & Salons',
+            description: 'Hair salons, barbershops, nail studios, skincare, and beauty treatments right in your neighborhood.',
+            list: ['Hair Styling & Braiding', 'Barbershops & Cuts', 'Nails & Lashes', 'Skincare & Makeup'],
+            url: 'services/beauty%20&%20freshness.html',
+            btnText: 'Explore Beauty & Freshness'
+        },
+        {
+            category: 'Repairs & Technical',
+            title: 'Home & Appliance Repairs',
+            description: 'Qualified technicians for electrical, plumbing, appliance repair, welding, and maintenance services.',
+            list: ['Electrical & Wiring', 'Plumbing & Geysers', 'Fridge & Washing Machine Fix', 'Welding & Gate Repairs'],
+            url: 'services/repairs%20&%20technical.html',
+            btnText: 'Explore Repairs & Technical'
+        }
+    ];
+
     let allServices = [];
     let newsUpdates = [];
     let alertUpdates = [];
@@ -227,9 +286,45 @@
     window.handleBookRideClick = handleBookRideClick;
 
     function renderCards(servicesData) {
-        if (!servicesData) return;
+        if (!servicesData || !servicesData.length) return;
         const grid = document.getElementById('services-grid');
-        grid.innerHTML = servicesData.map(service => `
+        grid.innerHTML = servicesData.map(service => {
+            const isTransport = service.isTransport || (service.category && (
+                service.category.toLowerCase() === 'transport' || 
+                service.category.toLowerCase().includes('layn rider') || 
+                service.category.toLowerCase().includes('laynrider')
+            ));
+
+            if (isTransport) {
+                return `
+                <section class="space-y-6">
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <span class="w-8 h-1 bg-green-500"></span> ${service.category || 'Transport'}
+                    </h2>
+                    <div class="card flex flex-col p-6 rounded-2xl border-l-4 border-l-green-500">
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-xl font-bold">${service.title || 'Layn Rider'}</h3>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 uppercase tracking-wider">Fast & Local</span>
+                            </div>
+                            <p class="text-sm opacity-70 mb-4">${service.description || 'Request a ride from verified local Poortjie drivers instantly. Safe, fast, and affordable township transport.'}</p>
+                            <ul class="space-y-2 text-sm font-medium">
+                                ${(service.list || [
+                                    'Instant local ride booking',
+                                    'Verified community drivers',
+                                    'Affordable upfront pricing',
+                                    'Live ride tracking & fast pickup'
+                                ]).map(item => `<li class="flex items-center gap-2">${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="mt-6 flex flex-col gap-2">
+                            <a href="laynfleet/laynrider/index.html" onclick="handleBookRideClick(event); return false;" class="block text-center py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition cursor-pointer shadow">Book a Ride</a>
+                        </div>
+                    </div>
+                </section>`;
+            }
+
+            return `
             <section class="space-y-6">
                 <h2 class="text-2xl font-bold flex items-center gap-3">
                     <span class="w-8 h-1 bg-green-500"></span> ${service.category}
@@ -239,49 +334,63 @@
                         <h3 class="text-xl font-bold mb-2">${service.title}</h3>
                         <p class="text-sm opacity-70 mb-4">${service.description}</p>
                         <ul class="space-y-2 text-sm font-medium">
-                            ${service.list.map(item => `<li class="flex items-center gap-2">${item}</li>`).join('')}
+                            ${(service.list || []).map(item => `<li class="flex items-center gap-2">${item}</li>`).join('')}
                         </ul>
                     </div>
                     <div class="mt-6 flex flex-col gap-2">
-                        <a href="${service.url}" class="block text-center py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition">${service.btnText}</a>
-                        ${service.category.toLowerCase() === 'transport' ? `<a href="laynfleet/laynrider/index.html" onclick="handleBookRideClick(event); return false;" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition mt-2 cursor-pointer">Book a Ride</a>` : ''}
-                        ${service.extraBtn ? `<a href="${service.extraBtn.url}" onclick="window.top.location.replace('${service.extraBtn.url}'); return false;" class="block text-center py-2 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition">${service.extraBtn.text}</a>` : ''}
+                        <a href="${service.url}" class="block text-center py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition">${service.btnText}</a>
+                        ${service.extraBtn ? `<a href="${service.extraBtn.url}" onclick="window.top.location.replace('${service.extraBtn.url}'); return false;" class="block text-center py-2.5 border-2 border-green-600 text-green-600 dark:text-green-400 rounded-lg font-bold hover:bg-green-600 hover:text-white transition">${service.extraBtn.text}</a>` : ''}
                     </div>
                 </div>
-            </section>
-        `).join('');
+            </section>`;
+        }).join('');
     }
+
     function fetchAndRenderServices() {
+        let initialServices = DEFAULT_SERVICES;
         try {
             const cachedData = sessionStorage.getItem('homeServicesCache');
             if (cachedData) {
-                allServices = JSON.parse(cachedData);
-                renderCards(allServices);
+                const parsed = JSON.parse(cachedData);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    const other = parsed.filter(s => !(s.isTransport || (s.category && s.category.toLowerCase() === 'transport')));
+                    initialServices = [LAYN_RIDER_SERVICE, ...other];
+                }
             }
         } catch (e) {
             console.error("Could not read from sessionStorage:", e);
         }
+        allServices = initialServices;
+        renderCards(allServices);
+
         const servicesDocRef = firebase.firestore().collection('poortjie').doc('services');
         const processData = (doc) => {
             if (doc.exists) {
                 const data = doc.data();
                 const homeScreenData = data.homeScreen;
                 if (homeScreenData && typeof homeScreenData === 'object') {
-                    const newServices = Object.keys(homeScreenData)
-                        .filter(key => homeScreenData[key].status !== 'inactive' && homeScreenData[key].status !== 'disabled')
+                    const activeKeys = Object.keys(homeScreenData)
+                        .filter(key => homeScreenData[key].status !== 'inactive' && homeScreenData[key].status !== 'disabled');
+
+                    const otherServices = activeKeys
+                        .filter(key => key.toLowerCase() !== 'transport' && key.toLowerCase() !== 'layn rider' && key.toLowerCase() !== 'laynrider')
                         .sort((a, b) => a.localeCompare(b))
                         .map(key => {
                             const service = homeScreenData[key];
                             return {
                                 category: key,
-                                title: service.subtitle,
-                                description: service.description,
+                                title: service.subtitle || key,
+                                description: service.description || '',
                                 list: service.listing || [],
                                 url: `services/${key.toLowerCase()}.html`,
                                 target: '_top',
                                 btnText: `Explore ${key}`
                             };
                         });
+
+                    // Transport card is ALWAYS Layn Rider and placed FIRST
+                    const newServices = [LAYN_RIDER_SERVICE, ...otherServices];
+
                     if (JSON.stringify(newServices) !== JSON.stringify(allServices)) {
                         allServices = newServices;
                         renderCards(allServices);
