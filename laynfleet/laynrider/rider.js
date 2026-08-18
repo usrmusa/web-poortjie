@@ -87,13 +87,13 @@
     type: 'ASAP', // 'ASAP' | 'SCHEDULED'
     pickup: {
       address: '',
-      lat: SERVICE_AREA.center.lat,
-      lng: SERVICE_AREA.center.lng
+      lat: null,
+      lng: null
     },
     dropoff: {
       address: '',
-      lat: -26.48000,
-      lng: 27.86000
+      lat: null,
+      lng: null
     },
     note: '',
     vehicleType: 'PRIVATE_CAR',
@@ -400,13 +400,44 @@
     const vType = (bookingState.vehicleType || 'PRIVATE_CAR').toUpperCase();
     const rateInfo = activePricingRates[vType] || DEFAULT_PRICING_RATES[vType] || { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0 };
 
+    const fareAmountEl = document.getElementById('booking-fare-amount');
+    const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
+    const submitBtn = document.getElementById('booking-submit-btn');
+
+    const hasPickupAddress = Boolean(bookingState.pickup && bookingState.pickup.address && bookingState.pickup.address.trim());
+    const hasPickupCoords = Boolean(bookingState.pickup && typeof bookingState.pickup.lat === 'number' && typeof bookingState.pickup.lng === 'number' && !isNaN(bookingState.pickup.lat) && bookingState.pickup.lat !== 0);
+    const hasDropoffAddress = Boolean(bookingState.dropoff && bookingState.dropoff.address && bookingState.dropoff.address.trim());
+    const hasDropoffCoords = Boolean(bookingState.dropoff && typeof bookingState.dropoff.lat === 'number' && typeof bookingState.dropoff.lng === 'number' && !isNaN(bookingState.dropoff.lat) && bookingState.dropoff.lat !== 0);
+
+    const hasPickup = hasPickupAddress && hasPickupCoords;
+    const hasDropoff = hasDropoffAddress && hasDropoffCoords;
+
+    if (!hasPickup || !hasDropoff) {
+      bookingState.estimatedDistanceKm = null;
+      bookingState.upfrontPrice = null;
+      bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
+      bookingState.minimumFareSnapshot = rateInfo.minimumFare;
+      bookingState.returnPercentSnapshot = bookingState.isReturnTrip !== false ? rateInfo.returnTripPercent : null;
+
+      if (fareAmountEl) fareAmountEl.textContent = 'R --';
+      if (fareBreakdownEl) {
+        if (!hasPickup && !hasDropoff) {
+          fareBreakdownEl.textContent = 'Enter pickup & destination to calculate fare';
+        } else if (!hasPickup) {
+          fareBreakdownEl.textContent = 'Enter pickup location';
+        } else {
+          fareBreakdownEl.textContent = 'Enter destination address';
+        }
+      }
+      if (submitBtn) {
+        submitBtn.innerHTML = '<span>⚡</span> Request Ride';
+      }
+      return;
+    }
+
     let oneWayDistKm = overrideDistanceKm;
     if (oneWayDistKm == null || isNaN(oneWayDistKm) || oneWayDistKm <= 0) {
-      if (bookingState.pickup && bookingState.pickup.lat && bookingState.dropoff && bookingState.dropoff.lat) {
-        oneWayDistKm = distanceMeters(bookingState.pickup.lat, bookingState.pickup.lng, bookingState.dropoff.lat, bookingState.dropoff.lng) / 1000.0;
-      } else {
-        oneWayDistKm = 3.0; // fallback preview estimate
-      }
+      oneWayDistKm = distanceMeters(bookingState.pickup.lat, bookingState.pickup.lng, bookingState.dropoff.lat, bookingState.dropoff.lng) / 1000.0;
     }
 
     const isReturn = bookingState.isReturnTrip !== false;
@@ -422,13 +453,9 @@
     bookingState.minimumFareSnapshot = rateInfo.minimumFare;
     bookingState.returnPercentSnapshot = isReturn ? returnPercent : null;
 
-    const fareAmountEl = document.getElementById('booking-fare-amount');
-    const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
-    const submitBtn = document.getElementById('booking-submit-btn');
-
     if (fareAmountEl) fareAmountEl.textContent = `R ${fare}`;
     if (fareBreakdownEl) {
-      fareBreakdownEl.textContent = `~${bookingState.estimatedDistanceKm} km`;
+      fareBreakdownEl.textContent = isReturn ? `~${bookingState.estimatedDistanceKm} km (${(oneWayDistKm).toFixed(1)} km return)` : `~${bookingState.estimatedDistanceKm} km`;
     }
     if (submitBtn) {
       submitBtn.innerHTML = `<span>⚡</span> Request Ride · R ${fare}`;
@@ -895,8 +922,13 @@
     }
     if (!bookingGoogleMap) return;
 
-    const hasPickup = bookingState.pickup && typeof bookingState.pickup.lat === 'number' && typeof bookingState.pickup.lng === 'number' && bookingState.pickup.lat !== 0;
-    const hasDropoff = bookingState.dropoff && typeof bookingState.dropoff.lat === 'number' && typeof bookingState.dropoff.lng === 'number' && bookingState.dropoff.lat !== 0;
+    const hasPickupAddress = Boolean(bookingState.pickup && bookingState.pickup.address && bookingState.pickup.address.trim());
+    const hasPickupCoords = Boolean(bookingState.pickup && typeof bookingState.pickup.lat === 'number' && typeof bookingState.pickup.lng === 'number' && !isNaN(bookingState.pickup.lat) && bookingState.pickup.lat !== 0);
+    const hasDropoffAddress = Boolean(bookingState.dropoff && bookingState.dropoff.address && bookingState.dropoff.address.trim());
+    const hasDropoffCoords = Boolean(bookingState.dropoff && typeof bookingState.dropoff.lat === 'number' && typeof bookingState.dropoff.lng === 'number' && !isNaN(bookingState.dropoff.lat) && bookingState.dropoff.lat !== 0);
+
+    const hasPickup = hasPickupAddress && hasPickupCoords;
+    const hasDropoff = hasDropoffAddress && hasDropoffCoords;
 
     console.log('[LaynRider Map] 🗺️ [BOOKING MAP UPDATE] hasPickup=' + hasPickup + ', hasDropoff=' + hasDropoff);
 
@@ -919,6 +951,7 @@
       }
     } else if (bookingPickupMarker) {
       bookingPickupMarker.setMap(null);
+      bookingPickupMarker = null;
     }
 
     // Update Dropoff Marker
@@ -940,9 +973,10 @@
       }
     } else if (bookingDropoffMarker) {
       bookingDropoffMarker.setMap(null);
+      bookingDropoffMarker = null;
     }
 
-    // Calculate Driving Route Directions if both endpoints are set
+    // Calculate Driving Route Directions if both endpoints are set with valid addresses & coordinates
     if (hasPickup && hasDropoff) {
       const origin = new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng);
       const destination = new google.maps.LatLng(bookingState.dropoff.lat, bookingState.dropoff.lng);
@@ -980,6 +1014,7 @@
         } else {
           console.warn('[LaynRider Map] ⚠️ [DIRECTIONS WARN] Directions request failed with status: ' + status);
           if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
+          updateUpfrontFarePreview();
           const bounds = new google.maps.LatLngBounds();
           bounds.extend(origin);
           bounds.extend(destination);
@@ -991,6 +1026,7 @@
         bookingDirectionsRenderer.set('directions', null);
       }
       if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
+      updateUpfrontFarePreview();
 
       if (hasPickup) {
         bookingGoogleMap.setCenter(new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng));
@@ -1563,21 +1599,21 @@
 
     setReturnTrip(true);
     setBookingType('ASAP');
-    if (bookingState.pickup && bookingState.pickup.address) {
-      setPickupLocation(bookingState.pickup.address, bookingState.pickup.lat, bookingState.pickup.lng);
-    } else {
-      if (pickupAddressInput) pickupAddressInput.value = '';
-      if (pickupClearBtn) pickupClearBtn.classList.add('is-hidden');
-      if (pickupGeofenceBadge) {
-        pickupGeofenceBadge.className = 'geofence-badge';
-        pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
-      }
-      if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+
+    bookingState.pickup = { address: '', lat: null, lng: null };
+    bookingState.dropoff = { address: '', lat: null, lng: null };
+
+    if (pickupAddressInput) pickupAddressInput.value = '';
+    if (pickupClearBtn) pickupClearBtn.classList.add('is-hidden');
+    if (pickupGeofenceBadge) {
+      pickupGeofenceBadge.className = 'geofence-badge';
+      pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
     }
-    if (dropoffAddressInput) {
-      dropoffAddressInput.value = bookingState.dropoff.address || '';
-      if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !dropoffAddressInput.value.trim());
-    }
+    if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+
+    if (dropoffAddressInput) dropoffAddressInput.value = '';
+    if (dropoffClearBtn) dropoffClearBtn.classList.add('is-hidden');
+
     if (bookingNoteInput) bookingNoteInput.value = '';
     if (bookingNoteCount) bookingNoteCount.textContent = '0/64';
     if (bookingFormError) bookingFormError.classList.add('is-hidden');
@@ -1640,8 +1676,18 @@
 
   /** Validate Pickup Geofence */
   function validatePickupGeofence() {
-    const lat = bookingState.pickup.lat;
-    const lng = bookingState.pickup.lng;
+    const lat = bookingState.pickup ? bookingState.pickup.lat : null;
+    const lng = bookingState.pickup ? bookingState.pickup.lng : null;
+
+    if (lat == null || lng == null) {
+      if (pickupGeofenceBadge) {
+        pickupGeofenceBadge.className = 'geofence-badge';
+        pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
+      }
+      if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+      return false;
+    }
+
     const allowed = isPickupAllowed(lat, lng);
 
     if (pickupGeofenceBadge) {
@@ -1734,14 +1780,6 @@
     }
     bookingState.pickup.address = pickupAddress;
 
-    if (!validatePickupGeofence()) {
-      if (bookingFormError) {
-        bookingFormError.textContent = 'Pickup must be inside Poortjie service area.';
-        bookingFormError.classList.remove('is-hidden');
-      }
-      return;
-    }
-
     const dropoffAddress = dropoffAddressInput ? dropoffAddressInput.value.trim() : '';
     if (!dropoffAddress) {
       if (bookingFormError) {
@@ -1751,6 +1789,58 @@
       return;
     }
     bookingState.dropoff.address = dropoffAddress;
+
+    // Geocode missing coordinates if user manually typed address without autocomplete
+    if (global.google && global.google.maps && global.google.maps.Geocoder) {
+      const geocoder = new google.maps.Geocoder();
+      if (!bookingState.pickup.lat || !bookingState.pickup.lng) {
+        try {
+          const geoRes = await new Promise((resolve) => {
+            geocoder.geocode({ address: pickupAddress, componentRestrictions: { country: 'za' } }, (results, status) => {
+              if (status === 'OK' && results && results[0] && results[0].geometry) {
+                resolve(results[0].geometry.location);
+              } else {
+                resolve(null);
+              }
+            });
+          });
+          if (geoRes) {
+            bookingState.pickup.lat = geoRes.lat();
+            bookingState.pickup.lng = geoRes.lng();
+          }
+        } catch (e) {
+          console.warn('Geocoding pickup error:', e);
+        }
+      }
+
+      if (!bookingState.dropoff.lat || !bookingState.dropoff.lng) {
+        try {
+          const geoRes = await new Promise((resolve) => {
+            geocoder.geocode({ address: dropoffAddress, componentRestrictions: { country: 'za' } }, (results, status) => {
+              if (status === 'OK' && results && results[0] && results[0].geometry) {
+                resolve(results[0].geometry.location);
+              } else {
+                resolve(null);
+              }
+            });
+          });
+          if (geoRes) {
+            bookingState.dropoff.lat = geoRes.lat();
+            bookingState.dropoff.lng = geoRes.lng();
+          }
+        } catch (e) {
+          console.warn('Geocoding dropoff error:', e);
+        }
+      }
+    }
+
+    if (!validatePickupGeofence()) {
+      if (bookingFormError) {
+        bookingFormError.textContent = 'Pickup must be inside Poortjie service area (within 1.64 km of town center).';
+        bookingFormError.classList.remove('is-hidden');
+      }
+      return;
+    }
 
     let scheduledEpochMillis = null;
     if (bookingState.type === 'SCHEDULED') {
@@ -2568,23 +2658,49 @@
       });
     });
 
+    // Helper to geocode manual text inputs on blur/change
+    function tryGeocodeField(field) {
+      if (!global.google || !global.google.maps || !global.google.maps.Geocoder) return;
+      const geocoder = new google.maps.Geocoder();
+      if (field === 'pickup') {
+        const addr = (pickupAddressInput ? pickupAddressInput.value : '').trim();
+        if (!addr || (bookingState.pickup.lat && bookingState.pickup.lng)) return;
+        geocoder.geocode({ address: addr, componentRestrictions: { country: 'za' } }, (results, status) => {
+          if (status === 'OK' && results && results[0] && results[0].geometry) {
+            const loc = results[0].geometry.location;
+            setPickupLocation(results[0].formatted_address || addr, loc.lat(), loc.lng());
+          }
+        });
+      } else if (field === 'dropoff') {
+        const addr = (dropoffAddressInput ? dropoffAddressInput.value : '').trim();
+        if (!addr || (bookingState.dropoff.lat && bookingState.dropoff.lng)) return;
+        geocoder.geocode({ address: addr, componentRestrictions: { country: 'za' } }, (results, status) => {
+          if (status === 'OK' && results && results[0] && results[0].geometry) {
+            const loc = results[0].geometry.location;
+            bookingState.dropoff = { address: results[0].formatted_address || addr, lat: loc.lat(), lng: loc.lng() };
+            updateBookingMap();
+          }
+        });
+      }
+    }
+
     // Pickup input manual change & select on focus
     if (pickupAddressInput) {
       pickupAddressInput.addEventListener('input', () => {
         const val = pickupAddressInput.value;
         bookingState.pickup.address = val;
         if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !val.trim());
-        if (!val.trim()) {
-          bookingState.pickup.lat = null;
-          bookingState.pickup.lng = null;
-          if (pickupGeofenceBadge) {
-            pickupGeofenceBadge.className = 'geofence-badge';
-            pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
-          }
-        } else {
-          validatePickupGeofence();
+        bookingState.pickup.lat = null;
+        bookingState.pickup.lng = null;
+        if (pickupGeofenceBadge) {
+          pickupGeofenceBadge.className = 'geofence-badge';
+          pickupGeofenceBadge.textContent = '📍 Enter Pickup Location';
         }
+        if (pickupErrorEl) pickupErrorEl.classList.add('is-hidden');
+        updateBookingMap();
       });
+
+      pickupAddressInput.addEventListener('change', () => tryGeocodeField('pickup'));
 
       // If user focuses pickup while GPS text is present, select all for instant 1-key replacement
       pickupAddressInput.addEventListener('focus', () => {
@@ -2600,7 +2716,12 @@
         const val = dropoffAddressInput.value;
         bookingState.dropoff.address = val;
         if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !val.trim());
+        bookingState.dropoff.lat = null;
+        bookingState.dropoff.lng = null;
+        updateBookingMap();
       });
+
+      dropoffAddressInput.addEventListener('change', () => tryGeocodeField('dropoff'));
     }
 
     // Note counter
