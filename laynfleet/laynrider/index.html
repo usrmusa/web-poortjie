@@ -234,6 +234,19 @@
 
       <form id="booking-form" class="booking-form-flow">
 
+        <!-- TRIP TYPE TOGGLE (RETURN vs SINGLE) -->
+        <div class="field">
+          <span class="field-label">Trip Type</span>
+          <div class="booking-type-toggle">
+            <button type="button" id="toggle-trip-return" class="booking-type-btn is-active">
+              <span>🔄</span> Return trip
+            </button>
+            <button type="button" id="toggle-trip-single" class="booking-type-btn">
+              <span>➡️</span> Single trip
+            </button>
+          </div>
+        </div>
+
         <!-- RIDE TYPE TOGGLE (ASAP vs SCHEDULED) -->
         <div class="field">
           <span class="field-label">When do you need the ride?</span>
@@ -313,7 +326,7 @@
               <span class="fare-preview-title">Upfront Fare</span>
               <span id="booking-fare-breakdown" class="fare-preview-breakdown">Calculating distance…</span>
             </div>
-            <div id="booking-fare-amount" class="fare-preview-amount">R --.--</div>
+            <div id="booking-fare-amount" class="fare-preview-amount">R --</div>
           </div>
         </div>
 

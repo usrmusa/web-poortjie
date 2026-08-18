@@ -97,19 +97,21 @@
     },
     note: '',
     vehicleType: 'PRIVATE_CAR',
+    isReturnTrip: true,
     scheduledEpoch: null,
     upfrontPrice: null,
     estimatedDistanceKm: null,
     ratePerKmSnapshot: null,
-    minimumFareSnapshot: null
+    minimumFareSnapshot: null,
+    returnPercentSnapshot: null
   };
 
   const DEFAULT_PRICING_RATES = {
-    PRIVATE_CAR: { ratePerKm: 10.0, minimumFare: 25.0 },
-    MINI_BUS: { ratePerKm: 12.0, minimumFare: 30.0 },
-    BAKKIE: { ratePerKm: 12.0, minimumFare: 30.0 },
-    MOTORBIKE: { ratePerKm: 7.0, minimumFare: 18.0 },
-    TUK_TUK: { ratePerKm: 6.0, minimumFare: 15.0 }
+    PRIVATE_CAR: { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0 },
+    MINI_BUS: { ratePerKm: 12.0, minimumFare: 30.0, returnTripPercent: 80.0 },
+    BAKKIE: { ratePerKm: 12.0, minimumFare: 30.0, returnTripPercent: 80.0 },
+    MOTORBIKE: { ratePerKm: 7.0, minimumFare: 18.0, returnTripPercent: 80.0 },
+    TUK_TUK: { ratePerKm: 6.0, minimumFare: 15.0, returnTripPercent: 80.0 }
   };
   let activePricingRates = { ...DEFAULT_PRICING_RATES };
 
@@ -179,6 +181,8 @@
   const bookingTargetTitle = document.getElementById('booking-target-title');
   const bookingTargetSubtitle = document.getElementById('booking-target-subtitle');
   const bookingTargetTypeBadge = document.getElementById('booking-target-type-badge');
+  const toggleTripReturn = document.getElementById('toggle-trip-return');
+  const toggleTripSingle = document.getElementById('toggle-trip-single');
   const toggleTypeAsap = document.getElementById('toggle-type-asap');
   const toggleTypeScheduled = document.getElementById('toggle-type-scheduled');
   const scheduledFields = document.getElementById('scheduled-fields');
@@ -394,33 +398,40 @@
   /** Calculate and update upfront fare preview card and submit button */
   function updateUpfrontFarePreview(overrideDistanceKm = null) {
     const vType = (bookingState.vehicleType || 'PRIVATE_CAR').toUpperCase();
-    const rateInfo = activePricingRates[vType] || DEFAULT_PRICING_RATES[vType] || { ratePerKm: 10.0, minimumFare: 25.0 };
+    const rateInfo = activePricingRates[vType] || DEFAULT_PRICING_RATES[vType] || { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0 };
 
-    let distKm = overrideDistanceKm;
-    if (distKm == null || isNaN(distKm) || distKm <= 0) {
+    let oneWayDistKm = overrideDistanceKm;
+    if (oneWayDistKm == null || isNaN(oneWayDistKm) || oneWayDistKm <= 0) {
       if (bookingState.pickup && bookingState.pickup.lat && bookingState.dropoff && bookingState.dropoff.lat) {
-        distKm = distanceMeters(bookingState.pickup.lat, bookingState.pickup.lng, bookingState.dropoff.lat, bookingState.dropoff.lng) / 1000.0;
+        oneWayDistKm = distanceMeters(bookingState.pickup.lat, bookingState.pickup.lng, bookingState.dropoff.lat, bookingState.dropoff.lng) / 1000.0;
       } else {
-        distKm = 3.0; // fallback preview estimate
+        oneWayDistKm = 3.0; // fallback preview estimate
       }
     }
 
-    const fare = Math.max(distKm * rateInfo.ratePerKm, rateInfo.minimumFare);
-    bookingState.estimatedDistanceKm = Number(distKm.toFixed(1));
-    bookingState.upfrontPrice = Number(fare.toFixed(2));
+    const isReturn = bookingState.isReturnTrip !== false;
+    const displayDistKm = isReturn ? (oneWayDistKm * 2.0) : oneWayDistKm;
+    const returnPercent = typeof rateInfo.returnTripPercent === 'number' ? rateInfo.returnTripPercent : 80.0;
+    const singlePrice = Math.max(oneWayDistKm * rateInfo.ratePerKm, rateInfo.minimumFare);
+    const rawFare = isReturn ? (singlePrice * (1.0 + returnPercent / 100.0)) : singlePrice;
+    const fare = Math.round(rawFare);
+
+    bookingState.estimatedDistanceKm = Number(displayDistKm.toFixed(1));
+    bookingState.upfrontPrice = fare;
     bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
     bookingState.minimumFareSnapshot = rateInfo.minimumFare;
+    bookingState.returnPercentSnapshot = isReturn ? returnPercent : null;
 
     const fareAmountEl = document.getElementById('booking-fare-amount');
     const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
     const submitBtn = document.getElementById('booking-submit-btn');
 
-    if (fareAmountEl) fareAmountEl.textContent = `R ${fare.toFixed(2)}`;
+    if (fareAmountEl) fareAmountEl.textContent = `R ${fare}`;
     if (fareBreakdownEl) {
-      fareBreakdownEl.textContent = `${bookingState.estimatedDistanceKm} km`;
+      fareBreakdownEl.textContent = `~${bookingState.estimatedDistanceKm} km`;
     }
     if (submitBtn) {
-      submitBtn.innerHTML = `<span>⚡</span> Request Ride · R ${fare.toFixed(2)}`;
+      submitBtn.innerHTML = `<span>⚡</span> Request Ride · R ${fare}`;
     }
   }
 
@@ -434,7 +445,8 @@
           const vType = (data.vehicleType || doc.id).toUpperCase();
           activePricingRates[vType] = {
             ratePerKm: typeof data.ratePerKm === 'number' ? data.ratePerKm : (DEFAULT_PRICING_RATES[vType]?.ratePerKm || 10.0),
-            minimumFare: typeof data.minimumFare === 'number' ? data.minimumFare : (DEFAULT_PRICING_RATES[vType]?.minimumFare || 25.0)
+            minimumFare: typeof data.minimumFare === 'number' ? data.minimumFare : (DEFAULT_PRICING_RATES[vType]?.minimumFare || 25.0),
+            returnTripPercent: typeof data.returnTripPercent === 'number' ? data.returnTripPercent : (DEFAULT_PRICING_RATES[vType]?.returnTripPercent || 80.0)
           };
         });
         updateUpfrontFarePreview();
@@ -1549,6 +1561,7 @@
       bookingState.vehicleType = 'PRIVATE_CAR';
     }
 
+    setReturnTrip(true);
     setBookingType('ASAP');
     if (bookingState.pickup && bookingState.pickup.address) {
       setPickupLocation(bookingState.pickup.address, bookingState.pickup.lat, bookingState.pickup.lng);
@@ -1579,6 +1592,14 @@
 
   function closeBookingModal() {
     if (bookingModal) bookingModal.classList.add('is-hidden');
+  }
+
+  /** Set Trip Type (Return or Single) */
+  function setReturnTrip(isReturn) {
+    bookingState.isReturnTrip = isReturn;
+    if (toggleTripReturn) toggleTripReturn.classList.toggle('is-active', isReturn);
+    if (toggleTripSingle) toggleTripSingle.classList.toggle('is-active', !isReturn);
+    updateUpfrontFarePreview();
   }
 
   /** Set Booking Type (ASAP or SCHEDULED) */
@@ -1808,6 +1829,8 @@
         cancelReason: '',
         cancelledByDriver: false,
         events: [initialEvent],
+        isReturnTrip: bookingState.isReturnTrip !== false,
+        returnPercentSnapshot: bookingState.returnPercentSnapshot || null,
         upfrontPrice: bookingState.upfrontPrice || null,
         ratePerKmSnapshot: bookingState.ratePerKmSnapshot || null,
         minimumFareSnapshot: bookingState.minimumFareSnapshot || null,
@@ -2479,6 +2502,10 @@
     if (bookingModalClose) bookingModalClose.addEventListener('click', closeBookingModal);
     if (bookingModalCancel) bookingModalCancel.addEventListener('click', closeBookingModal);
     if (bookingForm) bookingForm.addEventListener('submit', handleBookingSubmit);
+
+    // Trip Type Toggles
+    if (toggleTripReturn) toggleTripReturn.addEventListener('click', () => setReturnTrip(true));
+    if (toggleTripSingle) toggleTripSingle.addEventListener('click', () => setReturnTrip(false));
 
     // Ride Type Toggles
     if (toggleTypeAsap) toggleTypeAsap.addEventListener('click', () => setBookingType('ASAP'));
