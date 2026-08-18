@@ -1716,45 +1716,150 @@
     return allowed;
   }
 
-  /** Get GPS Current Position */
-  function getGpsLocation() {
+  /** Get GPS Current Position with comprehensive diagnostics, retry fallback, and reverse geocoding */
+  async function getGpsLocation() {
+    console.log('[GPS] ----------------------------------------------------');
+    console.log('[GPS] Starting GPS location request...');
+    console.log('[GPS] Environment diagnostics:', {
+      hasNavigatorGeolocation: Boolean(navigator && navigator.geolocation),
+      isSecureContext: window.isSecureContext,
+      protocol: window.location.protocol,
+      hostname: window.location.hostname,
+      userAgent: navigator.userAgent
+    });
+
+    if (!window.isSecureContext && window.location.protocol !== 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      console.warn('[GPS] ⚠️ Page is not running in a secure context (HTTPS/localhost). Geolocation is restricted by modern browsers.');
+    }
+
     if (!navigator.geolocation) {
+      console.error('[GPS] ❌ navigator.geolocation is not supported by this browser.');
       showToast('Geolocation is not supported by your browser.');
       return;
     }
 
-    if (pickupGpsBtn) {
-      pickupGpsBtn.disabled = true;
-      pickupGpsBtn.innerHTML = '<div class="spinner" style="width:14px;height:14px;"></div> GPS';
+    // Check Permissions API if available
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permStatus = await navigator.permissions.query({ name: 'geolocation' });
+        console.log(`[GPS] Geolocation permission status: "${permStatus.state}"`);
+        permStatus.onchange = () => {
+          console.log(`[GPS] Geolocation permission changed to: "${permStatus.state}"`);
+        };
+      } catch (pErr) {
+        console.log('[GPS] Could not query permission status via Permissions API:', pErr);
+      }
     }
 
-    navigator.geolocation.getCurrentPosition((pos) => {
+    if (pickupGpsBtn) {
+      pickupGpsBtn.disabled = true;
+      pickupGpsBtn.innerHTML = '<div class="spinner" style="width:14px;height:14px;"></div> Locating…';
+    }
+
+    function resetButton() {
+      if (pickupGpsBtn) {
+        pickupGpsBtn.disabled = false;
+        pickupGpsBtn.innerHTML = '<span>📍</span> GPS';
+      }
+    }
+
+    function handlePositionSuccess(pos, mode = 'high-accuracy') {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      const accuracy = pos.coords.accuracy;
+      const distToCenter = distanceMeters(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng, lat, lng);
       const allowed = isPickupAllowed(lat, lng);
 
-      if (allowed) {
-        setPickupLocation('Current GPS Location (Poortjie)', lat, lng);
-        showToast('GPS location within Poortjie captured!');
+      console.log(`[GPS] ✅ Position acquired successfully (${mode}):`, {
+        latitude: lat,
+        longitude: lng,
+        accuracyMeters: accuracy,
+        distanceToPoortjieCenterMeters: distToCenter.toFixed(1),
+        isInsidePoortjie: allowed,
+        altitude: pos.coords.altitude,
+        speed: pos.coords.speed,
+        timestamp: pos.timestamp
+      });
+
+      // Attempt reverse geocoding with Google Maps Geocoder if loaded
+      if (window.google && window.google.maps && window.google.maps.Geocoder) {
+        console.log(`[GPS] Attempting reverse geocoding via Google Maps for (${lat}, ${lng})...`);
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          console.log(`[GPS] Reverse geocode response status: ${status}`, results);
+          if (status === 'OK' && results && results[0] && results[0].formatted_address) {
+            const formattedAddr = results[0].formatted_address;
+            console.log(`[GPS] Resolved address: "${formattedAddr}"`);
+            setPickupLocation(formattedAddr, lat, lng);
+          } else {
+            const fallbackAddr = allowed ? 'Current Location (Poortjie)' : 'Current Location (Outside Area)';
+            console.log(`[GPS] Reverse geocoding unfulfilled, using fallback label: "${fallbackAddr}"`);
+            setPickupLocation(fallbackAddr, lat, lng);
+          }
+          if (pickupClearBtn) pickupClearBtn.classList.remove('is-hidden');
+          resetButton();
+        });
       } else {
-        setPickupLocation('Current GPS Location (Outside Area)', lat, lng);
-        showToast('Your GPS location is outside the Poortjie service area.');
+        const fallbackAddr = allowed ? 'Current Location (Poortjie)' : 'Current Location (Outside Area)';
+        console.log(`[GPS] Google Geocoder not loaded, using fallback label: "${fallbackAddr}"`);
+        setPickupLocation(fallbackAddr, lat, lng);
+        if (pickupClearBtn) pickupClearBtn.classList.remove('is-hidden');
+        resetButton();
       }
 
-      if (pickupClearBtn) pickupClearBtn.classList.remove('is-hidden');
+      if (allowed) {
+        showToast('📍 GPS location within Poortjie captured!');
+      } else {
+        showToast('⚠️ Your GPS location is outside the Poortjie pickup area.');
+      }
+    }
 
-      if (pickupGpsBtn) {
-        pickupGpsBtn.disabled = false;
-        pickupGpsBtn.innerHTML = '<span>📍</span> GPS';
-      }
-    }, (err) => {
-      console.warn('Geolocation error:', err);
-      showToast('Could not retrieve GPS location. Search an address.');
-      if (pickupGpsBtn) {
-        pickupGpsBtn.disabled = false;
-        pickupGpsBtn.innerHTML = '<span>📍</span> GPS';
-      }
-    }, { enableHighAccuracy: true, timeout: 10000 });
+    const highAccuracyOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+    console.log('[GPS] Invoking navigator.geolocation.getCurrentPosition with high accuracy:', highAccuracyOptions);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => handlePositionSuccess(pos, 'high-accuracy'),
+      (err) => {
+        const errorNames = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' };
+        const errType = errorNames[err.code] || 'UNKNOWN_ERROR';
+        console.warn(`[GPS] ⚠️ High-accuracy geolocation failed: code=${err.code} (${errType}), message="${err.message}"`);
+
+        // If high accuracy timed out or was position unavailable, retry once with standard accuracy
+        if (err.code === 3 || err.code === 2) {
+          console.log('[GPS] Retrying with standard accuracy (enableHighAccuracy: false)...');
+          const standardOptions = { enableHighAccuracy: false, timeout: 12000, maximumAge: 30000 };
+          navigator.geolocation.getCurrentPosition(
+            (pos) => handlePositionSuccess(pos, 'standard-accuracy-fallback'),
+            (fallbackErr) => {
+              const fallbackType = errorNames[fallbackErr.code] || 'UNKNOWN_ERROR';
+              console.error(`[GPS] ❌ Standard-accuracy retry also failed: code=${fallbackErr.code} (${fallbackType}), message="${fallbackErr.message}"`);
+              if (fallbackErr.code === 2) {
+                console.info('[GPS] 💡 Tip for Mac / Chrome DevTools: macOS CoreLocation returned kCLErrorLocationUnknown. To resolve this:\n1. Enable macOS System Settings → Privacy & Security → Location Services → Google Chrome: ON (and ensure Wi-Fi is ON), OR\n2. In Chrome DevTools: Press Cmd+Shift+P → type "Sensors" → set Location to custom coordinates (e.g. Poortjie: Lat -26.45600, Lng 27.77087).');
+              }
+              resetButton();
+              if (fallbackErr.code === 1) {
+                showToast('Location permission denied. Please allow location access in your browser.');
+              } else if (fallbackErr.code === 2) {
+                showToast('GPS position unavailable on your device. Please search an address or check Location Services.');
+              } else if (fallbackErr.code === 3) {
+                showToast('GPS request timed out. Please search an address manually.');
+              } else {
+                showToast('Could not retrieve GPS location. Please search an address.');
+              }
+            },
+            standardOptions
+          );
+        } else {
+          resetButton();
+          if (err.code === 1) {
+            showToast('Location permission denied. Please allow location access in your browser.');
+          } else {
+            showToast('Could not retrieve GPS location. Please search an address.');
+          }
+        }
+      },
+      highAccuracyOptions
+    );
   }
 
   /** Submit Booking */
