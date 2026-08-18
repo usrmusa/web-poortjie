@@ -204,9 +204,8 @@
   const activeTripModalClose = document.getElementById('active-trip-modal-close');
   const trackBookingId = document.getElementById('track-booking-id');
 
-  // Stepper Elements
+  // Stepper Elements (Direct Accept Model: Request -> Accepted -> En Route -> In Trip -> Done)
   const stepRequested = document.getElementById('step-requested');
-  const stepQuote = document.getElementById('step-quote');
   const stepAccepted = document.getElementById('step-accepted');
   const stepEnroute = document.getElementById('step-enroute');
   const stepTrip = document.getElementById('step-trip');
@@ -219,19 +218,6 @@
   const pendingCountdownLabel = document.getElementById('pending-countdown-label');
   const pendingCountdown = document.getElementById('pending-countdown');
   const cancelPendingBtn = document.getElementById('cancel-pending-btn');
-
-  const trackQuotedSection = document.getElementById('track-quoted-section');
-  const quotedDriverAvatar = document.getElementById('quoted-driver-avatar');
-  const quotedDriverName = document.getElementById('quoted-driver-name');
-  const quotedDriverRating = document.getElementById('quoted-driver-rating');
-  const quotedDriverVehicle = document.getElementById('quoted-driver-vehicle');
-  const quotedDriverPlate = document.getElementById('quoted-driver-plate');
-  const quotedPriceAmount = document.getElementById('quoted-price-amount');
-  const quotedEtaText = document.getElementById('quoted-eta-text');
-  const quotedCountdown = document.getElementById('quoted-countdown');
-  const approveBtnPrice = document.getElementById('approve-btn-price');
-  const approveQuoteBtn = document.getElementById('approve-quote-btn');
-  const declineQuoteBtn = document.getElementById('decline-quote-btn');
 
   const trackActiveSection = document.getElementById('track-active-section');
   const trackStatusIcon = document.getElementById('track-status-icon');
@@ -1573,7 +1559,7 @@
       return;
     }
 
-    if (currentBookingDoc && ['PENDING', 'QUOTED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'].includes(currentBookingDoc.status)) {
+    if (currentBookingDoc && ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'].includes(currentBookingDoc.status)) {
       showToast('You already have an active ride in progress.');
       openActiveTripModal();
       return;
@@ -2091,7 +2077,7 @@
           list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
           const active = list.find(it => [
-            'PENDING', 'QUOTED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'
+            'PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'
           ].includes(it.status));
 
           const bookingToDisplay = active || list[0];
@@ -2100,11 +2086,16 @@
 
           const isLive = active != null;
 
-          // Sound & Toast feedback when driver sets a price quote
-          if (bookingToDisplay.status === 'QUOTED' && previousStatus !== 'QUOTED') {
+          // Sound & Toast feedback on Direct Accept transitions
+          if (bookingToDisplay.status === 'ACCEPTED' && previousStatus === 'PENDING') {
             playQuoteChime();
-            showToast(`Quote received! Driver quoted R ${bookingToDisplay.quotedPrice ? bookingToDisplay.quotedPrice.toFixed(2) : ''}.`);
+            showToast('🎉 Driver accepted your ride!');
             openActiveTripModal();
+          } else if (bookingToDisplay.status === 'EN_ROUTE' && previousStatus !== 'EN_ROUTE') {
+            showToast('🚗 Driver is on the way to pickup!');
+          } else if (bookingToDisplay.status === 'ARRIVED' && previousStatus !== 'ARRIVED') {
+            playQuoteChime();
+            showToast('📍 Driver has arrived at your pickup location!');
           }
 
           // Update Dashboard Banner Widget
@@ -2256,8 +2247,7 @@
     activeBookingBanner.classList.remove('is-hidden');
 
     if (activeBookingIcon) {
-      if (booking.status === 'QUOTED') activeBookingIcon.textContent = '💵';
-      else if (booking.status === 'ACCEPTED' || booking.status === 'EN_ROUTE') activeBookingIcon.textContent = '🚗';
+      if (booking.status === 'ACCEPTED' || booking.status === 'EN_ROUTE') activeBookingIcon.textContent = '🚗';
       else if (booking.status === 'ARRIVED') activeBookingIcon.textContent = '📍';
       else if (booking.status === 'IN_TRIP') activeBookingIcon.textContent = '🚀';
       else if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
@@ -2268,15 +2258,21 @@
     }
 
     if (activeBookingTitle) {
-      if (booking.status === 'QUOTED') activeBookingTitle.textContent = `Quote: R ${booking.quotedPrice ? booking.quotedPrice.toFixed(2) : '0.00'}`;
-      else if (booking.status === 'EN_ROUTE') activeBookingTitle.textContent = 'Driver En Route';
-      else if (booking.status === 'ARRIVED') activeBookingTitle.textContent = 'Driver Arrived!';
-      else if (booking.status === 'IN_TRIP') activeBookingTitle.textContent = 'Trip in Progress';
-      else if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
+      if (booking.status === 'ACCEPTED') {
+        const etaMins = booking.availabilityEtaMinutes || 5;
+        activeBookingTitle.textContent = `Driver Accepted (ETA ~${etaMins}m)`;
+      } else if (booking.status === 'EN_ROUTE') {
+        activeBookingTitle.textContent = 'Driver En Route';
+      } else if (booking.status === 'ARRIVED') {
+        activeBookingTitle.textContent = 'Driver Arrived!';
+      } else if (booking.status === 'IN_TRIP') {
+        activeBookingTitle.textContent = 'Trip in Progress';
+      } else if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
         const info = getDetailedCancellationInfo(booking);
         activeBookingTitle.textContent = info.title;
+      } else {
+        activeBookingTitle.textContent = 'Finding your ride…';
       }
-      else activeBookingTitle.textContent = 'Finding your ride…';
     }
 
     if (activeBookingStatusText) {
@@ -2296,7 +2292,6 @@
     }
     switch (status) {
       case 'PENDING': return 'Finding your ride / Driver reviewing…';
-      case 'QUOTED': return 'Price quoted! 60s to approve.';
       case 'ACCEPTED': return 'Driver accepted your ride.';
       case 'EN_ROUTE': return 'Driver is en route to pickup.';
       case 'ARRIVED': return 'Driver has arrived at pickup!';
@@ -2304,8 +2299,8 @@
       case 'COMPLETED': return 'Trip completed!';
       case 'CANCELLED_NO_DRIVER': return 'No drivers responded in time.';
       case 'DRIVER_UNAVAILABLE': return 'Driver did not respond or declined.';
-      case 'CANCELLED_EXPIRED': return 'Quote approval expired.';
-      case 'CANCELLED': return 'Ride request cancelled.';
+      case 'CANCELLED_EXPIRED': return 'Ride request expired.';
+      case 'CANCELLED': return 'Ride request ended.';
       default: return status || 'In progress';
     }
   }
@@ -2318,14 +2313,12 @@
 
     // Reset all sections
     if (trackPendingSection) trackPendingSection.classList.add('is-hidden');
-    if (trackQuotedSection) trackQuotedSection.classList.add('is-hidden');
     if (trackActiveSection) trackActiveSection.classList.add('is-hidden');
     if (trackCompletedSection) trackCompletedSection.classList.add('is-hidden');
     if (trackCancelledSection) trackCancelledSection.classList.add('is-hidden');
 
     // Clear timers
     if (pendingTimerInterval) { clearInterval(pendingTimerInterval); pendingTimerInterval = null; }
-    if (quoteTimerInterval) { clearInterval(quoteTimerInterval); quoteTimerInterval = null; }
 
     // Update Stepper
     updateTrackingStepper(booking.status);
@@ -2358,34 +2351,19 @@
 
       startPendingCountdown(booking);
       updateCancelPendingButton(booking);
-    } else if (status === 'QUOTED') {
-      // 2. Quote Handshake (Shows who the driver is + 60s countdown)
-      if (trackQuotedSection) trackQuotedSection.classList.remove('is-hidden');
-      
-      await renderQuotedDriverHeader(booking);
-
-      const price = typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00';
-      if (quotedPriceAmount) quotedPriceAmount.textContent = `R ${price}`;
-      if (approveBtnPrice) approveBtnPrice.textContent = price;
-      if (quotedEtaText) {
-        const etaMins = booking.availabilityEtaMinutes || 5;
-        const arrivalDate = new Date(Date.now() + etaMins * 60 * 1000);
-        const hh = String(arrivalDate.getHours()).padStart(2, '0');
-        const mm = String(arrivalDate.getMinutes()).padStart(2, '0');
-        quotedEtaText.textContent = `Est. Pickup ETA: ~${etaMins} mins (Arrival at ${hh}:${mm})`;
-      }
-      startQuoteCountdown(booking);
     } else if (['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'].includes(status)) {
-      // 3. Active En Route / Arrived / In Trip Section
+      // 2. Active En Route / Arrived / In Trip Section (Direct Accept)
       if (trackActiveSection) trackActiveSection.classList.remove('is-hidden');
       await renderDriverInfoForTracking(booking);
     } else if (status === 'COMPLETED') {
-      // 4. Completed Section
+      // 3. Completed Section
       if (trackCompletedSection) trackCompletedSection.classList.remove('is-hidden');
-      const finalFare = typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00';
+      const finalFare = typeof booking.upfrontPrice === 'number'
+        ? booking.upfrontPrice.toFixed(2)
+        : (typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00');
       if (completedFareAmount) completedFareAmount.textContent = `R ${finalFare}`;
     } else {
-      // 5. Terminal Cancelled / Expired / No Driver
+      // 4. Terminal Cancelled / Expired / No Driver
       if (trackCancelledSection) trackCancelledSection.classList.remove('is-hidden');
       const cancelInfo = getDetailedCancellationInfo(booking);
       if (cancelledIcon) cancelledIcon.textContent = cancelInfo.icon;
@@ -2394,41 +2372,17 @@
     }
   }
 
-  /** Render Driver Identity header inside Quote Handshake */
-  async function renderQuotedDriverHeader(booking) {
-    const driverUid = booking.driverId || booking.requestedDriverId;
-    const userDoc = await getDriverIdentity(driverUid);
-    const driverDoc = await getDriverRecord(driverUid);
-    const realTrips = await getDriverTripsCount(driverUid);
-
-    const v = driverDoc.vehicle || {};
-    const name = userDoc.displayName || 'Driver';
-    const avatar = userDoc.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=22c55e&color=fff&size=128`;
-    const hasRating = typeof driverDoc.ratingCount === 'number' && driverDoc.ratingCount > 0;
-    const rating = hasRating ? driverDoc.ratingAvg.toFixed(1) : '—';
-    const trips = realTrips;
-
-    if (quotedDriverAvatar) quotedDriverAvatar.src = avatar;
-    if (quotedDriverName) quotedDriverName.textContent = name;
-    if (quotedDriverRating) quotedDriverRating.textContent = `★ ${rating} (${trips} trip${trips === 1 ? '' : 's'})`;
-    if (quotedDriverVehicle) {
-      quotedDriverVehicle.textContent = `${formatVehicleType(booking.vehicleType)} · ${v.make || 'Vehicle'} ${v.model || ''} (${v.colour || 'Standard'})`;
-    }
-    if (quotedDriverPlate) quotedDriverPlate.textContent = v.plate || '—';
-  }
-
-  /** Update Stepper nodes */
+  /** Update Stepper nodes (Direct Accept Model: Request -> Accepted -> En Route -> In Trip -> Done) */
   function updateTrackingStepper(status) {
     const steps = [
       { el: stepRequested, target: 'PENDING' },
-      { el: stepQuote, target: 'QUOTED' },
       { el: stepAccepted, target: 'ACCEPTED' },
       { el: stepEnroute, target: 'EN_ROUTE' },
       { el: stepTrip, target: 'IN_TRIP' },
       { el: stepCompleted, target: 'COMPLETED' }
     ];
 
-    const order = ['PENDING', 'QUOTED', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP', 'COMPLETED'];
+    const order = ['PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP', 'COMPLETED'];
     const currentIdx = order.indexOf(status === 'ARRIVED' ? 'EN_ROUTE' : status);
 
     steps.forEach((step, idx) => {
@@ -2534,35 +2488,6 @@
     pendingTimerInterval = setInterval(update, 1000);
   }
 
-  /**
-   * Quote countdown — display only, anchored to the server deadline
-   * (booking.offerExpiresAt, the QUOTE window). The server expires unapproved
-   * quotes; the client never writes CANCELLED_EXPIRED itself.
-   */
-  function startQuoteCountdown(booking) {
-    const deadline = readEpochMillis(booking.offerExpiresAt);
-
-    function update() {
-      const remaining = deadline == null
-        ? 0
-        : Math.max(0, Math.round((deadline - Date.now()) / 1000));
-      const formatted = formatTimerSeconds(remaining);
-      if (quotedCountdown) quotedCountdown.textContent = formatted;
-      if (activeBookingCountdownPill) {
-        activeBookingCountdownPill.textContent = `⏱️ ${formatted}`;
-        activeBookingCountdownPill.classList.remove('is-hidden');
-      }
-      if (remaining <= 0) {
-        clearInterval(quoteTimerInterval);
-        quoteTimerInterval = null;
-        // Do not write status — the server expires the quote.
-      }
-    }
-
-    update();
-    quoteTimerInterval = setInterval(update, 1000);
-  }
-
   /** Render Driver Identity on Active Trip */
   async function renderDriverInfoForTracking(booking) {
     const driverUid = booking.driverId || booking.requestedDriverId;
@@ -2593,8 +2518,9 @@
 
     if (trackStatusIcon && trackStatusTitle && trackStatusDesc) {
       if (booking.status === 'ACCEPTED') {
+        const etaMins = booking.availabilityEtaMinutes || 5;
         trackStatusIcon.textContent = '✅';
-        trackStatusTitle.textContent = 'Driver Accepted';
+        trackStatusTitle.textContent = `Driver Accepted (ETA ~${etaMins}m)`;
         trackStatusDesc.textContent = `${name} is preparing to head your way.`;
       } else if (booking.status === 'EN_ROUTE') {
         const etaMins = booking.availabilityEtaMinutes || 5;
@@ -2618,8 +2544,10 @@
     if (trackPickupText) trackPickupText.textContent = booking.pickup?.address || 'Poortjie';
     if (trackDropoffText) trackDropoffText.textContent = booking.dropoff?.address || 'Destination';
     if (trackFareText) {
-      const price = typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00';
-      trackFareText.textContent = `💵 Agreed Fare: R ${price} (Pay driver offline)`;
+      const price = typeof booking.upfrontPrice === 'number'
+        ? booking.upfrontPrice.toFixed(2)
+        : (typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00');
+      trackFareText.textContent = `💵 Locked Upfront Fare: R ${price} (Pay driver cash on arrival)`;
     }
 
     if (activeBookingCountdownPill) {
@@ -2674,39 +2602,6 @@
       if (cancelPendingBtn && currentBookingDoc) {
         updateCancelPendingButton(currentBookingDoc);
       }
-    }
-  }
-
-  /** Approve Quote → server (approveQuoteCallable; QUOTED → EN_ROUTE). */
-  async function handleApproveQuote() {
-    if (!currentBookingDoc) return;
-    try {
-      if (approveQuoteBtn) approveQuoteBtn.disabled = true;
-      await callFn('approveQuoteCallable', { bookingId: currentBookingDoc.id });
-      showToast('Quote approved! Driver confirmed.');
-    } catch (err) {
-      console.error('Failed to approve quote:', err);
-      showToast('Could not approve quote. Please try again.');
-    } finally {
-      if (approveQuoteBtn) approveQuoteBtn.disabled = false;
-    }
-  }
-
-  /** Decline Quote → server (rejectQuoteCallable; Quick Ride rolls on, specific driver ends). */
-  async function handleDeclineQuote() {
-    if (!currentBookingDoc) return;
-    try {
-      if (declineQuoteBtn) declineQuoteBtn.disabled = true;
-      await callFn('rejectQuoteCallable', {
-        bookingId: currentBookingDoc.id,
-        reason: 'Rider declined driver price quote.'
-      });
-      showToast('Quote declined.');
-    } catch (err) {
-      console.error('Failed to decline quote:', err);
-      showToast('Could not decline quote.');
-    } finally {
-      if (declineQuoteBtn) declineQuoteBtn.disabled = false;
     }
   }
 
@@ -3070,8 +2965,6 @@
     if (viewActiveBookingBtn) viewActiveBookingBtn.addEventListener('click', openActiveTripModal);
     if (activeTripModalClose) activeTripModalClose.addEventListener('click', closeActiveTripModal);
     if (cancelPendingBtn) cancelPendingBtn.addEventListener('click', handleCancelPending);
-    if (approveQuoteBtn) approveQuoteBtn.addEventListener('click', handleApproveQuote);
-    if (declineQuoteBtn) declineQuoteBtn.addEventListener('click', handleDeclineQuote);
     if (completedDoneBtn) completedDoneBtn.addEventListener('click', handleCompletedDone);
     if (cancelledDismissBtn) cancelledDismissBtn.addEventListener('click', closeActiveTripModal);
 

@@ -362,26 +362,22 @@
         <button id="active-trip-modal-close" class="modal-close" aria-label="Close">&times;</button>
       </div>
 
-      <!-- Stepper Progress Bar -->
+      <!-- Stepper Progress Bar (Direct Accept Model) -->
       <div class="tracking-stepper">
         <div id="step-requested" class="step-node is-active">
           <div class="step-circle">1</div>
           <span class="step-lbl">Request</span>
         </div>
-        <div id="step-quote" class="step-node">
-          <div class="step-circle">2</div>
-          <span class="step-lbl">Quote</span>
-        </div>
         <div id="step-accepted" class="step-node">
-          <div class="step-circle">3</div>
+          <div class="step-circle">2</div>
           <span class="step-lbl">Accepted</span>
         </div>
         <div id="step-enroute" class="step-node">
-          <div class="step-circle">4</div>
+          <div class="step-circle">3</div>
           <span class="step-lbl">En Route</span>
         </div>
         <div id="step-trip" class="step-node">
-          <div class="step-circle">5</div>
+          <div class="step-circle">4</div>
           <span class="step-lbl">In Trip</span>
         </div>
         <div id="step-completed" class="step-node">
@@ -390,7 +386,7 @@
         </div>
       </div>
 
-      <!-- State 1: PENDING (Searching / Driver reviewing) -->
+      <!-- State 1: PENDING (Searching / Driver reviewing / Scheduled waiting) -->
       <div id="track-pending-section" class="is-hidden" style="display: flex; flex-direction: column; gap: 14px; text-align: center; padding: 12px 0;">
         <div class="spinner" style="margin: 0 auto; width: 36px; height: 36px;"></div>
         <div>
@@ -404,39 +400,6 @@
         <button id="cancel-pending-btn" class="btn btn-ghost btn-sm" style="color: var(--danger); border-color: var(--danger); margin-top: 8px;">
           Cancel Request
         </button>
-      </div>
-
-      <!-- State 2: QUOTED (Quote Handshake) -->
-      <div id="track-quoted-section" class="is-hidden" style="display: flex; flex-direction: column; gap: 14px;">
-        <!-- Driver Profile Header on Quote -->
-        <div class="quote-driver-hero">
-          <img id="quoted-driver-avatar" class="quote-driver-avatar" src="" alt="Driver Photo" />
-          <div style="flex: 1; min-width: 0;">
-            <div id="quoted-driver-name" style="font-size: 15px; font-weight: 800;">—</div>
-            <div id="quoted-driver-rating" style="font-size: 12px; color: var(--text-dim);">★ 5.0 (0 trips)</div>
-            <div id="quoted-driver-vehicle" style="font-size: 12px; color: var(--brand); font-weight: 600;">—</div>
-          </div>
-          <div id="quoted-driver-plate" style="font-size: 11px; font-weight: 700; background: var(--panel-2); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-family: monospace;">Verified</div>
-        </div>
-
-        <div class="quote-highlight-box">
-          <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Driver's Price Quote</span>
-          <div id="quoted-price-amount" class="quote-price-big">R 0.00</div>
-          <div id="quoted-eta-text" style="font-size: 13px; font-weight: 600; color: var(--text);">Est. Pickup: ~5 mins</div>
-          <div class="countdown-timer-wrap">
-            <span>⏱️ Quote expires in:</span>
-            <span id="quoted-countdown" class="countdown-badge">60s</span>
-          </div>
-        </div>
-
-        <div class="payment-notice">
-          💵 <strong>Offline Payment:</strong> Pay the driver cash or EFT directly upon trip arrival.
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-          <button id="decline-quote-btn" class="btn btn-ghost" style="flex: 1; color: var(--danger);">Decline</button>
-          <button id="approve-quote-btn" class="btn btn-primary" style="flex: 2;">Approve Quote (R <span id="approve-btn-price">0</span>)</button>
-        </div>
       </div>
 
       <!-- State 3: ACCEPTED / EN_ROUTE / ARRIVED / IN_TRIP -->
