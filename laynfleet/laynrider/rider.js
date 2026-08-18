@@ -254,6 +254,7 @@
   const ratingStarBtns = document.querySelectorAll('.rating-star-btn');
 
   const trackCancelledSection = document.getElementById('track-cancelled-section');
+  const cancelledIcon = document.getElementById('cancelled-icon');
   const cancelledTitle = document.getElementById('cancelled-title');
   const cancelledReasonText = document.getElementById('cancelled-reason-text');
   const cancelledDismissBtn = document.getElementById('cancelled-dismiss-btn');
@@ -2018,6 +2019,126 @@
       });
   }
 
+  /**
+   * Resolves the exact human-readable cancellation title, explanation, and badge icon
+   * by inspecting booking status, cancelReason, cancelledByDriver, events, and dispatchMessage.
+   */
+  function getDetailedCancellationInfo(booking) {
+    if (!booking) {
+      return {
+        title: 'Ride Request Ended',
+        reason: 'Request ended without confirmation.',
+        icon: '❌'
+      };
+    }
+
+    const status = booking.status || 'CANCELLED';
+    const rawReason = (booking.cancelReason || '').trim();
+    const dispatchMsg = (booking.dispatchMessage || '').trim();
+    const byDriver = booking.cancelledByDriver === true;
+    const events = Array.isArray(booking.events) ? booking.events : [];
+
+    // Check audit events for specific timeout or decline entries
+    const timeoutEvent = [...events].reverse().find(e => e && (e.event === 'DRIVER_TIMEOUT' || e.event === 'TIMEOUT'));
+    const declineEvent = [...events].reverse().find(e => e && e.event === 'DRIVER_DECLINED');
+    const noDriverEvent = [...events].reverse().find(e => e && e.event === 'NO_DRIVER_AVAILABLE');
+
+    // 1. Driver cancelled after accepting (Post-Acceptance / En Route / Arrived / In Trip)
+    if (byDriver) {
+      return {
+        title: 'Driver Cancelled Ride',
+        reason: rawReason ? `The driver had to cancel: "${rawReason}"` : 'The driver cancelled this ride after acceptance.',
+        icon: '⚠️'
+      };
+    }
+
+    // 2. Specific Driver or All Drivers Timed Out (didn't respond in 60s)
+    if (status === 'DRIVER_UNAVAILABLE' && (timeoutEvent || rawReason.toLowerCase().includes('timed out') || rawReason.toLowerCase().includes('respond'))) {
+      return {
+        title: 'Driver Did Not Respond in Time',
+        reason: 'The driver did not accept or respond within the 60-second window.',
+        icon: '⏱️'
+      };
+    }
+
+    // 3. Driver Declined during review
+    if (declineEvent || rawReason.toLowerCase().startsWith('declined:') || rawReason.toLowerCase().includes('declined')) {
+      const declineDetail = declineEvent?.detail ? declineEvent.detail.replace(/^Declined:\s*/i, '') : rawReason.replace(/^Declined:\s*/i, '');
+      return {
+        title: 'Driver Declined Request',
+        reason: declineDetail ? `The driver was unable to take your trip: "${declineDetail}".` : 'The driver declined this trip request.',
+        icon: '🚫'
+      };
+    }
+
+    // 4. Chosen driver is offline or busy
+    if (status === 'DRIVER_UNAVAILABLE') {
+      let detail = rawReason;
+      if (!detail && timeoutEvent?.detail) detail = timeoutEvent.detail;
+      if (!detail && dispatchMsg) detail = dispatchMsg;
+      return {
+        title: 'Driver Unavailable',
+        reason: detail || 'The requested driver is currently offline or busy on another ride.',
+        icon: '🚗'
+      };
+    }
+
+    // 5. No drivers available in area / exhausted candidates
+    if (status === 'CANCELLED_NO_DRIVER') {
+      if (timeoutEvent) {
+        return {
+          title: 'Timed Out',
+          reason: 'Nearby driver did not respond within the time limit. Please try requesting again.',
+          icon: '⏱️'
+        };
+      }
+      return {
+        title: 'No Drivers Available',
+        reason: rawReason || noDriverEvent?.detail || 'All available drivers in Poortjie are currently busy or offline. Please try again shortly.',
+        icon: '📍'
+      };
+    }
+
+    // 6. Quote Expired (rider did not approve within 60s)
+    if (status === 'CANCELLED_EXPIRED') {
+      return {
+        title: 'Quote Expired',
+        reason: 'The 60-second price quote approval window expired without confirmation.',
+        icon: '⏱️'
+      };
+    }
+
+    // 7. Rider Cancelled
+    if (status === 'CANCELLED') {
+      if (rawReason.toLowerCase().includes('no_show') || rawReason.toLowerCase().includes('no-show')) {
+        return {
+          title: 'Cancelled — Rider No-Show',
+          reason: 'The driver waited 5 minutes at the pickup location but could not locate you.',
+          icon: '📍'
+        };
+      }
+      if (rawReason.toLowerCase().includes('scheduled')) {
+        return {
+          title: 'Scheduled Ride Cancelled',
+          reason: rawReason || 'You cancelled this scheduled ride request.',
+          icon: '📅'
+        };
+      }
+      return {
+        title: 'Ride Request Cancelled',
+        reason: rawReason || 'You cancelled this ride request before confirmation.',
+        icon: '✕'
+      };
+    }
+
+    // Default fallback
+    return {
+      title: 'Ride Request Ended',
+      reason: rawReason || dispatchMsg || 'Request ended without confirmation.',
+      icon: '❌'
+    };
+  }
+
   /** Render Dashboard Active Booking Widget */
   function renderActiveBookingBanner(booking, isLive) {
     if (!activeBookingBanner) return;
@@ -2034,6 +2155,10 @@
       else if (booking.status === 'ACCEPTED' || booking.status === 'EN_ROUTE') activeBookingIcon.textContent = '🚗';
       else if (booking.status === 'ARRIVED') activeBookingIcon.textContent = '📍';
       else if (booking.status === 'IN_TRIP') activeBookingIcon.textContent = '🚀';
+      else if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
+        const info = getDetailedCancellationInfo(booking);
+        activeBookingIcon.textContent = info.icon;
+      }
       else activeBookingIcon.textContent = '🚖';
     }
 
@@ -2042,15 +2167,28 @@
       else if (booking.status === 'EN_ROUTE') activeBookingTitle.textContent = 'Driver En Route';
       else if (booking.status === 'ARRIVED') activeBookingTitle.textContent = 'Driver Arrived!';
       else if (booking.status === 'IN_TRIP') activeBookingTitle.textContent = 'Trip in Progress';
+      else if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
+        const info = getDetailedCancellationInfo(booking);
+        activeBookingTitle.textContent = info.title;
+      }
       else activeBookingTitle.textContent = 'Finding your ride…';
     }
 
     if (activeBookingStatusText) {
-      activeBookingStatusText.textContent = booking.dispatchMessage || formatBookingStatus(booking.status);
+      if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
+        const info = getDetailedCancellationInfo(booking);
+        activeBookingStatusText.textContent = info.reason;
+      } else {
+        activeBookingStatusText.textContent = booking.dispatchMessage || formatBookingStatus(booking.status, booking);
+      }
     }
   }
 
-  function formatBookingStatus(status) {
+  function formatBookingStatus(status, booking = null) {
+    if (booking && ['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(status)) {
+      const cancelInfo = getDetailedCancellationInfo(booking);
+      return `${cancelInfo.title}: ${cancelInfo.reason}`;
+    }
     switch (status) {
       case 'PENDING': return 'Finding your ride / Driver reviewing…';
       case 'QUOTED': return 'Price quoted! 60s to approve.';
@@ -2059,8 +2197,8 @@
       case 'ARRIVED': return 'Driver has arrived at pickup!';
       case 'IN_TRIP': return 'Heading to drop-off destination.';
       case 'COMPLETED': return 'Trip completed!';
-      case 'CANCELLED_NO_DRIVER': return 'No drivers available.';
-      case 'DRIVER_UNAVAILABLE': return 'Driver unavailable.';
+      case 'CANCELLED_NO_DRIVER': return 'No drivers responded in time.';
+      case 'DRIVER_UNAVAILABLE': return 'Driver did not respond or declined.';
       case 'CANCELLED_EXPIRED': return 'Quote approval expired.';
       case 'CANCELLED': return 'Ride request cancelled.';
       default: return status || 'In progress';
@@ -2144,18 +2282,10 @@
     } else {
       // 5. Terminal Cancelled / Expired / No Driver
       if (trackCancelledSection) trackCancelledSection.classList.remove('is-hidden');
-      if (cancelledTitle) {
-        if (status === 'CANCELLED_NO_DRIVER' || status === 'DRIVER_UNAVAILABLE') {
-          cancelledTitle.textContent = 'No Drivers Available';
-        } else if (status === 'CANCELLED_EXPIRED') {
-          cancelledTitle.textContent = 'Quote Expired';
-        } else {
-          cancelledTitle.textContent = 'Ride Cancelled';
-        }
-      }
-      if (cancelledReasonText) {
-        cancelledReasonText.textContent = booking.cancelReason || 'Request ended without confirmation.';
-      }
+      const cancelInfo = getDetailedCancellationInfo(booking);
+      if (cancelledIcon) cancelledIcon.textContent = cancelInfo.icon;
+      if (cancelledTitle) cancelledTitle.textContent = cancelInfo.title;
+      if (cancelledReasonText) cancelledReasonText.textContent = cancelInfo.reason;
     }
   }
 
