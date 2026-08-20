@@ -277,6 +277,12 @@
   // Toast
   const toastEl = document.getElementById('toast');
 
+  // App Test / Beta Modal Elements
+  const appTestModal = document.getElementById('app-test-modal');
+  const appTestModalClose = document.getElementById('app-test-modal-close');
+  const appTestModalCancel = document.getElementById('app-test-modal-cancel');
+  const appTestDownloadBtn = document.getElementById('app-test-download-btn');
+
   // Profile Completion Modal
   const profileModal = document.getElementById('profile-modal');
   const profileModalClose = document.getElementById('profile-modal-close');
@@ -1683,6 +1689,15 @@
     if (bookingModal) bookingModal.classList.add('is-hidden');
   }
 
+  /** Open / Close Android App Test Beta Modal */
+  function openAppTestModal() {
+    if (appTestModal) appTestModal.classList.remove('is-hidden');
+  }
+
+  function closeAppTestModal() {
+    if (appTestModal) appTestModal.classList.add('is-hidden');
+  }
+
   /** Set Trip Type (Return or Single) */
   function setReturnTrip(isReturn) {
     bookingState.isReturnTrip = isReturn;
@@ -1997,95 +2012,10 @@
       return;
     }
 
-    // Web bookings are strictly ASAP dispatch
-    bookingState.type = 'ASAP';
-    const note = bookingNoteInput ? bookingNoteInput.value.trim() : '';
-
-    try {
-      if (bookingSubmitBtn) {
-        bookingSubmitBtn.disabled = true;
-        bookingSubmitBtn.innerHTML = '<div class="spinner"></div> Dispatching…';
-      }
-
-      const now = Date.now();
-      const riderUidPrefix = currentUser.uid.substring(0, 6);
-      const bookingId = `b_${now}_${riderUidPrefix}`;
-
-      const requestedDriverId = bookingTargetDriver ? bookingTargetDriver.uid : null;
-      const initialDetail = requestedDriverId
-        ? `Requested specific driver: ${requestedDriverId}`
-        : 'Quick Ride auto-dispatch';
-
-      const initialEvent = {
-        event: 'DISPATCHED',
-        actorUid: currentUser.uid,
-        detail: initialDetail,
-        timestamp: now
-      };
-
-      const bookingDocData = {
-        id: bookingId,
-        riderId: currentUser.uid,
-        type: bookingState.type,
-        pickup: {
-          address: bookingState.pickup.address,
-          lat: bookingState.pickup.lat,
-          lng: bookingState.pickup.lng
-        },
-        dropoff: {
-          address: bookingState.dropoff.address,
-          lat: bookingState.dropoff.lat,
-          lng: bookingState.dropoff.lng
-        },
-        note: note,
-        vehicleType: bookingState.vehicleType,
-        scheduledTime: null,
-        status: 'PENDING',
-        driverId: null,
-        requestedDriverId: requestedDriverId,
-        currentDriverId: null,
-        offerExpiresAt: null,
-        attemptedDriverIds: [],
-        dispatchMessage: 'Finding your ride…',
-        deliveredAt: null,
-        quotedPrice: null,
-        availabilityEtaMinutes: null,
-        priceApproved: false,
-        cancelReason: '',
-        cancelledByDriver: false,
-        events: [initialEvent],
-        isReturnTrip: bookingState.isReturnTrip !== false,
-        returnPercentSnapshot: bookingState.returnPercentSnapshot || null,
-        upfrontPrice: bookingState.upfrontPrice || null,
-        ratePerKmSnapshot: bookingState.ratePerKmSnapshot || null,
-        minimumFareSnapshot: bookingState.minimumFareSnapshot || null,
-        estimatedDistanceKm: bookingState.estimatedDistanceKm || null,
-        createdAt: now,
-        updatedAt: now
-      };
-
-      await bookingsCol.doc(bookingId).set(bookingDocData);
-
-      await ridersCol.doc(currentUser.uid).set({
-        uid: currentUser.uid,
-        lastRequestedAt: now
-      }, { merge: true });
-
-      closeBookingModal();
-      showToast('Ride requested! Opening live tracking…');
-      openActiveTripModal();
-    } catch (err) {
-      console.error('Failed to create booking:', err);
-      if (bookingFormError) {
-        bookingFormError.textContent = 'Failed to create ride request. Please try again.';
-        bookingFormError.classList.remove('is-hidden');
-      }
-    } finally {
-      if (bookingSubmitBtn) {
-        bookingSubmitBtn.disabled = false;
-        bookingSubmitBtn.textContent = 'Request Ride';
-      }
-    }
+    // Web bookings are blocked during the Android App Testing Phase:
+    // Close the booking modal and present the Android App Test dialog with 50% off tester reward!
+    closeBookingModal();
+    openAppTestModal();
   }
 
   /** ============================================================
@@ -3068,6 +2998,15 @@
     if (completedDoneBtn) completedDoneBtn.addEventListener('click', handleCompletedDone);
     if (cancelledDismissBtn) cancelledDismissBtn.addEventListener('click', closeActiveTripModal);
 
+    // App Test Modal
+    if (appTestModalClose) appTestModalClose.addEventListener('click', closeAppTestModal);
+    if (appTestModalCancel) appTestModalCancel.addEventListener('click', closeAppTestModal);
+    if (appTestModal) {
+      appTestModal.addEventListener('click', (e) => {
+        if (e.target === appTestModal) closeAppTestModal();
+      });
+    }
+
     // Rating star selectors
     ratingStarBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -3126,6 +3065,8 @@
     isProfileComplete: () => isProfileComplete,
     openDriverModal,
     openBookingForm,
+    openAppTestModal,
+    closeAppTestModal,
     openActiveTripModal,
     navigateToProfile,
     signOut: handleSignOut
