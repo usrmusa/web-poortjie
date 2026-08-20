@@ -38,11 +38,6 @@
           <span>📱</span> <span class="nav-btn-text">Apps</span>
         </a>
 
-        <div id="live-driver-status-pill" class="live-pill">
-          <span class="live-pulse"></span>
-          <span id="header-driver-count">0</span><span class="live-pill-text"> Live</span>
-        </div>
-
         <button id="header-user-btn" class="user-menu-btn is-hidden" title="View / Edit Profile">
           <img id="header-avatar" class="user-avatar" src="" alt="Profile" />
           <span id="header-user-name">Profile</span>
@@ -62,7 +57,7 @@
     <div id="boot-view" class="boot-loader">
       <img src="laynrider.png" alt="LaynRider" class="boot-logo" />
       <div class="spinner"></div>
-      <p class="boot-text">Loading verified drivers in Poortjie…</p>
+      <p class="boot-text">Connecting to Poortjie Rides…</p>
     </div>
 
     <!-- SUSPENDED VIEW -->
@@ -81,7 +76,7 @@
       <div class="auth-gate-header">
         <img src="laynrider.png" alt="LaynRider" class="auth-gate-img" />
         <h2 class="auth-gate-title">Sign in to LaynRider</h2>
-        <p class="auth-gate-desc">Please sign in with your Poortjie account to book local rides and see online drivers near you.</p>
+        <p class="auth-gate-desc">Please sign in with your Poortjie account to book local rides in Poortjie.</p>
       </div>
 
       <a href="../../authentication/login.html" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" class="btn btn-primary btn-block">
@@ -102,7 +97,6 @@
         <div class="hero-main-card">
           <div class="hero-badge-row">
             <span class="hero-eyebrow">🟢 Poortjie Rides · Live</span>
-            <span id="hero-driver-count-badge" class="hero-driver-badge">0 Online</span>
           </div>
           <h2 class="hero-title">Where to, <span id="hero-name">rider</span>?</h2>
           <p class="hero-sub">Book a verified local driver in seconds. Pickup inside Poortjie, drop-off anywhere.</p>
@@ -168,46 +162,23 @@
         <button id="view-active-booking-btn" class="btn btn-sm btn-primary">Track Trip</button>
       </div>
 
-      <!-- TRANSPORT TYPE FILTER CHIPS -->
-      <div class="filter-section">
-        <div class="filter-scroll" role="tablist" aria-label="Transport Types">
-          <button class="filter-chip is-active" data-type="ALL">🚗 All Types</button>
-          <button class="filter-chip" data-type="PRIVATE_CAR">🚙 Private Car</button>
-          <button class="filter-chip" data-type="MINI_BUS">🚐 Mini Bus</button>
-          <button class="filter-chip" data-type="BAKKIE">🛻 Bakkie</button>
-          <button class="filter-chip" data-type="MOTORBIKE">🏍️ Motorbike</button>
-          <button class="filter-chip" data-type="TUK_TUK">🛺 TukTuk</button>
+      <!-- APP PROMO CARD FOR SPECIFIC DRIVER & VEHICLE SELECTION -->
+      <section class="app-promo-card">
+        <div class="app-promo-content">
+          <div class="app-promo-icon-wrap">
+            <span class="app-promo-icon">🚗</span>
+          </div>
+          <div class="app-promo-text">
+            <h3 class="app-promo-title">Want to pick your driver or preferred vehicle?</h3>
+            <p class="app-promo-desc">Use the LaynRider app to pick drivers you know and choose preferred vehicle types like a Bakkie, Mini Bus, Private Car, or TukTuk with real-time tracking.</p>
+          </div>
+          <div class="app-promo-action">
+            <a href="download.html" class="btn btn-primary btn-sm">
+              <span>📱</span> Get the App
+            </a>
+          </div>
         </div>
-      </div>
-
-      <!-- AVAILABLE DRIVERS SECTION -->
-      <section id="section-available" class="drivers-section">
-        <div class="section-header">
-          <h3 class="section-title">
-            <span class="status-indicator-dot online"></span> Available Drivers
-          </h3>
-          <span id="available-count" class="section-count">0</span>
-        </div>
-        <div id="available-drivers-list" class="driver-list"></div>
       </section>
-
-      <!-- BUSY DRIVERS SECTION -->
-      <section id="section-busy" class="drivers-section">
-        <div class="section-header">
-          <h3 class="section-title">
-            <span class="status-indicator-dot busy"></span> Busy Drivers (On a Trip)
-          </h3>
-          <span id="busy-count" class="section-count">0</span>
-        </div>
-        <div id="busy-drivers-list" class="driver-list"></div>
-      </section>
-
-      <!-- EMPTY STATE (No online drivers) -->
-      <div id="empty-drivers-view" class="empty-card is-hidden">
-        <span class="empty-icon">📍</span>
-        <h4 class="empty-title">No drivers online right now</h4>
-        <p class="empty-desc">There are currently no verified drivers matching your filter online in Poortjie. This screen will update automatically as soon as a driver goes online.</p>
-      </div>
 
     </div>
 
@@ -482,56 +453,7 @@
     </div>
   </div>
 
-  <!-- ===================== DRIVER PROFILE MODAL ===================== -->
-  <div id="driver-modal" class="modal-overlay is-hidden">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">Driver Profile</h3>
-        <button id="driver-modal-close" class="modal-close" aria-label="Close">&times;</button>
-      </div>
 
-      <div class="driver-detail-hero">
-        <img id="driver-modal-avatar" class="driver-detail-avatar" src="" alt="Driver Photo" />
-        <div>
-          <h4 id="driver-modal-name" style="font-size: 16px; font-weight: 800;">—</h4>
-          <p id="driver-modal-vehicle-type" style="font-size: 12px; color: var(--brand); font-weight: 700; text-transform: uppercase;">—</p>
-          <p id="driver-modal-status" style="font-size: 12px; margin-top: 2px;">—</p>
-        </div>
-      </div>
-
-      <div class="driver-detail-stats">
-        <div>
-          <div id="driver-modal-rating" class="stat-item-val">★ —</div>
-          <div class="stat-item-lbl">Rating</div>
-        </div>
-        <div>
-          <div id="driver-modal-trips" class="stat-item-val">—</div>
-          <div class="stat-item-lbl">Trips</div>
-        </div>
-        <div>
-          <div id="driver-modal-seats" class="stat-item-val">—</div>
-          <div class="stat-item-lbl">Capacity</div>
-        </div>
-      </div>
-
-      <div style="background: var(--panel-2); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 6px;">
-        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Vehicle Details</span>
-        <div id="driver-modal-vehicle-desc" style="font-size: 14px; font-weight: 700;">—</div>
-        <div id="driver-modal-plate" style="font-size: 12px; color: var(--text-dim); font-family: monospace;">—</div>
-      </div>
-
-      <!-- Ratings & Passenger Reviews -->
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Passenger Reviews & Comments</span>
-        <div id="driver-modal-reviews-list" class="reviews-container"></div>
-      </div>
-
-      <div class="modal-actions" style="margin-top: 8px;">
-        <button id="driver-modal-cancel" class="btn btn-ghost" style="flex: 1;">Close</button>
-        <button id="driver-modal-select-btn" class="btn btn-primary" style="flex: 2;">Book This Driver</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ===================== COMPLETE PROFILE MODAL ===================== -->
   <div id="profile-modal" class="modal-overlay is-hidden">

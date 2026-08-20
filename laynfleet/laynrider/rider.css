@@ -805,6 +805,65 @@ img, svg, video, canvas, audio, iframe, embed, object {
   line-height: 1.5;
 }
 
+/* App Promo Card (Driver & Vehicle Selection) */
+.app-promo-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 26px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-promo-card:hover {
+  border-color: var(--brand);
+  box-shadow: var(--shadow);
+}
+
+.app-promo-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.app-promo-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-promo-text {
+  flex: 1;
+  min-width: 260px;
+}
+
+.app-promo-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.app-promo-desc {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.app-promo-action {
+  flex-shrink: 0;
+}
+
 /* ============================================================
    BOOKING MODAL & TOUCH-FRIENDLY BOTTOM SHEET
    ============================================================ */

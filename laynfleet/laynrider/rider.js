@@ -1288,340 +1288,15 @@
     }
   };
 
-  /**
-   * Live listener for online drivers with RTDB presence cross-check.
-   *
-   * Mirrors Android FirestoreDriverRepository.observeOnlineDrivers: a driver is
-   * only shown if Firestore says approved+online AND their Realtime Database
-   * heartbeat (driverLocations/{uid}) is online and fresh (≤ 60s). This prevents
-   * stale-online drivers from appearing when their app was killed without going
-   * offline. STRICT: no synthetic rating/trip/review fallbacks.
-   */
-  let firestoreDriverDocs = [];
-  let rtdbPresence = {}; // uid -> { online, updatedAt, lat, lng }
-  let presenceReevalInterval = null;
-  let rtdbPresenceRef = null;
-  let rtdbPresenceHandler = null;
-
-  /** Pure presence evaluator (mirrors Android isDriverPresenceActive). */
-  function isDriverPresenceActive(presence, now) {
-    if (!presence || presence.online !== true) return false;
-    const ts = presence.updatedAt;
-    if (typeof ts !== 'number') return false;
-    const diff = now - ts;
-    return diff >= -10000 && diff <= HEARTBEAT_FRESHNESS_WINDOW_MS;
-  }
-
-  async function reevaluateDrivers() {
-    const now = Date.now();
-    const activeDocs = firestoreDriverDocs.filter((doc) =>
-      isDriverPresenceActive(rtdbPresence[doc.uid], now)
-    );
-
-    const drivers = [];
-    for (const doc of activeDocs) {
-      const data = doc.data;
-      const userDoc = await getDriverIdentity(doc.uid);
-      const reviews = await getDriverReviews(doc.uid);
-      const realTrips = await getDriverTripsCount(doc.uid);
-      const latestComment = (reviews && reviews.length > 0) ? reviews[0].review : '';
-      const loc = rtdbPresence[doc.uid] || {};
-
-      drivers.push({
-        uid: doc.uid,
-        approvalStatus: data.approvalStatus,
-        online: data.online === true,
-        busy: data.busy === true,
-        ratingAvg: typeof data.ratingAvg === 'number' ? data.ratingAvg : 0,
-        ratingCount: typeof data.ratingCount === 'number' ? data.ratingCount : 0,
-        tripsCount: realTrips,
-        latestComment: latestComment,
-        vehicle: data.vehicle || {},
-        lat: typeof loc.lat === 'number' ? loc.lat : 0,
-        lng: typeof loc.lng === 'number' ? loc.lng : 0,
-        user: {
-          displayName: userDoc.displayName || '',
-          photoUrl: userDoc.photoUrl || '',
-          phone: userDoc.phone || ''
-        }
-      });
-    }
-
-    allOnlineDrivers = drivers;
-    renderDrivers();
-  }
-
-  function startDriverListener() {
-    stopDriverListener();
-
-    // Firestore: approved + online drivers.
-    driverListenersUnsub = driversCol
-      .where('approvalStatus', '==', 'APPROVED')
-      .where('online', '==', true)
-      .onSnapshot((snapshot) => {
-        firestoreDriverDocs = snapshot.docs.map((doc) => ({ uid: doc.id, data: doc.data() || {} }));
-        reevaluateDrivers();
-      }, (error) => {
-        console.error('Error observing online drivers:', error);
-        showToast('Error loading online drivers.');
-      });
-
-    // Realtime Database: driver presence heartbeats.
-    rtdbPresenceRef = rtdb.ref(RTDB_LOCATIONS);
-    rtdbPresenceHandler = rtdbPresenceRef.on('value', (snap) => {
-      rtdbPresence = snap.val() || {};
-      reevaluateDrivers();
-    }, (err) => {
-      console.warn('RTDB presence listener error:', err);
-      rtdbPresence = {};
-      reevaluateDrivers();
-    });
-
-    // Periodic re-evaluation so stale heartbeats expire off the list (Android
-    // re-emits every 15s for exactly this reason).
-    presenceReevalInterval = setInterval(reevaluateDrivers, 15000);
-  }
-
-  function stopDriverListener() {
-    if (driverListenersUnsub) {
-      driverListenersUnsub();
-      driverListenersUnsub = null;
-    }
-    if (rtdbPresenceRef && rtdbPresenceHandler) {
-      rtdbPresenceRef.off('value', rtdbPresenceHandler);
-    }
-    rtdbPresenceRef = null;
-    rtdbPresenceHandler = null;
-    if (presenceReevalInterval) {
-      clearInterval(presenceReevalInterval);
-      presenceReevalInterval = null;
-    }
-    firestoreDriverDocs = [];
-    rtdbPresence = {};
-  }
-
-  /** Render drivers list partitioned into Available and Busy */
-  function renderDrivers() {
-    const filtered = allOnlineDrivers.filter((driver) => {
-      if (selectedCategory === 'ALL') return true;
-      const vType = (driver.vehicle && driver.vehicle.type) ? driver.vehicle.type.toUpperCase() : 'PRIVATE_CAR';
-      return vType === selectedCategory;
-    });
-
-    const availableDrivers = filtered.filter((d) => !d.busy);
-    const busyDrivers = filtered.filter((d) => d.busy);
-
-    if (availableCountEl) availableCountEl.textContent = availableDrivers.length;
-    if (busyCountEl) busyCountEl.textContent = busyDrivers.length;
-    if (headerDriverCountEl) headerDriverCountEl.textContent = availableDrivers.length;
-    if (heroDriverCountBadge) heroDriverCountBadge.textContent = `${availableDrivers.length} Online`;
-
-    if (availableListEl) {
-      if (availableDrivers.length > 0) {
-        availableListEl.innerHTML = availableDrivers.map((d) => createDriverCardHtml(d)).join('');
-        if (availableSectionEl) availableSectionEl.classList.remove('is-hidden');
-      } else {
-        availableListEl.innerHTML = '';
-        if (availableSectionEl) availableSectionEl.classList.add('is-hidden');
-      }
-    }
-
-    if (busyListEl) {
-      if (busyDrivers.length > 0) {
-        busyListEl.innerHTML = busyDrivers.map((d) => createDriverCardHtml(d)).join('');
-        if (busySectionEl) busySectionEl.classList.remove('is-hidden');
-      } else {
-        busyListEl.innerHTML = '';
-        if (busySectionEl) busySectionEl.classList.add('is-hidden');
-      }
-    }
-
-    if (emptyDriversView) {
-      const hasDrivers = availableDrivers.length > 0 || busyDrivers.length > 0;
-      emptyDriversView.classList.toggle('is-hidden', hasDrivers);
-    }
-  }
-
-  /** Generate HTML for a driver card with visible Ratings and Comments */
-  function createDriverCardHtml(driver) {
-    const v = driver.vehicle || {};
-    const u = driver.user || {};
-    const vehicleTypeFormatted = formatVehicleType(v.type);
-    const makeModel = `${v.make || 'Vehicle'} ${v.model || ''}`.trim();
-    const colour = v.colour ? ` · ${v.colour}` : '';
-    const plate = v.plate || '—';
-    const seats = v.seats ? `${v.seats} seats` : '—';
-    const name = u.displayName || 'Driver';
-    const avatar = u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=22c55e&color=fff&size=128`;
-    const hasRating = driver.ratingCount > 0;
-    const ratingFormatted = hasRating ? driver.ratingAvg.toFixed(1) : '—';
-    const ratingMeta = hasRating
-      ? `(${driver.ratingCount} review${driver.ratingCount === 1 ? '' : 's'} · ${driver.tripsCount} trip${driver.tripsCount === 1 ? '' : 's'})`
-      : 'New driver';
-    const comment = driver.latestComment || '';
-    const reviewSnippet = comment
-      ? `<div class="driver-review-snippet"><span>💬</span><span>"${escapeHtml(comment)}"</span></div>`
-      : '';
-
-    return `
-      <article class="driver-card ${driver.busy ? 'is-busy' : ''}" data-driver-id="${driver.uid}">
-        <div class="driver-card-top">
-          <span class="vehicle-type-tag">${vehicleTypeFormatted}</span>
-          <span class="driver-status-badge ${driver.busy ? 'badge-busy' : ''}">
-            ${driver.busy ? '🟡 Busy' : '🟢 Available'}
-          </span>
-        </div>
-
-        <div>
-          <div class="vehicle-desc">${escapeHtml(makeModel)}${escapeHtml(colour)}</div>
-          <div class="vehicle-meta">
-            <span>💺 ${seats}</span>
-            <span>·</span>
-            <span>🏷️ ${escapeHtml(plate)}</span>
-          </div>
-        </div>
-
-        ${reviewSnippet}
-
-        <div class="driver-profile-row">
-          <img class="driver-avatar" src="${avatar}" alt="${escapeHtml(name)}" onerror="this.src='https://placehold.co/80x80/22c55e/ffffff?text=D'" />
-          <div class="driver-info">
-            <div class="driver-name">${escapeHtml(name)}</div>
-            <div class="driver-rating">
-              <span class="star">★</span>
-              <strong>${ratingFormatted}</strong>
-              <span>${ratingMeta}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="driver-actions">
-          <button class="btn btn-sm btn-ghost" onclick="LaynRiderBooking.openDriverModal('${driver.uid}')">
-            Reviews & Profile
-          </button>
-          <button class="btn btn-sm ${driver.busy ? 'btn-gold' : 'btn-primary'}" onclick="LaynRiderBooking.openBookingForm('${driver.uid}')">
-            Book Ride
-          </button>
-        </div>
-      </article>
-    `;
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  /** Open Driver Detail Modal with Ratings and Passenger Reviews */
-  async function openDriverModal(driverId) {
-    const uid = (driverId && typeof driverId === 'object') ? driverId.uid : driverId;
-    const driver = allOnlineDrivers.find((d) => d.uid === uid);
-    if (!driver) return;
-
-    activeDriverModal = driver;
-    const v = driver.vehicle || {};
-    const u = driver.user || {};
-
-    if (driverModalAvatar) {
-      driverModalAvatar.src = u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || 'D')}&background=22c55e&color=fff&size=128`;
-    }
-    if (driverModalName) driverModalName.textContent = u.displayName || 'Driver';
-    if (driverModalVehicleType) driverModalVehicleType.textContent = formatVehicleType(v.type);
-    if (driverModalStatus) {
-      driverModalStatus.textContent = driver.busy ? '🟡 Currently on a trip (Queue available)' : '🟢 Available now for pickup';
-    }
-    if (driverModalRating) driverModalRating.textContent = driver.ratingCount > 0 ? `★ ${driver.ratingAvg.toFixed(1)}` : '★ —';
-    if (driverModalTrips) driverModalTrips.textContent = `${driver.tripsCount || 0}`;
-    if (driverModalSeats) driverModalSeats.textContent = v.seats ? `${v.seats} Seats` : '—';
-    if (driverModalVehicleDesc) driverModalVehicleDesc.textContent = `${v.make || 'Vehicle'} ${v.model || ''} (${v.colour || 'Standard'})`;
-    if (driverModalPlate) driverModalPlate.textContent = `Plate: ${v.plate || '—'}`;
-
-    // Refresh real trips count dynamically
-    getDriverTripsCount(driver.uid).then((realTrips) => {
-      driver.tripsCount = realTrips;
-      if (driverModalTrips) driverModalTrips.textContent = `${realTrips}`;
-    });
-
-    // Load and render real reviews (no synthetic fallback).
-    if (driverModalReviewsList) {
-      driverModalReviewsList.innerHTML = '<div style="font-size:12px;color:var(--text-dim);">Loading passenger reviews…</div>';
-      const reviews = await getDriverReviews(driver.uid);
-      if (reviews && reviews.length > 0) {
-        driverModalReviewsList.innerHTML = reviews.map(r => {
-          const isAuthor = currentUser && r.byUid === currentUser.uid;
-          const elapsed = Date.now() - (r.createdAt || 0);
-          const canEdit = isAuthor && (r.createdAt > 0) && (elapsed < 60000);
-          const editBtnHtml = canEdit ? `<button type="button" class="btn btn-ghost btn-sm edit-review-btn" data-id="${r.id}" data-comment="${escapeHtml(r.review || '')}" style="font-size:11px;padding:2px 8px;cursor:pointer;">Edit</button>` : '';
-
-          return `
-          <div class="review-item-card">
-            <div class="review-item-header">
-              <span>${escapeHtml(maskUserName(reviewerNameOf(r)))}</span>
-              <span style="color:var(--brand-gold);">★ ${r.stars || 0}</span>
-            </div>
-            ${r.review ? `<p class="review-item-comment">"${escapeHtml(r.review)}"</p>` : ''}
-            <div class="review-item-footer">
-              <button type="button" class="like-review-btn ${r.likedByCurrentUser ? 'is-liked' : ''}" data-id="${r.id}" title="Like review">
-                <span class="like-icon">${r.likedByCurrentUser ? '♥' : '♡'}</span>
-                <span class="like-count">${r.likes || 0}</span>
-              </button>
-              ${editBtnHtml}
-            </div>
-          </div>
-        `;}).join('');
-
-        driverModalReviewsList.querySelectorAll('.like-review-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const ratingId = btn.dataset.id;
-            await toggleLikeReview(ratingId, driver.uid);
-          });
-        });
-
-        driverModalReviewsList.querySelectorAll('.edit-review-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const ratingId = btn.dataset.id;
-            const currentComment = btn.dataset.comment || '';
-            const newComment = prompt('Edit your review message (within 1 minute):', currentComment);
-            if (newComment !== null && newComment.trim() !== currentComment) {
-              try {
-                await ratingsCol.doc(ratingId).update({
-                  review: newComment.trim(),
-                  updatedAt: Date.now()
-                });
-                driverReviewsCache.delete(driver.uid);
-                showToast('Review updated!');
-                openDriverModal(driver.uid);
-              } catch (err) {
-                console.warn('Failed to update review:', err);
-                showToast('Could not update review.');
-              }
-            }
-          });
-        });
-      } else {
-        driverModalReviewsList.innerHTML = '<div style="font-size:12px;color:var(--text-dim);">No reviews yet. Be the first to rate!</div>';
-      }
-    }
-
-    if (driverModal) driverModal.classList.remove('is-hidden');
-  }
-
-  function closeDriverModal() {
-    activeDriverModal = null;
-    if (driverModal) driverModal.classList.add('is-hidden');
-  }
-
   /** ============================================================
    * BOOKING FORM & GEOFENCING IMPLEMENTATION
    * ============================================================ */
 
   /** Open Booking Form */
-  function openBookingForm(driverId) {
+  function openBookingForm() {
     if (!isProfileComplete) {
       showToast('Add your details to request a ride.');
-      openProfileModal(driverId === undefined ? null : driverId);
+      openProfileModal();
       return;
     }
 
@@ -1631,27 +1306,12 @@
       return;
     }
 
-    closeDriverModal();
+    bookingTargetDriver = null; // Quick Ride (Auto-Dispatch)
 
-    if (driverId) {
-      bookingTargetDriver = allOnlineDrivers.find((d) => d.uid === driverId) || null;
-    } else {
-      bookingTargetDriver = null; // Quick Ride
-    }
-
-    if (bookingTargetDriver) {
-      const v = bookingTargetDriver.vehicle || {};
-      const u = bookingTargetDriver.user || {};
-      if (bookingTargetTitle) bookingTargetTitle.textContent = u.displayName || 'Driver';
-      if (bookingTargetSubtitle) bookingTargetSubtitle.textContent = `${v.make || 'Vehicle'} ${v.model || ''} (${v.plate || 'Verified'})`;
-      if (bookingTargetTypeBadge) bookingTargetTypeBadge.textContent = formatVehicleType(v.type);
-      bookingState.vehicleType = v.type || 'PRIVATE_CAR';
-    } else {
-      if (bookingTargetTitle) bookingTargetTitle.textContent = 'Quick Ride Auto-Dispatch';
-      if (bookingTargetSubtitle) bookingTargetSubtitle.textContent = 'Nearest available Private Car in Poortjie';
-      if (bookingTargetTypeBadge) bookingTargetTypeBadge.textContent = 'Private Car';
-      bookingState.vehicleType = 'PRIVATE_CAR';
-    }
+    if (bookingTargetTitle) bookingTargetTitle.textContent = 'Quick Ride Auto-Dispatch';
+    if (bookingTargetSubtitle) bookingTargetSubtitle.textContent = 'Nearest available driver in Poortjie';
+    if (bookingTargetTypeBadge) bookingTargetTypeBadge.textContent = 'Private Car';
+    bookingState.vehicleType = 'PRIVATE_CAR';
 
     setReturnTrip(true);
     setBookingType('ASAP');
@@ -2727,7 +2387,6 @@
       if (reasonEl) {
         reasonEl.textContent = userProfile.suspendedReason || 'Account suspended by management.';
       }
-      stopDriverListener();
       if (activeBookingUnsub) { activeBookingUnsub(); activeBookingUnsub = null; }
       showView('suspended');
       return;
@@ -2755,14 +2414,12 @@
     }
 
     showView('app');
-    startDriverListener();
     startActiveBookingListener(authUser.uid);
   }
 
   /** Sign Out */
   async function handleSignOut() {
     try {
-      stopDriverListener();
       if (activeBookingUnsub) { activeBookingUnsub(); activeBookingUnsub = null; }
       if (typeof AuthStore !== 'undefined' && AuthStore.signOut) {
         await AuthStore.signOut();
@@ -2782,8 +2439,8 @@
     const suspendedSignOutBtn = document.getElementById('suspended-signout-btn');
     if (suspendedSignOutBtn) suspendedSignOutBtn.addEventListener('click', handleSignOut);
 
-    if (completeProfileBtn) completeProfileBtn.addEventListener('click', () => openProfileModal(undefined));
-    if (headerUserBtn) headerUserBtn.addEventListener('click', () => openProfileModal(undefined));
+    if (completeProfileBtn) completeProfileBtn.addEventListener('click', () => openProfileModal());
+    if (headerUserBtn) headerUserBtn.addEventListener('click', () => openProfileModal());
 
     // Profile Completion Modal
     if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
@@ -2807,28 +2464,7 @@
     }
 
     // Quick Ride
-    if (quickRideBtn) quickRideBtn.addEventListener('click', () => openBookingForm(null));
-
-    // Filter Chips
-    filterChips.forEach((chip) => {
-      chip.addEventListener('click', () => {
-        filterChips.forEach((c) => c.classList.remove('is-active'));
-        chip.classList.add('is-active');
-        selectedCategory = chip.getAttribute('data-type') || 'ALL';
-        renderDrivers();
-      });
-    });
-
-    // Driver Modal
-    if (driverModalClose) driverModalClose.addEventListener('click', closeDriverModal);
-    if (driverModalCancel) driverModalCancel.addEventListener('click', closeDriverModal);
-    if (driverModalSelectBtn) {
-      driverModalSelectBtn.addEventListener('click', () => {
-        if (activeDriverModal) {
-          openBookingForm(activeDriverModal.uid);
-        }
-      });
-    }
+    if (quickRideBtn) quickRideBtn.addEventListener('click', () => openBookingForm());
 
     // Booking Modal
     if (bookingModalClose) bookingModalClose.addEventListener('click', closeBookingModal);
@@ -3063,7 +2699,6 @@
     getCurrentUser: () => currentUser,
     getUserProfile: () => userProfile,
     isProfileComplete: () => isProfileComplete,
-    openDriverModal,
     openBookingForm,
     openAppTestModal,
     closeAppTestModal,
