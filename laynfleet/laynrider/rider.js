@@ -1009,6 +1009,19 @@
       };
 
       bookingDirectionsService.route(request, (result, status) => {
+        const response = result || {};
+        console.log("=== GOOGLE MAPS ROUTE QA LOG ===");
+        console.log("API Status Code:", response.status || status);
+        if (response.routes && response.routes[0]) {
+            const leg = response.routes[0].legs[0];
+            console.log("Verification Status: SUCCESS (Using actual road grid)");
+            console.log("Total Turn-by-Turn Steps:", leg.steps.length);
+            console.log("API Calculated Real Distance:", leg.distance.text, `(${leg.distance.value} meters)`);
+        } else {
+            console.log("Verification Status: FAILED (Check for coordinate inversion or off-road pins)");
+        }
+        console.log("================================");
+
         if (status === google.maps.DirectionsStatus.OK) {
           bookingDirectionsRenderer.setDirections(result);
           const route = result.routes[0];
@@ -1181,6 +1194,19 @@
       };
 
       trackingDirectionsService.route(request, (result, status) => {
+        const response = result || {};
+        console.log("=== GOOGLE MAPS ROUTE QA LOG ===");
+        console.log("API Status Code:", response.status || status);
+        if (response.routes && response.routes[0]) {
+            const leg = response.routes[0].legs[0];
+            console.log("Verification Status: SUCCESS (Using actual road grid)");
+            console.log("Total Turn-by-Turn Steps:", leg.steps.length);
+            console.log("API Calculated Real Distance:", leg.distance.text, `(${leg.distance.value} meters)`);
+        } else {
+            console.log("Verification Status: FAILED (Check for coordinate inversion or off-road pins)");
+        }
+        console.log("================================");
+
         if (status === google.maps.DirectionsStatus.OK) {
           trackingDirectionsRenderer.setDirections(result);
           const route = result.routes[0];
