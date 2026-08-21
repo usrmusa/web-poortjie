@@ -102,7 +102,7 @@
           <p class="hero-sub">Book a verified local driver in seconds. Pickup inside Poortjie, drop-off anywhere.</p>
           <div class="hero-actions">
             <button id="quick-ride-btn" class="btn btn-primary btn-hero">
-              <span class="btn-icon">⚡</span> Quick Ride (Instant Dispatch)
+              <span class="btn-icon">⚡</span> Quick Ride
             </button>
           </div>
         </div>
@@ -282,14 +282,14 @@
           </div>
         </div>
 
-        <!-- ROUTE DISTANCE PREVIEW CARD -->
-        <div id="booking-distance-card" class="fare-preview-card">
+        <!-- UPFRONT FARE PREVIEW CARD -->
+        <div id="booking-fare-card" class="fare-preview-card">
           <div class="fare-preview-main">
             <div class="fare-preview-info">
-              <span class="fare-preview-title">Estimated Distance</span>
-              <span id="booking-distance-breakdown" class="fare-preview-breakdown">Enter pickup & destination to calculate distance</span>
+              <span class="fare-preview-title">Upfront Fare</span>
+              <span id="booking-fare-breakdown" class="fare-preview-breakdown">Enter pickup & destination to calculate fare</span>
             </div>
-            <div id="booking-distance-amount" class="fare-preview-amount">-- km</div>
+            <div id="booking-fare-amount" class="fare-preview-amount">R --</div>
           </div>
         </div>
 
@@ -297,7 +297,7 @@
         <div class="payment-notice">
           <div class="payment-notice-icon">💵</div>
           <div class="payment-notice-text">
-            <strong>Offline Direct Payment:</strong> Settle directly with your driver with cash or EFT upon arrival.
+            <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival.
           </div>
         </div>
 
@@ -416,8 +416,8 @@
         <div style="font-size: 12px; display: flex; flex-direction: column; gap: 6px; color: var(--text-dim);">
           <div>🟢 <strong>Pickup:</strong> <span id="track-pickup-text">—</span></div>
           <div>🏁 <strong>Drop-off:</strong> <span id="track-dropoff-text">—</span></div>
-          <div id="track-distance-text" style="font-weight: 700; color: var(--brand);">📏 Trip Distance: <span id="track-distance-val">—</span></div>
-          <div style="font-size: 11px; color: var(--text-dim);">💵 Settle directly with driver on arrival (cash/EFT) · 50% Testing Discount</div>
+          <div id="track-fare-text" style="font-weight: 700; color: var(--brand);">💵 Upfront Fare: <span id="track-fare-amount">R —</span> (Pay driver offline: cash/EFT)</div>
+          <div style="font-size: 11.5px; color: var(--text-dim);">📏 Trip Distance: <span id="track-distance-val">—</span> · 50% Testing Discount</div>
         </div>
       </div>
 
@@ -428,8 +428,9 @@
         <p style="font-size: 13px; color: var(--text-dim);">Thank you for riding with LaynRider in Poortjie.</p>
 
         <div style="background: var(--panel-2); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
-          <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Trip Distance Completed</div>
-          <div id="completed-distance-amount" style="font-size: 24px; font-weight: 900; color: var(--brand);">—</div>
+          <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Total Fare Paid</div>
+          <div id="completed-fare-amount" style="font-size: 24px; font-weight: 900; color: var(--brand);">R 0.00</div>
+          <div id="completed-distance-amount" style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">—</div>
         </div>
 
         <!-- Rating Form -->
@@ -515,6 +516,10 @@
           <div class="confirm-meta-item">
             <span class="confirm-meta-label">Est. Distance</span>
             <span id="confirm-distance-text" class="confirm-meta-value">-- km</span>
+          </div>
+          <div class="confirm-meta-item" style="grid-column: span 2;">
+            <span class="confirm-meta-label">Upfront Fare</span>
+            <span id="confirm-fare-text" class="confirm-meta-value" style="font-size: 20px; color: var(--brand); font-weight: 900;">R --</span>
           </div>
         </div>
 
