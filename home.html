@@ -271,17 +271,8 @@
 
     function handleBookRideClick(event) {
         if (event) event.preventDefault();
-        const state = (typeof AuthStore !== 'undefined' && AuthStore.getState) ? AuthStore.getState() : null;
-        const isAuth = state ? state.isAuthenticated : (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser !== null);
         const targetUrl = 'laynfleet/laynrider/index.html';
-        const fullTarget = new URL(targetUrl, window.location.href).href;
-
-        if (isAuth) {
-            window.top.location.href = targetUrl;
-        } else {
-            sessionStorage.setItem('redirectUrl', fullTarget);
-            window.top.location.href = 'authentication/login.html?redirect=' + encodeURIComponent(fullTarget);
-        }
+        window.top.location.href = targetUrl;
     }
     window.handleBookRideClick = handleBookRideClick;
 

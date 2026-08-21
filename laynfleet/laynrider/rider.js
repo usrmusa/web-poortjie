@@ -671,6 +671,24 @@
       showToast('Profile saved!');
       closeProfileModal();
 
+      // Check if there is a pending ride booking to resume
+      let pendingRaw = null;
+      try {
+        pendingRaw = sessionStorage.getItem('pendingRideBooking');
+      } catch (e) {}
+
+      if (pendingRaw) {
+        let pendingRide = null;
+        try { pendingRide = JSON.parse(pendingRaw); } catch(e) {}
+        if (pendingRide && isProfileComplete) {
+          sessionStorage.removeItem('pendingRideBooking');
+          setTimeout(() => {
+            openConfirmBookingModal();
+          }, 200);
+          return;
+        }
+      }
+
       // Resume whatever the rider was trying to book.
       if (isProfileComplete && pendingBookingDriverId !== undefined) {
         const resume = pendingBookingDriverId;
@@ -1310,7 +1328,7 @@
 
   /** Open Booking Form */
   function openBookingForm() {
-    if (!isProfileComplete) {
+    if (currentUser && !isProfileComplete) {
       showToast('Add your details to request a ride.');
       openProfileModal();
       return;
@@ -1591,22 +1609,41 @@
     );
   }
 
+  /** Save pending booking state to sessionStorage before redirecting to login */
+  function savePendingBookingState() {
+    const pendingRide = {
+      pickup: {
+        address: (bookingState.pickup && bookingState.pickup.address) || (pickupAddressInput ? pickupAddressInput.value.trim() : ''),
+        lat: bookingState.pickup ? bookingState.pickup.lat : null,
+        lng: bookingState.pickup ? bookingState.pickup.lng : null
+      },
+      dropoff: {
+        address: (bookingState.dropoff && bookingState.dropoff.address) || (dropoffAddressInput ? dropoffAddressInput.value.trim() : ''),
+        lat: bookingState.dropoff ? bookingState.dropoff.lat : null,
+        lng: bookingState.dropoff ? bookingState.dropoff.lng : null
+      },
+      note: bookingState.note || (bookingNoteInput ? bookingNoteInput.value.trim() : ''),
+      vehicleType: bookingState.vehicleType || 'PRIVATE_CAR',
+      isReturnTrip: bookingState.isReturnTrip !== false,
+      actualOneWayDistanceKm: bookingState.actualOneWayDistanceKm,
+      estimatedDistanceKm: bookingState.estimatedDistanceKm,
+      upfrontPrice: bookingState.upfrontPrice,
+      ratePerKmSnapshot: bookingState.ratePerKmSnapshot,
+      minimumFareSnapshot: bookingState.minimumFareSnapshot,
+      returnPercentSnapshot: bookingState.returnPercentSnapshot,
+      targetDriverId: bookingTargetDriver ? bookingTargetDriver.uid : null
+    };
+    try {
+      sessionStorage.setItem('pendingRideBooking', JSON.stringify(pendingRide));
+    } catch (e) {
+      console.warn('Could not store pendingRideBooking in sessionStorage:', e);
+    }
+  }
+
   /** Submit Booking */
   async function handleBookingSubmit(e) {
     if (e) e.preventDefault();
     if (bookingFormError) bookingFormError.classList.add('is-hidden');
-
-    if (!currentUser) {
-      showToast('Please sign in to book a ride.');
-      return;
-    }
-
-    if (!isProfileComplete) {
-      showToast('Add your details to request a ride.');
-      closeBookingModal();
-      openProfileModal(bookingTargetDriver ? bookingTargetDriver.uid : null);
-      return;
-    }
 
     const pickupAddress = pickupAddressInput ? pickupAddressInput.value.trim() : '';
     if (!pickupAddress) {
@@ -1690,6 +1727,21 @@
 
     bookingState.note = (bookingNoteInput ? bookingNoteInput.value.trim() : '');
 
+    // If user is not signed in, save booking state and navigate to login
+    if (!currentUser) {
+      savePendingBookingState();
+      sessionStorage.setItem('redirectUrl', window.location.href);
+      window.location.href = '../../authentication/login.html?redirect=' + encodeURIComponent(window.location.href);
+      return;
+    }
+
+    if (!isProfileComplete) {
+      showToast('Add your details to request a ride.');
+      closeBookingModal();
+      openProfileModal(bookingTargetDriver ? bookingTargetDriver.uid : null);
+      return;
+    }
+
     // Open short and friendly confirmation dialog showing details of their ride & 50% test discount
     openConfirmBookingModal();
   }
@@ -1745,7 +1797,9 @@
   /** Confirm and Dispatch Booking directly to Firestore */
   async function handleConfirmBookingSubmit() {
     if (!currentUser) {
-      showToast('Please sign in to book a ride.');
+      savePendingBookingState();
+      sessionStorage.setItem('redirectUrl', window.location.href);
+      window.location.href = '../../authentication/login.html?redirect=' + encodeURIComponent(window.location.href);
       return;
     }
 
@@ -2543,18 +2597,88 @@
     );
   }
 
+  /** Resume pending booking saved in sessionStorage before login */
+  function checkAndResumePendingBooking() {
+    let pendingRaw = null;
+    try {
+      pendingRaw = sessionStorage.getItem('pendingRideBooking');
+    } catch (e) {
+      console.warn('Could not read pendingRideBooking from sessionStorage:', e);
+    }
+    if (!pendingRaw) return;
+
+    let pendingRide = null;
+    try {
+      pendingRide = JSON.parse(pendingRaw);
+    } catch (e) {
+      console.warn('Could not parse pendingRideBooking:', e);
+      sessionStorage.removeItem('pendingRideBooking');
+      return;
+    }
+
+    if (!pendingRide || !pendingRide.pickup || !pendingRide.dropoff) {
+      sessionStorage.removeItem('pendingRideBooking');
+      return;
+    }
+
+    // Restore booking state
+    bookingState.pickup = pendingRide.pickup || { address: '', lat: null, lng: null };
+    bookingState.dropoff = pendingRide.dropoff || { address: '', lat: null, lng: null };
+    bookingState.note = pendingRide.note || '';
+    bookingState.vehicleType = pendingRide.vehicleType || 'PRIVATE_CAR';
+    bookingState.isReturnTrip = pendingRide.isReturnTrip !== false;
+    bookingState.actualOneWayDistanceKm = pendingRide.actualOneWayDistanceKm || null;
+    bookingState.estimatedDistanceKm = pendingRide.estimatedDistanceKm || null;
+    bookingState.upfrontPrice = pendingRide.upfrontPrice || null;
+    bookingState.ratePerKmSnapshot = pendingRide.ratePerKmSnapshot || null;
+    bookingState.minimumFareSnapshot = pendingRide.minimumFareSnapshot || null;
+    bookingState.returnPercentSnapshot = pendingRide.returnPercentSnapshot || null;
+    bookingTargetDriver = pendingRide.targetDriverId ? { uid: pendingRide.targetDriverId } : null;
+
+    // Populate UI inputs
+    if (pickupAddressInput) pickupAddressInput.value = bookingState.pickup.address || '';
+    if (dropoffAddressInput) dropoffAddressInput.value = bookingState.dropoff.address || '';
+    if (bookingNoteInput) bookingNoteInput.value = bookingState.note || '';
+    if (bookingNoteCount) bookingNoteCount.textContent = `${(bookingState.note || '').length}/64`;
+    if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !bookingState.pickup.address);
+    if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !bookingState.dropoff.address);
+
+    setReturnTrip(bookingState.isReturnTrip);
+    validatePickupGeofence();
+    updateUpfrontFarePreview(bookingState.actualOneWayDistanceKm);
+
+    // If profile is NOT complete, prompt user to complete profile details first
+    if (!isProfileComplete) {
+      showToast('Please complete your profile to continue with your ride booking.', 4000);
+      openProfileModal(pendingRide.targetDriverId || null);
+    } else {
+      // Profile is complete! Automatically open confirmation dialog to continue booking
+      sessionStorage.removeItem('pendingRideBooking');
+      showToast('Continuing with your ride request...', 3000);
+      setTimeout(() => {
+        openConfirmBookingModal();
+      }, 300);
+    }
+  }
+
   /** Render user state */
   function renderUserState(authUser, profileData) {
     if (!authUser) {
       currentUser = null;
       userProfile = null;
       isProfileComplete = false;
-      stopDriverListener();
+      if (driverListenersUnsub) { driverListenersUnsub(); driverListenersUnsub = null; }
       if (activeBookingUnsub) { activeBookingUnsub(); activeBookingUnsub = null; }
-      showView('auth');
-      // LaynFleet reuses the global authentication system
-      sessionStorage.setItem('redirectUrl', window.location.href);
-      window.top.location.replace('../../authentication/login.html?redirect=' + encodeURIComponent(window.location.href));
+
+      if (headerSignInBtn) headerSignInBtn.classList.remove('is-hidden');
+      if (headerUserBtn) headerUserBtn.classList.add('is-hidden');
+      if (headerSignOutBtn) headerSignOutBtn.classList.add('is-hidden');
+
+      if (heroNameEl) heroNameEl.textContent = 'rider';
+      if (profileIncompleteBanner) profileIncompleteBanner.classList.add('is-hidden');
+      if (activeBookingBanner) activeBookingBanner.classList.add('is-hidden');
+
+      showView('app');
       return;
     }
 
@@ -2594,6 +2718,9 @@
 
     showView('app');
     startActiveBookingListener(authUser.uid);
+
+    // Check if there is a pending ride booking from before login
+    checkAndResumePendingBooking();
   }
 
   /** Sign Out */
