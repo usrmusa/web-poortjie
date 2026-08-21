@@ -282,14 +282,14 @@
           </div>
         </div>
 
-        <!-- UPFRONT FARE ESTIMATE CARD -->
-        <div id="booking-fare-card" class="fare-preview-card">
+        <!-- ROUTE DISTANCE PREVIEW CARD -->
+        <div id="booking-distance-card" class="fare-preview-card">
           <div class="fare-preview-main">
             <div class="fare-preview-info">
-              <span class="fare-preview-title">Upfront Fare</span>
-              <span id="booking-fare-breakdown" class="fare-preview-breakdown">Enter pickup & destination to calculate fare</span>
+              <span class="fare-preview-title">Estimated Distance</span>
+              <span id="booking-distance-breakdown" class="fare-preview-breakdown">Enter pickup & destination to calculate distance</span>
             </div>
-            <div id="booking-fare-amount" class="fare-preview-amount">R --</div>
+            <div id="booking-distance-amount" class="fare-preview-amount">-- km</div>
           </div>
         </div>
 
@@ -297,7 +297,7 @@
         <div class="payment-notice">
           <div class="payment-notice-icon">💵</div>
           <div class="payment-notice-text">
-            <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival. Pricing is transparent and democratically locked upfront.
+            <strong>Offline Direct Payment:</strong> Settle directly with your driver with cash or EFT upon arrival.
           </div>
         </div>
 
@@ -397,6 +397,11 @@
               <span>💬</span> WhatsApp
             </a>
           </div>
+
+          <!-- App Driver Tracking Link -->
+          <a href="download.html" target="_blank" rel="noopener" class="btn-track-app-link" title="Track Driver Live in LaynRider Android App">
+            <span>📱</span> <span>Track driver live on LaynRider App</span> <span style="font-size: 11px; opacity: 0.7;">↗</span>
+          </a>
         </div>
 
         <!-- LIVE TRIP TRACKING MAP -->
@@ -411,7 +416,8 @@
         <div style="font-size: 12px; display: flex; flex-direction: column; gap: 6px; color: var(--text-dim);">
           <div>🟢 <strong>Pickup:</strong> <span id="track-pickup-text">—</span></div>
           <div>🏁 <strong>Drop-off:</strong> <span id="track-dropoff-text">—</span></div>
-          <div id="track-fare-text" style="font-weight: 700; color: var(--brand);">💵 Fare: R — (Pay driver offline)</div>
+          <div id="track-distance-text" style="font-weight: 700; color: var(--brand);">📏 Trip Distance: <span id="track-distance-val">—</span></div>
+          <div style="font-size: 11px; color: var(--text-dim);">💵 Settle directly with driver on arrival (cash/EFT) · 50% Testing Discount</div>
         </div>
       </div>
 
@@ -422,8 +428,8 @@
         <p style="font-size: 13px; color: var(--text-dim);">Thank you for riding with LaynRider in Poortjie.</p>
 
         <div style="background: var(--panel-2); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
-          <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Total Fare Paid</div>
-          <div id="completed-fare-amount" style="font-size: 24px; font-weight: 900; color: var(--brand);">R 0.00</div>
+          <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Trip Distance Completed</div>
+          <div id="completed-distance-amount" style="font-size: 24px; font-weight: 900; color: var(--brand);">—</div>
         </div>
 
         <!-- Rating Form -->
@@ -454,6 +460,99 @@
   </div>
 
 
+
+  <!-- ===================== CONFIRM BOOKING MODAL ===================== -->
+  <div id="confirm-booking-modal" class="modal-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-booking-modal-title">
+    <div class="modal-card confirm-modal-card">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">🚖</span>
+          <div>
+            <h3 id="confirm-booking-modal-title" class="modal-title" style="font-size: 18px;">Confirm Your Ride</h3>
+            <p class="modal-subtitle">Review your ride details before dispatch</p>
+          </div>
+        </div>
+        <button id="confirm-booking-modal-close" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Testing 50% Off Friendly Callout -->
+      <div class="confirm-promo-badge">
+        <span class="confirm-promo-icon">🎉</span>
+        <div class="confirm-promo-text">
+          <strong>Testing Promo: 50% OFF!</strong>
+          <p>App gives you 50% off since we are testing LaynRider.</p>
+        </div>
+      </div>
+
+      <!-- Ride Details Card -->
+      <div class="confirm-details-card">
+        <div class="confirm-detail-row">
+          <span class="confirm-detail-icon">📍</span>
+          <div class="confirm-detail-content">
+            <span class="confirm-detail-label">Pickup Location</span>
+            <span id="confirm-pickup-text" class="confirm-detail-value">—</span>
+          </div>
+        </div>
+
+        <div class="confirm-detail-divider"></div>
+
+        <div class="confirm-detail-row">
+          <span class="confirm-detail-icon">🏁</span>
+          <div class="confirm-detail-content">
+            <span class="confirm-detail-label">Drop-off Destination</span>
+            <span id="confirm-dropoff-text" class="confirm-detail-value">—</span>
+          </div>
+        </div>
+
+        <div class="confirm-detail-divider"></div>
+
+        <div class="confirm-meta-grid">
+          <div class="confirm-meta-item">
+            <span class="confirm-meta-label">Trip Type</span>
+            <span id="confirm-trip-type" class="confirm-meta-value">Return Trip</span>
+          </div>
+          <div class="confirm-meta-item">
+            <span class="confirm-meta-label">Est. Distance</span>
+            <span id="confirm-distance-text" class="confirm-meta-value">-- km</span>
+          </div>
+        </div>
+
+        <div id="confirm-note-container" class="confirm-note-box is-hidden">
+          <span class="confirm-detail-label">Driver Note</span>
+          <p id="confirm-note-text" class="confirm-note-val">—</p>
+        </div>
+      </div>
+
+      <!-- App Driver Tracking Ability Box -->
+      <div class="confirm-app-track-box">
+        <div class="confirm-app-track-left">
+          <span class="confirm-app-track-icon">📱</span>
+          <div class="confirm-app-track-info">
+            <strong>Track Driver Live on App</strong>
+            <p>Real-time background GPS tracking & push alerts on Android</p>
+          </div>
+        </div>
+        <a href="download.html" target="_blank" rel="noopener" class="btn btn-sm btn-ghost confirm-app-track-btn" title="Open or Download LaynRider Android App">
+          <span>Get App</span> ↗
+        </a>
+      </div>
+
+      <div class="confirm-payment-reminder">
+        <span>💵</span>
+        <span>Settle directly with your driver with cash or EFT upon arrival.</span>
+      </div>
+
+      <div id="confirm-modal-error" class="form-error is-hidden"></div>
+
+      <div class="modal-actions">
+        <button type="button" id="confirm-booking-back-btn" class="btn btn-ghost">Edit</button>
+        <button type="button" id="confirm-booking-submit-btn" class="btn btn-primary btn-submit">
+          <span>⚡</span> Confirm & Request Ride
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===================== COMPLETE PROFILE MODAL ===================== -->
   <div id="profile-modal" class="modal-overlay is-hidden">
@@ -513,7 +612,7 @@
         </div>
         <h3 id="app-test-modal-title" class="test-modal-title">We're Running an Android App Test!</h3>
         <p class="test-modal-subtitle">
-          Web booking is temporarily paused while we run our official Android app test. Web booking will be fully available when testing is done.
+          Help us test the official LaynRider Android app and enjoy 50% discount on all your trips across Poortjie!
         </p>
       </div>
 

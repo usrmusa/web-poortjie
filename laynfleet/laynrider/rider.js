@@ -235,7 +235,7 @@
   const trackFareText = document.getElementById('track-fare-text');
 
   const trackCompletedSection = document.getElementById('track-completed-section');
-  const completedFareAmount = document.getElementById('completed-fare-amount');
+  const completedDistanceAmount = document.getElementById('completed-distance-amount');
   const completedDoneBtn = document.getElementById('completed-done-btn');
   const tripReviewComment = document.getElementById('trip-review-comment');
   const ratingStarBtns = document.querySelectorAll('.rating-star-btn');
@@ -276,6 +276,19 @@
 
   // Toast
   const toastEl = document.getElementById('toast');
+
+  // Confirm Booking Modal Elements
+  const confirmBookingModal = document.getElementById('confirm-booking-modal');
+  const confirmBookingModalClose = document.getElementById('confirm-booking-modal-close');
+  const confirmBookingBackBtn = document.getElementById('confirm-booking-back-btn');
+  const confirmBookingSubmitBtn = document.getElementById('confirm-booking-submit-btn');
+  const confirmPickupText = document.getElementById('confirm-pickup-text');
+  const confirmDropoffText = document.getElementById('confirm-dropoff-text');
+  const confirmTripType = document.getElementById('confirm-trip-type');
+  const confirmDistanceText = document.getElementById('confirm-distance-text');
+  const confirmNoteContainer = document.getElementById('confirm-note-container');
+  const confirmNoteText = document.getElementById('confirm-note-text');
+  const confirmModalError = document.getElementById('confirm-modal-error');
 
   // App Test / Beta Modal Elements
   const appTestModal = document.getElementById('app-test-modal');
@@ -392,13 +405,10 @@
     return dist <= SERVICE_AREA.radiusMeters;
   }
 
-  /** Calculate and update upfront fare preview card and submit button ONLY with actual driving road distance */
-  function updateUpfrontFarePreview(overrideDistanceKm = null) {
-    const vType = (bookingState.vehicleType || 'PRIVATE_CAR').toUpperCase();
-    const rateInfo = activePricingRates[vType] || DEFAULT_PRICING_RATES[vType] || { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0 };
-
-    const fareAmountEl = document.getElementById('booking-fare-amount');
-    const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
+  /** Calculate and update distance preview card and submit button ONLY with actual driving road distance */
+  function updateBookingDistancePreview(overrideDistanceKm = null) {
+    const distanceAmountEl = document.getElementById('booking-distance-amount');
+    const distanceBreakdownEl = document.getElementById('booking-distance-breakdown');
     const submitBtn = document.getElementById('booking-submit-btn');
 
     const hasPickupAddress = Boolean(bookingState.pickup && bookingState.pickup.address && bookingState.pickup.address.trim());
@@ -417,18 +427,15 @@
       bookingState.actualOneWayDistanceKm = null;
       bookingState.estimatedDistanceKm = null;
       bookingState.upfrontPrice = null;
-      bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
-      bookingState.minimumFareSnapshot = rateInfo.minimumFare;
-      bookingState.returnPercentSnapshot = bookingState.isReturnTrip !== false ? rateInfo.returnTripPercent : null;
 
-      if (fareAmountEl) fareAmountEl.textContent = 'R --';
-      if (fareBreakdownEl) {
+      if (distanceAmountEl) distanceAmountEl.textContent = '-- km';
+      if (distanceBreakdownEl) {
         if (!hasPickup && !hasDropoff) {
-          fareBreakdownEl.textContent = 'Enter pickup & destination to calculate fare';
+          distanceBreakdownEl.textContent = 'Enter pickup & destination to calculate distance';
         } else if (!hasPickup) {
-          fareBreakdownEl.textContent = 'Enter pickup location';
+          distanceBreakdownEl.textContent = 'Enter pickup location';
         } else {
-          fareBreakdownEl.textContent = 'Enter destination address';
+          distanceBreakdownEl.textContent = 'Enter destination address';
         }
       }
       if (submitBtn) {
@@ -444,13 +451,10 @@
       // Actual road distance is still being computed by Google Directions
       bookingState.estimatedDistanceKm = null;
       bookingState.upfrontPrice = null;
-      bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
-      bookingState.minimumFareSnapshot = rateInfo.minimumFare;
-      bookingState.returnPercentSnapshot = bookingState.isReturnTrip !== false ? rateInfo.returnTripPercent : null;
 
-      if (fareAmountEl) fareAmountEl.textContent = 'R ...';
-      if (fareBreakdownEl) {
-        fareBreakdownEl.textContent = 'Calculating route distance & fare…';
+      if (distanceAmountEl) distanceAmountEl.textContent = '... km';
+      if (distanceBreakdownEl) {
+        distanceBreakdownEl.textContent = 'Calculating route distance…';
       }
       if (submitBtn) {
         submitBtn.innerHTML = '<span>⚡</span> Calculating Route…';
@@ -461,27 +465,23 @@
     // We have the actual measured driving distance from Google Maps!
     const isReturn = bookingState.isReturnTrip !== false;
     const displayDistKm = isReturn ? (oneWayDistKm * 2.0) : oneWayDistKm;
-    const returnPercent = typeof rateInfo.returnTripPercent === 'number' ? rateInfo.returnTripPercent : 80.0;
-    const singlePrice = Math.max(oneWayDistKm * rateInfo.ratePerKm, rateInfo.minimumFare);
-    const rawFare = isReturn ? (singlePrice * (1.0 + returnPercent / 100.0)) : singlePrice;
-    const fare = Math.round(rawFare);
 
     bookingState.estimatedDistanceKm = Number(displayDistKm.toFixed(1));
-    bookingState.upfrontPrice = fare;
-    bookingState.ratePerKmSnapshot = rateInfo.ratePerKm;
-    bookingState.minimumFareSnapshot = rateInfo.minimumFare;
-    bookingState.returnPercentSnapshot = isReturn ? returnPercent : null;
+    bookingState.upfrontPrice = null;
 
-    if (fareAmountEl) fareAmountEl.textContent = `R ${fare}`;
-    if (fareBreakdownEl) {
-      fareBreakdownEl.textContent = isReturn
-        ? `~${bookingState.estimatedDistanceKm} km (${oneWayDistKm.toFixed(1)} km return) · R${rateInfo.ratePerKm}/km`
-        : `~${bookingState.estimatedDistanceKm} km · R${rateInfo.ratePerKm}/km`;
+    if (distanceAmountEl) distanceAmountEl.textContent = `${bookingState.estimatedDistanceKm} km`;
+    if (distanceBreakdownEl) {
+      distanceBreakdownEl.textContent = isReturn
+        ? `~${bookingState.estimatedDistanceKm} km total (${oneWayDistKm.toFixed(1)} km return)`
+        : `~${bookingState.estimatedDistanceKm} km (Single trip)`;
     }
     if (submitBtn) {
-      submitBtn.innerHTML = `<span>⚡</span> Request Ride · R ${fare}`;
+      submitBtn.innerHTML = '<span>⚡</span> Request Ride';
     }
   }
+
+  // Alias for backward compatibility
+  const updateUpfrontFarePreview = updateBookingDistancePreview;
 
   /** Listen for dynamic democratic pricing rates from Firestore */
   function initPricingRatesListener() {
@@ -1054,9 +1054,9 @@
           console.warn('[LaynRider Map] ⚠️ [DIRECTIONS WARN] Directions request failed with status: ' + status);
           bookingState.actualOneWayDistanceKm = null;
           if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
-          updateUpfrontFarePreview(null);
-          const fareBreakdownEl = document.getElementById('booking-fare-breakdown');
-          if (fareBreakdownEl) fareBreakdownEl.textContent = 'Could not determine driving route. Check addresses.';
+          updateBookingDistancePreview(null);
+          const distanceBreakdownEl = document.getElementById('booking-distance-breakdown') || document.getElementById('booking-fare-breakdown');
+          if (distanceBreakdownEl) distanceBreakdownEl.textContent = 'Could not determine driving route. Check addresses.';
           const bounds = new google.maps.LatLngBounds();
           bounds.extend(origin);
           bounds.extend(destination);
@@ -1069,7 +1069,7 @@
         bookingDirectionsRenderer.set('directions', null);
       }
       if (bookingMapRouteInfo) bookingMapRouteInfo.classList.add('is-hidden');
-      updateUpfrontFarePreview(null);
+      updateBookingDistancePreview(null);
 
       if (hasPickup) {
         bookingGoogleMap.setCenter(new google.maps.LatLng(bookingState.pickup.lat, bookingState.pickup.lng));
@@ -1664,18 +1664,151 @@
       return;
     }
 
-    if (bookingState.actualOneWayDistanceKm == null || bookingState.upfrontPrice == null) {
+    if (bookingState.actualOneWayDistanceKm == null) {
       if (bookingFormError) {
-        bookingFormError.textContent = 'Calculating driving route distance and fare. Please wait a moment.';
+        bookingFormError.textContent = 'Calculating driving route distance. Please wait a moment.';
         bookingFormError.classList.remove('is-hidden');
       }
       return;
     }
 
-    // Web bookings are blocked during the Android App Testing Phase:
-    // Close the booking modal and present the Android App Test dialog with 50% off tester reward!
-    closeBookingModal();
-    openAppTestModal();
+    bookingState.note = (bookingNoteInput ? bookingNoteInput.value.trim() : '');
+
+    // Open short and friendly confirmation dialog showing details of their ride & 50% test discount
+    openConfirmBookingModal();
+  }
+
+  /** ============================================================
+   * CONFIRMATION DIALOG & DISPATCH
+   * ============================================================ */
+
+  /** Open / Close Confirmation Dialog */
+  function openConfirmBookingModal() {
+    if (confirmModalError) confirmModalError.classList.add('is-hidden');
+
+    if (confirmPickupText) confirmPickupText.textContent = bookingState.pickup.address || 'Poortjie';
+    if (confirmDropoffText) confirmDropoffText.textContent = bookingState.dropoff.address || 'Destination';
+    if (confirmTripType) {
+      confirmTripType.textContent = bookingState.isReturnTrip !== false ? 'Return Trip (Round trip)' : 'Single Trip (One way)';
+    }
+    if (confirmDistanceText) {
+      const isReturn = bookingState.isReturnTrip !== false;
+      const oneWay = bookingState.actualOneWayDistanceKm ? bookingState.actualOneWayDistanceKm.toFixed(1) : '—';
+      confirmDistanceText.textContent = isReturn
+        ? `${bookingState.estimatedDistanceKm || '—'} km (${oneWay} km return)`
+        : `${bookingState.estimatedDistanceKm || '—'} km`;
+    }
+
+    const note = (bookingNoteInput ? bookingNoteInput.value.trim() : '');
+    bookingState.note = note;
+    if (confirmNoteContainer && confirmNoteText) {
+      if (note) {
+        confirmNoteText.textContent = note;
+        confirmNoteContainer.classList.remove('is-hidden');
+      } else {
+        confirmNoteContainer.classList.add('is-hidden');
+      }
+    }
+
+    if (confirmBookingModal) confirmBookingModal.classList.remove('is-hidden');
+  }
+
+  function closeConfirmBookingModal() {
+    if (confirmBookingModal) confirmBookingModal.classList.add('is-hidden');
+  }
+
+  /** Confirm and Dispatch Booking directly to Firestore */
+  async function handleConfirmBookingSubmit() {
+    if (!currentUser) {
+      showToast('Please sign in to book a ride.');
+      return;
+    }
+
+    if (confirmModalError) confirmModalError.classList.add('is-hidden');
+
+    try {
+      if (confirmBookingSubmitBtn) {
+        confirmBookingSubmitBtn.disabled = true;
+        confirmBookingSubmitBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;"></div> Requesting…';
+      }
+
+      const now = Date.now();
+      const riderUidPrefix = currentUser.uid.substring(0, 6);
+      const bookingId = `b_${now}_${riderUidPrefix}`;
+
+      const requestedDriverId = bookingTargetDriver ? bookingTargetDriver.uid : null;
+      const initialDetail = requestedDriverId
+        ? `Requested specific driver: ${requestedDriverId}`
+        : 'Quick Ride auto-dispatch';
+
+      const initialEvent = {
+        event: 'DISPATCHED',
+        actorUid: currentUser.uid,
+        detail: initialDetail,
+        timestamp: now
+      };
+
+      const bookingDocData = {
+        id: bookingId,
+        riderId: currentUser.uid,
+        type: 'ASAP',
+        pickup: {
+          address: bookingState.pickup.address,
+          lat: bookingState.pickup.lat,
+          lng: bookingState.pickup.lng
+        },
+        dropoff: {
+          address: bookingState.dropoff.address,
+          lat: bookingState.dropoff.lat,
+          lng: bookingState.dropoff.lng
+        },
+        note: bookingState.note || '',
+        vehicleType: bookingState.vehicleType || 'PRIVATE_CAR',
+        scheduledTime: null,
+        status: 'PENDING',
+        driverId: null,
+        requestedDriverId: requestedDriverId,
+        currentDriverId: null,
+        offerExpiresAt: null,
+        attemptedDriverIds: [],
+        dispatchMessage: 'Finding your ride…',
+        deliveredAt: null,
+        availabilityEtaMinutes: null,
+        priceApproved: true,
+        cancelReason: '',
+        cancelledByDriver: false,
+        events: [initialEvent],
+        isReturnTrip: bookingState.isReturnTrip !== false,
+        estimatedDistanceKm: bookingState.estimatedDistanceKm || null,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      await bookingsCol.doc(bookingId).set(bookingDocData);
+
+      await ridersCol.doc(currentUser.uid).set({
+        uid: currentUser.uid,
+        lastRequestedAt: now
+      }, { merge: true });
+
+      closeConfirmBookingModal();
+      closeBookingModal();
+      showToast('🎉 Ride requested! Finding your driver…');
+      openActiveTripModal();
+    } catch (err) {
+      console.error('Failed to create booking:', err);
+      if (confirmModalError) {
+        confirmModalError.textContent = 'Failed to request ride. Please check your connection and try again.';
+        confirmModalError.classList.remove('is-hidden');
+      } else {
+        showToast('Failed to request ride. Please try again.');
+      }
+    } finally {
+      if (confirmBookingSubmitBtn) {
+        confirmBookingSubmitBtn.disabled = false;
+        confirmBookingSubmitBtn.innerHTML = '<span>⚡</span> Confirm & Request Ride';
+      }
+    }
   }
 
   /** ============================================================
@@ -2030,10 +2163,12 @@
     } else if (status === 'COMPLETED') {
       // 3. Completed Section
       if (trackCompletedSection) trackCompletedSection.classList.remove('is-hidden');
-      const finalFare = typeof booking.upfrontPrice === 'number'
-        ? booking.upfrontPrice.toFixed(2)
-        : (typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00');
-      if (completedFareAmount) completedFareAmount.textContent = `R ${finalFare}`;
+      if (completedDistanceAmount) {
+        const isReturn = booking.isReturnTrip !== false;
+        completedDistanceAmount.textContent = booking.estimatedDistanceKm
+          ? `${booking.estimatedDistanceKm} km${isReturn ? ' (Return)' : ''}`
+          : 'Trip Done';
+      }
     } else {
       // 4. Terminal Cancelled / Expired / No Driver
       if (trackCancelledSection) trackCancelledSection.classList.remove('is-hidden');
@@ -2215,11 +2350,12 @@
 
     if (trackPickupText) trackPickupText.textContent = booking.pickup?.address || 'Poortjie';
     if (trackDropoffText) trackDropoffText.textContent = booking.dropoff?.address || 'Destination';
-    if (trackFareText) {
-      const price = typeof booking.upfrontPrice === 'number'
-        ? booking.upfrontPrice.toFixed(2)
-        : (typeof booking.quotedPrice === 'number' ? booking.quotedPrice.toFixed(2) : '0.00');
-      trackFareText.textContent = `💵 Locked Upfront Fare: R ${price} (Pay driver cash on arrival)`;
+    const trackDistanceVal = document.getElementById('track-distance-val');
+    if (trackDistanceVal) {
+      const isReturn = booking.isReturnTrip !== false;
+      trackDistanceVal.textContent = booking.estimatedDistanceKm
+        ? `${booking.estimatedDistanceKm} km${isReturn ? ' (Return)' : ''}`
+        : '—';
     }
 
     if (activeBookingCountdownPill) {
@@ -2643,6 +2779,16 @@
       });
     }
 
+    // Confirm Booking Modal
+    if (confirmBookingModalClose) confirmBookingModalClose.addEventListener('click', closeConfirmBookingModal);
+    if (confirmBookingBackBtn) confirmBookingBackBtn.addEventListener('click', closeConfirmBookingModal);
+    if (confirmBookingSubmitBtn) confirmBookingSubmitBtn.addEventListener('click', handleConfirmBookingSubmit);
+    if (confirmBookingModal) {
+      confirmBookingModal.addEventListener('click', (e) => {
+        if (e.target === confirmBookingModal) closeConfirmBookingModal();
+      });
+    }
+
     // Rating star selectors
     ratingStarBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -2700,6 +2846,8 @@
     getUserProfile: () => userProfile,
     isProfileComplete: () => isProfileComplete,
     openBookingForm,
+    openConfirmBookingModal,
+    closeConfirmBookingModal,
     openAppTestModal,
     closeAppTestModal,
     openActiveTripModal,

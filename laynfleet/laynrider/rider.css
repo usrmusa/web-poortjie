@@ -2343,3 +2343,233 @@ img, svg, video, canvas, audio, iframe, embed, object {
   box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35);
 }
 
+/* ============================================================
+   CONFIRM BOOKING MODAL (Short & Friendly Confirmation Dialog)
+   ============================================================ */
+.confirm-modal-card {
+  max-width: 460px;
+  gap: 16px;
+}
+
+.confirm-promo-badge {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(217, 119, 6, 0.12));
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.confirm-promo-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.confirm-promo-text {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.confirm-promo-text strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--brand-hover);
+  margin-bottom: 2px;
+}
+
+.confirm-details-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.confirm-detail-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.confirm-detail-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirm-detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-faint);
+}
+
+.confirm-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.confirm-detail-divider {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+.confirm-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.confirm-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirm-meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-faint);
+}
+
+.confirm-meta-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.confirm-note-box {
+  background: var(--panel);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirm-note-val {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.confirm-payment-reminder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--panel-2);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border-left: 3px solid var(--brand);
+}
+
+.confirm-app-track-box {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.confirm-app-track-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.confirm-app-track-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.confirm-app-track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirm-app-track-info strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.confirm-app-track-info p {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.confirm-app-track-btn {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  gap: 4px;
+  border-color: var(--border);
+  flex-shrink: 0;
+}
+
+.confirm-app-track-btn:hover {
+  background: var(--panel-hover);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.btn-track-app-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.btn-track-app-link:hover {
+  background: var(--panel-hover);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+
+
