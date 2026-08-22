@@ -2200,12 +2200,18 @@
       if (booking.status === 'ACCEPTED') {
         const etaMins = booking.availabilityEtaMinutes || 5;
         activeBookingTitle.textContent = `Driver Accepted (ETA ~${etaMins}m)`;
+      } else if (booking.status === 'SCHEDULED_CONFIRMED') {
+        activeBookingTitle.textContent = 'Scheduled Ride Confirmed';
       } else if (booking.status === 'EN_ROUTE') {
         activeBookingTitle.textContent = 'Driver En Route';
       } else if (booking.status === 'ARRIVED') {
         activeBookingTitle.textContent = 'Driver Arrived!';
       } else if (booking.status === 'IN_TRIP') {
         activeBookingTitle.textContent = 'Trip in Progress';
+      } else if (booking.status === 'AT_DESTINATION') {
+        activeBookingTitle.textContent = 'Waiting at Stop';
+      } else if (booking.status === 'RETURN_TRIP') {
+        activeBookingTitle.textContent = 'Returning to Pickup';
       } else if (['CANCELLED', 'CANCELLED_NO_DRIVER', 'DRIVER_UNAVAILABLE', 'CANCELLED_EXPIRED'].includes(booking.status)) {
         const info = getDetailedCancellationInfo(booking);
         activeBookingTitle.textContent = info.title;
@@ -2231,10 +2237,14 @@
     }
     switch (status) {
       case 'PENDING': return 'Finding your ride / Driver reviewing…';
+      case 'QUOTED': return 'Quote received from driver.';
+      case 'SCHEDULED_CONFIRMED': return 'Scheduled ride confirmed.';
       case 'ACCEPTED': return 'Driver accepted your ride.';
       case 'EN_ROUTE': return 'Driver is en route to pickup.';
       case 'ARRIVED': return 'Driver has arrived at pickup!';
       case 'IN_TRIP': return 'Heading to drop-off destination.';
+      case 'AT_DESTINATION': return 'Waiting at stop.';
+      case 'RETURN_TRIP': return 'Returning to pickup point.';
       case 'COMPLETED': return 'Trip completed!';
       case 'CANCELLED_NO_DRIVER': return 'No drivers responded in time.';
       case 'DRIVER_UNAVAILABLE': return 'Driver did not respond or declined.';
