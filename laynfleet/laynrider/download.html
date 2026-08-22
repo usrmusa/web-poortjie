@@ -183,7 +183,8 @@
       flex-direction: column;
       gap: 10px;
       flex: 1;
-      padding: 4px 0;
+      padding: 16px 0 4px;
+      border-top: 1px solid var(--border);
     }
 
     .app-features-list li {
@@ -459,24 +460,6 @@
       </p>
     </section>
 
-    <!-- PLAY STORE REVIEW NOTICE -->
-    <div class="store-notice-card">
-      <span class="store-notice-icon">⏳</span>
-      <div class="store-notice-content">
-        <strong>Google Play Store Review in Progress</strong>
-        Our official apps have been submitted and are currently in Google Play Store review. In the meantime, you can directly and securely install the official release APKs below with zero waiting.
-      </div>
-    </div>
-
-    <!-- ANDROID TESTING PROGRAM NOTICE -->
-    <div class="store-notice-card" style="background: var(--success-bg); border-color: rgba(34, 197, 94, 0.35);">
-      <span class="store-notice-icon">🎁</span>
-      <div class="store-notice-content">
-        <strong style="color: var(--brand);">Android Testing Program · 50% Discount on All Trips!</strong>
-        We are actively running our official Android app test. If you have an Android device running <strong>Android OS 12 upwards</strong>, download the <strong>LaynRider</strong> APK below to help test the app and enjoy <strong>50% discount on all your rides</strong>!
-      </div>
-    </div>
-
     <!-- DUAL APPS GRID (RIDER & DRIVER) -->
     <section class="apps-grid">
 
@@ -489,6 +472,13 @@
             <h2>LaynRider</h2>
             <p>Fast, transparent rides in Poortjie</p>
           </div>
+        </div>
+
+        <a href="laynrider-release.apk" download="laynrider-release.apk" class="app-download-btn primary">
+          <span>📥</span> Download LaynRider APK
+        </a>
+        <div class="app-meta-text">
+          Release v1.0.0 · Android 12+ · APK Size: ~15.4 MB
         </div>
 
         <ul class="app-features-list">
@@ -521,13 +511,6 @@
             </div>
           </li>
         </ul>
-
-        <a href="laynrider-release.apk" download="laynrider-release.apk" class="app-download-btn primary">
-          <span>📥</span> Download LaynRider APK
-        </a>
-        <div class="app-meta-text">
-          Release v1.0.0 · Android 12+ · APK Size: ~15.4 MB
-        </div>
       </article>
 
       <!-- CARD 2: LAYNDRIVER DRIVER & OPERATOR APP -->
@@ -539,6 +522,13 @@
             <h2>LaynDriver</h2>
             <p>Earn on your terms in Poortjie</p>
           </div>
+        </div>
+
+        <a href="../layndriver/layndriver-release.apk" download="layndriver-release.apk" class="app-download-btn primary" style="background: #1e293b;">
+          <span>📥</span> Download LaynDriver APK
+        </a>
+        <div class="app-meta-text">
+          Release v1.0.0 · Android 12+ · APK Size: ~15.5 MB
         </div>
 
         <ul class="app-features-list">
@@ -571,13 +561,6 @@
             </div>
           </li>
         </ul>
-
-        <a href="../layndriver/layndriver-release.apk" download="layndriver-release.apk" class="app-download-btn primary" style="background: #1e293b;">
-          <span>📥</span> Download LaynDriver APK
-        </a>
-        <div class="app-meta-text">
-          Release v1.0.0 · Android 12+ · APK Size: ~15.5 MB
-        </div>
       </article>
 
     </section>
