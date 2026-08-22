@@ -98,6 +98,8 @@
     note: '',
     vehicleType: 'PRIVATE_CAR',
     isReturnTrip: true,
+    returnWaitMinutes: 15,
+    waitPriceSnapshot: null,
     scheduledEpoch: null,
     actualOneWayDistanceKm: null, // Populated ONLY when actual driving road distance is measured by Google Directions
     upfrontPrice: null,
@@ -108,11 +110,11 @@
   };
 
   const DEFAULT_PRICING_RATES = {
-    PRIVATE_CAR: { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0 },
-    MINI_BUS: { ratePerKm: 12.0, minimumFare: 30.0, returnTripPercent: 80.0 },
-    BAKKIE: { ratePerKm: 12.0, minimumFare: 30.0, returnTripPercent: 80.0 },
-    MOTORBIKE: { ratePerKm: 7.0, minimumFare: 18.0, returnTripPercent: 80.0 },
-    TUK_TUK: { ratePerKm: 6.0, minimumFare: 15.0, returnTripPercent: 80.0 }
+    PRIVATE_CAR: { ratePerKm: 10.0, minimumFare: 25.0, returnTripPercent: 80.0, waitRatePerMinute: 1.50, freeWaitMinutes: 10 },
+    MINI_BUS: { ratePerKm: 12.0, minimumFare: 30.0, returnTripPercent: 80.0, waitRatePerMinute: 1.50, freeWaitMinutes: 10 },
+    BAKKIE: { ratePerKm: 12.0, minimumFare: 30.0, returnTripPercent: 80.0, waitRatePerMinute: 1.50, freeWaitMinutes: 10 },
+    MOTORBIKE: { ratePerKm: 7.0, minimumFare: 18.0, returnTripPercent: 80.0, waitRatePerMinute: 1.50, freeWaitMinutes: 10 },
+    TUK_TUK: { ratePerKm: 6.0, minimumFare: 15.0, returnTripPercent: 80.0, waitRatePerMinute: 1.50, freeWaitMinutes: 10 }
   };
   let activePricingRates = { ...DEFAULT_PRICING_RATES };
 
@@ -476,8 +478,21 @@
     const displayDistKm = isReturn ? (oneWayDistKm * 2.0) : oneWayDistKm;
     const returnPercent = typeof rateInfo.returnTripPercent === 'number' ? rateInfo.returnTripPercent : 80.0;
     const singlePrice = Math.max(oneWayDistKm * rateInfo.ratePerKm, rateInfo.minimumFare);
-    const rawFare = isReturn ? (singlePrice * (1.0 + returnPercent / 100.0)) : singlePrice;
-    const fare = Math.round(rawFare);
+
+    let fare;
+    if (isReturn) {
+      const baseReturnPrice = singlePrice * (1.0 + returnPercent / 100.0);
+      const waitMins = typeof bookingState.returnWaitMinutes === 'number' ? bookingState.returnWaitMinutes : 15;
+      const freeMins = typeof rateInfo.freeWaitMinutes === 'number' ? rateInfo.freeWaitMinutes : 10;
+      const ratePerMin = typeof rateInfo.waitRatePerMinute === 'number' ? rateInfo.waitRatePerMinute : 1.50;
+      const chargeableMinutes = Math.max(0, waitMins - freeMins);
+      const waitSurcharge = chargeableMinutes * ratePerMin;
+      bookingState.waitPriceSnapshot = waitSurcharge;
+      fare = Math.round(baseReturnPrice + waitSurcharge);
+    } else {
+      bookingState.waitPriceSnapshot = 0;
+      fare = Math.round(singlePrice);
+    }
 
     bookingState.estimatedDistanceKm = Number(displayDistKm.toFixed(1));
     bookingState.upfrontPrice = fare;
@@ -488,7 +503,7 @@
     if (fareAmountEl) fareAmountEl.textContent = `R ${fare}`;
     if (fareBreakdownEl) {
       fareBreakdownEl.textContent = isReturn
-        ? `~${bookingState.estimatedDistanceKm} km total (${oneWayDistKm.toFixed(1)} km return)`
+        ? `~${bookingState.estimatedDistanceKm} km total (${oneWayDistKm.toFixed(1)} km return · ${bookingState.returnWaitMinutes || 15}m stop)`
         : `~${bookingState.estimatedDistanceKm} km (Single trip)`;
     }
     if (submitBtn) {
@@ -510,7 +525,9 @@
           activePricingRates[vType] = {
             ratePerKm: typeof data.ratePerKm === 'number' ? data.ratePerKm : (DEFAULT_PRICING_RATES[vType]?.ratePerKm || 10.0),
             minimumFare: typeof data.minimumFare === 'number' ? data.minimumFare : (DEFAULT_PRICING_RATES[vType]?.minimumFare || 25.0),
-            returnTripPercent: typeof data.returnTripPercent === 'number' ? data.returnTripPercent : (DEFAULT_PRICING_RATES[vType]?.returnTripPercent || 80.0)
+            returnTripPercent: typeof data.returnTripPercent === 'number' ? data.returnTripPercent : (DEFAULT_PRICING_RATES[vType]?.returnTripPercent || 80.0),
+            waitRatePerMinute: typeof data.waitRatePerMinute === 'number' ? data.waitRatePerMinute : (DEFAULT_PRICING_RATES[vType]?.waitRatePerMinute || 1.50),
+            freeWaitMinutes: typeof data.freeWaitMinutes === 'number' ? data.freeWaitMinutes : (DEFAULT_PRICING_RATES[vType]?.freeWaitMinutes || 10)
           };
         });
         updateUpfrontFarePreview();
@@ -1397,6 +1414,19 @@
     bookingState.isReturnTrip = isReturn;
     if (toggleTripReturn) toggleTripReturn.classList.toggle('is-active', isReturn);
     if (toggleTripSingle) toggleTripSingle.classList.toggle('is-active', !isReturn);
+    const returnWaitSec = document.getElementById('return-wait-section');
+    if (returnWaitSec) returnWaitSec.classList.toggle('is-hidden', !isReturn);
+    updateUpfrontFarePreview();
+  }
+
+  /** Set Return Expected Stop Duration in Minutes */
+  function setReturnWaitMinutes(mins) {
+    bookingState.returnWaitMinutes = mins;
+    const chips = document.querySelectorAll('.wait-chip');
+    chips.forEach((c) => {
+      const m = parseInt(c.getAttribute('data-minutes'), 10);
+      c.classList.toggle('is-active', m === mins);
+    });
     updateUpfrontFarePreview();
   }
 
@@ -1625,6 +1655,8 @@
       note: bookingState.note || (bookingNoteInput ? bookingNoteInput.value.trim() : ''),
       vehicleType: bookingState.vehicleType || 'PRIVATE_CAR',
       isReturnTrip: bookingState.isReturnTrip !== false,
+      returnWaitMinutes: bookingState.returnWaitMinutes || 15,
+      waitPriceSnapshot: bookingState.waitPriceSnapshot,
       actualOneWayDistanceKm: bookingState.actualOneWayDistanceKm,
       estimatedDistanceKm: bookingState.estimatedDistanceKm,
       upfrontPrice: bookingState.upfrontPrice,
@@ -1767,6 +1799,19 @@
         ? `${bookingState.estimatedDistanceKm || '—'} km (${oneWay} km return)`
         : `${bookingState.estimatedDistanceKm || '—'} km`;
     }
+
+    const returnStopItem = document.getElementById('confirm-return-stop-item');
+    const returnStopText = document.getElementById('confirm-return-stop-text');
+    const isReturn = bookingState.isReturnTrip !== false;
+    if (returnStopItem && returnStopText) {
+      if (isReturn) {
+        returnStopText.textContent = `Includes return trip & ~${bookingState.returnWaitMinutes || 15} min stop at destination`;
+        returnStopItem.classList.remove('is-hidden');
+      } else {
+        returnStopItem.classList.add('is-hidden');
+      }
+    }
+
     if (confirmFareText) {
       confirmFareText.textContent = typeof bookingState.upfrontPrice === 'number' ? `R ${bookingState.upfrontPrice}` : 'R --';
     }
@@ -1827,6 +1872,8 @@
         timestamp: now
       };
 
+      const isReturn = bookingState.isReturnTrip !== false;
+
       const bookingDocData = {
         id: bookingId,
         riderId: currentUser.uid,
@@ -1857,7 +1904,9 @@
         cancelReason: '',
         cancelledByDriver: false,
         events: [initialEvent],
-        isReturnTrip: bookingState.isReturnTrip !== false,
+        isReturnTrip: isReturn,
+        returnWaitMinutes: isReturn ? (bookingState.returnWaitMinutes || 15) : null,
+        waitPriceSnapshot: isReturn ? (bookingState.waitPriceSnapshot != null ? bookingState.waitPriceSnapshot : 7.50) : null,
         returnPercentSnapshot: bookingState.returnPercentSnapshot || null,
         upfrontPrice: bookingState.upfrontPrice || null,
         ratePerKmSnapshot: bookingState.ratePerKmSnapshot || null,
@@ -2780,6 +2829,15 @@
     // Trip Type Toggles
     if (toggleTripReturn) toggleTripReturn.addEventListener('click', () => setReturnTrip(true));
     if (toggleTripSingle) toggleTripSingle.addEventListener('click', () => setReturnTrip(false));
+
+    // Return Wait Chips
+    const waitChips = document.querySelectorAll('.wait-chip');
+    waitChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const mins = parseInt(chip.getAttribute('data-minutes'), 10) || 15;
+        setReturnWaitMinutes(mins);
+      });
+    });
 
     // Ride Type Toggles
     if (toggleTypeAsap) toggleTypeAsap.addEventListener('click', () => setBookingType('ASAP'));

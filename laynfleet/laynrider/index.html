@@ -222,6 +222,22 @@
           </div>
         </div>
 
+        <!-- EXPECTED STOP DURATION (RETURN TRIPS ONLY) -->
+        <div id="return-wait-section" class="field">
+          <div class="field-label-row">
+            <span class="field-label">⏱️ Expected Stop Duration</span>
+            <span class="field-sublabel">At destination</span>
+          </div>
+          <div class="wait-chips-container">
+            <button type="button" class="wait-chip is-active" data-minutes="15">15 min</button>
+            <button type="button" class="wait-chip" data-minutes="30">30 min</button>
+            <button type="button" class="wait-chip" data-minutes="45">45 min</button>
+            <button type="button" class="wait-chip" data-minutes="60">1 hr</button>
+            <button type="button" class="wait-chip" data-minutes="120">2 hrs</button>
+          </div>
+          <p class="wait-helper-text">First 10 min free · R1.50/min thereafter</p>
+        </div>
+
         <!-- RIDE TYPE / SCHEDULE ENTRY POINT -->
         <div class="field">
           <span class="field-label">When do you need the ride?</span>
@@ -516,6 +532,10 @@
           <div class="confirm-meta-item">
             <span class="confirm-meta-label">Est. Distance</span>
             <span id="confirm-distance-text" class="confirm-meta-value">-- km</span>
+          </div>
+          <div id="confirm-return-stop-item" class="confirm-meta-item" style="grid-column: span 2;">
+            <span class="confirm-meta-label">Expected Stop Duration</span>
+            <span id="confirm-return-stop-text" class="confirm-meta-value" style="color: var(--brand); font-weight: 700;">~15 min stop at destination</span>
           </div>
           <div class="confirm-meta-item" style="grid-column: span 2;">
             <span class="confirm-meta-label">Upfront Fare</span>

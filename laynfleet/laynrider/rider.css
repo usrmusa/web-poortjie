@@ -1078,6 +1078,48 @@ img, svg, video, canvas, audio, iframe, embed, object {
   text-transform: uppercase;
 }
 
+/* Return Ride Wait Duration Chips */
+.wait-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.wait-chip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wait-chip:hover {
+  border-color: var(--brand);
+  color: var(--text);
+}
+
+.wait-chip.is-active {
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.wait-helper-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-top: 6px;
+  margin-left: 2px;
+}
+
 .scheduled-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
