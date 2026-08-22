@@ -33,6 +33,7 @@
     center: { lat: -26.57537, lng: 27.68133 },
     radiusMeters: 175933
   };
+  const POORTJIE_MAP_CENTER = { lat: -26.4568052, lng: 27.7678277 }; // Poortjie Taxi Rank
 
   /**
    * Invoke a dispatch Cloud Function callable (server-authoritative). Mirrors
@@ -953,9 +954,10 @@
     try {
       console.log('[LaynRider Map] 🗺️ Initializing Booking Google Map...');
       const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
+      const defaultMapCenter = new google.maps.LatLng(POORTJIE_MAP_CENTER.lat, POORTJIE_MAP_CENTER.lng);
       bookingGoogleMap = new google.maps.Map(bookingMapEl, {
-        center: poortjieCenter,
-        zoom: 8,
+        center: defaultMapCenter,
+        zoom: 16,
         disableDefaultUI: true,
         zoomControl: true,
         clickableIcons: false
@@ -1129,8 +1131,8 @@
         bookingGoogleMap.setCenter(new google.maps.LatLng(bookingState.dropoff.lat, bookingState.dropoff.lng));
         bookingGoogleMap.setZoom(14);
       } else {
-        bookingGoogleMap.setCenter(new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng));
-        bookingGoogleMap.setZoom(8);
+        bookingGoogleMap.setCenter(new google.maps.LatLng(POORTJIE_MAP_CENTER.lat, POORTJIE_MAP_CENTER.lng));
+        bookingGoogleMap.setZoom(16);
       }
     }
   }
@@ -1140,10 +1142,10 @@
 
     try {
       console.log('[LaynRider Map] 🗺️ Initializing Tracking Google Map...');
-      const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
+      const defaultMapCenter = new google.maps.LatLng(POORTJIE_MAP_CENTER.lat, POORTJIE_MAP_CENTER.lng);
       trackingGoogleMap = new google.maps.Map(trackingMapEl, {
-        center: poortjieCenter,
-        zoom: 8,
+        center: defaultMapCenter,
+        zoom: 16,
         disableDefaultUI: true,
         zoomControl: true,
         clickableIcons: false
