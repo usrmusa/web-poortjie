@@ -64,8 +64,8 @@ if (typeof window !== 'undefined') {
 
   // Poortjie service area boundary (locked)
   window.SERVICE_AREA = {
-    center: { lat: -26.45600, lng: 27.77087 },
-    radiusMeters: 1637 // ~1.64 km
+    center: { lat: -26.57537, lng: 27.68133 },
+    radiusMeters: 175933 // 175.93 km
   };
 
   window.APP_PACKAGE = 'com.digilayn.laynrider';

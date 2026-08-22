@@ -30,8 +30,8 @@
   const RTDB_LOCATIONS = global.RTDB_LOCATIONS || 'driverLocations';
   const HEARTBEAT_FRESHNESS_WINDOW_MS = global.HEARTBEAT_FRESHNESS_WINDOW_MS || 60000;
   const SERVICE_AREA = global.SERVICE_AREA || {
-    center: { lat: -26.45600, lng: 27.77087 },
-    radiusMeters: 1637
+    center: { lat: -26.57537, lng: 27.68133 },
+    radiusMeters: 175933
   };
 
   /**
@@ -400,7 +400,7 @@
     return R * c;
   }
 
-  /** Geofence Validation: Must be within 1637m of Poortjie center */
+  /** Geofence Validation: Must be within 175933m of Poortjie center */
   function isPickupAllowed(lat, lng) {
     if (lat == null || lng == null) return false;
     const dist = distanceMeters(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng, lat, lng);
@@ -955,7 +955,7 @@
       const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
       bookingGoogleMap = new google.maps.Map(bookingMapEl, {
         center: poortjieCenter,
-        zoom: 14,
+        zoom: 8,
         disableDefaultUI: true,
         zoomControl: true,
         clickableIcons: false
@@ -1130,7 +1130,7 @@
         bookingGoogleMap.setZoom(14);
       } else {
         bookingGoogleMap.setCenter(new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng));
-        bookingGoogleMap.setZoom(14);
+        bookingGoogleMap.setZoom(8);
       }
     }
   }
@@ -1143,7 +1143,7 @@
       const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
       trackingGoogleMap = new google.maps.Map(trackingMapEl, {
         center: poortjieCenter,
-        zoom: 14,
+        zoom: 8,
         disableDefaultUI: true,
         zoomControl: true,
         clickableIcons: false
@@ -1297,7 +1297,7 @@
     initBookingMap();
 
     const poortjieCenter = new google.maps.LatLng(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng);
-    const circle = new google.maps.Circle({ center: poortjieCenter, radius: 5000 });
+    const circle = new google.maps.Circle({ center: poortjieCenter, radius: SERVICE_AREA.radiusMeters });
 
     if (pickupAddressInput) {
       const pickupAutocomplete = new google.maps.places.Autocomplete(pickupAddressInput, {
@@ -1483,7 +1483,7 @@
 
     if (pickupErrorEl) {
       if (!allowed) {
-        pickupErrorEl.textContent = 'Pickup must be inside Poortjie (within 1.64 km of town center).';
+        pickupErrorEl.textContent = 'Pickup must be within the service area (within 176 km of centre).';
         pickupErrorEl.classList.remove('is-hidden');
       } else {
         pickupErrorEl.classList.add('is-hidden');
@@ -1611,7 +1611,7 @@
               const fallbackType = errorNames[fallbackErr.code] || 'UNKNOWN_ERROR';
               console.error(`[GPS] ❌ Standard-accuracy retry also failed: code=${fallbackErr.code} (${fallbackType}), message="${fallbackErr.message}"`);
               if (fallbackErr.code === 2) {
-                console.info('[GPS] 💡 Tip for Mac / Chrome DevTools: macOS CoreLocation returned kCLErrorLocationUnknown. To resolve this:\n1. Enable macOS System Settings → Privacy & Security → Location Services → Google Chrome: ON (and ensure Wi-Fi is ON), OR\n2. In Chrome DevTools: Press Cmd+Shift+P → type "Sensors" → set Location to custom coordinates (e.g. Poortjie: Lat -26.45600, Lng 27.77087).');
+                console.info('[GPS] 💡 Tip for Mac / Chrome DevTools: macOS CoreLocation returned kCLErrorLocationUnknown. To resolve this:\n1. Enable macOS System Settings → Privacy & Security → Location Services → Google Chrome: ON (and ensure Wi-Fi is ON), OR\n2. In Chrome DevTools: Press Cmd+Shift+P → type "Sensors" → set Location to custom coordinates (e.g. Poortjie: Lat -26.57537, Lng 27.68133).');
               }
               resetButton();
               if (fallbackErr.code === 1) {
@@ -1743,7 +1743,7 @@
 
     if (!validatePickupGeofence()) {
       if (bookingFormError) {
-        bookingFormError.textContent = 'Pickup must be inside Poortjie service area (within 1.64 km of town center).';
+        bookingFormError.textContent = 'Pickup must be within the service area (within 176 km of centre).';
         bookingFormError.classList.remove('is-hidden');
       }
       return;
