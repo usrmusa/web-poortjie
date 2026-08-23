@@ -785,9 +785,15 @@
       if (headerSignOutBtn) headerSignOutBtn.classList.remove('is-hidden');
     } else if (viewName === 'app') {
       if (appView) appView.classList.remove('is-hidden');
-      if (headerSignInBtn) headerSignInBtn.classList.add('is-hidden');
-      if (headerUserBtn) headerUserBtn.classList.remove('is-hidden');
-      if (headerSignOutBtn) headerSignOutBtn.classList.remove('is-hidden');
+      if (currentUser) {
+        if (headerSignInBtn) headerSignInBtn.classList.add('is-hidden');
+        if (headerUserBtn) headerUserBtn.classList.remove('is-hidden');
+        if (headerSignOutBtn) headerSignOutBtn.classList.remove('is-hidden');
+      } else {
+        if (headerSignInBtn) headerSignInBtn.classList.remove('is-hidden');
+        if (headerUserBtn) headerUserBtn.classList.add('is-hidden');
+        if (headerSignOutBtn) headerSignOutBtn.classList.add('is-hidden');
+      }
     }
   }
 
@@ -2151,7 +2157,7 @@
           list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
           const active = list.find(it => [
-            'PENDING', 'ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'
+            'PENDING', 'ACCEPTED', 'SCHEDULED_CONFIRMED', 'EN_ROUTE', 'ARRIVED', 'IN_TRIP'
           ].includes(it.status));
 
           const bookingToDisplay = active || list[0];
@@ -3229,10 +3235,15 @@
       dropoffAddressInput.addEventListener('change', () => tryGeocodeField('dropoff'));
     }
 
-    // Note counter
+    // Note counter & dismiss on enter
     if (bookingNoteInput) {
       bookingNoteInput.addEventListener('input', () => {
         if (bookingNoteCount) bookingNoteCount.textContent = `${bookingNoteInput.value.length}/64`;
+      });
+      bookingNoteInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          bookingNoteInput.blur();
+        }
       });
     }
 
