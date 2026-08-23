@@ -180,6 +180,36 @@
   const bookingModal = document.getElementById('booking-modal');
   const bookingModalClose = document.getElementById('booking-modal-close');
   const bookingModalCancel = document.getElementById('booking-modal-cancel');
+  const bookingModalBack = document.getElementById('booking-modal-back');
+  const bookingStepTitle = document.getElementById('booking-step-title');
+  const bookingStepSubtitle = document.getElementById('booking-step-subtitle');
+  const bookingStepIndicator1 = document.getElementById('booking-step-indicator-1');
+  const bookingStepIndicator2 = document.getElementById('booking-step-indicator-2');
+  const bookingStepIndicator3 = document.getElementById('booking-step-indicator-3');
+  const bookingStepPickup = document.getElementById('booking-step-pickup');
+  const bookingStepDropoff = document.getElementById('booking-step-dropoff');
+  const bookingStepOptions = document.getElementById('booking-step-options');
+  const bookingMapContainerStep1 = document.getElementById('booking-map-container-step1');
+  const bookingMapContainerStep2 = document.getElementById('booking-map-container-step2');
+  const bookingMapContainerStep3 = document.getElementById('booking-map-container-step3');
+  const step2PickupSummaryText = document.getElementById('step2-pickup-summary-text');
+  const step2ChangePickupBtn = document.getElementById('step2-change-pickup-btn');
+  const step2TripTypeSection = document.getElementById('step2-trip-type-section');
+  const step2TripSingleBtn = document.getElementById('step2-trip-single-btn');
+  const step2TripReturnBtn = document.getElementById('step2-trip-return-btn');
+  const step2ReturnDurationSection = document.getElementById('step2-return-duration-section');
+  const step2ReturnContinueBtn = document.getElementById('step2-return-continue-btn');
+  const reviewPickupAddress = document.getElementById('review-pickup-address');
+  const reviewDropoffAddress = document.getElementById('review-dropoff-address');
+  const reviewTripTypeVal = document.getElementById('review-trip-type-val');
+  const reviewTripTypeIcon = document.getElementById('review-trip-type-icon');
+  const reviewRouteDistanceBadge = document.getElementById('review-route-distance-badge');
+  const reviewRouteDurationBadge = document.getElementById('review-route-duration-badge');
+  const reviewEditPickupBtn = document.getElementById('review-edit-pickup-btn');
+  const reviewEditDropoffBtn = document.getElementById('review-edit-dropoff-btn');
+  const reviewEditTypeBtn = document.getElementById('review-edit-type-btn');
+  const bookingScheduleBtn = document.getElementById('booking-schedule-btn');
+
   const bookingForm = document.getElementById('booking-form');
   const bookingSubmitBtn = document.getElementById('booking-submit-btn');
   const bookingTargetTitle = document.getElementById('booking-target-title');
@@ -199,6 +229,7 @@
   const pickupErrorEl = document.getElementById('pickup-error');
   const dropoffAddressInput = document.getElementById('booking-dropoff-address');
   const dropoffClearBtn = document.getElementById('dropoff-clear-btn');
+  const dropoffErrorEl = document.getElementById('dropoff-error');
   const bookingNoteInput = document.getElementById('booking-note');
   const bookingNoteCount = document.getElementById('booking-note-count');
   const bookingFormError = document.getElementById('booking-form-error');
@@ -1332,18 +1363,129 @@
           const lat = place.geometry.location.lat();
           const lng = place.geometry.location.lng();
           const addr = place.formatted_address || place.name || dropoffAddressInput.value;
-          bookingState.dropoff = { address: addr, lat, lng };
-          dropoffAddressInput.value = addr;
-          if (dropoffClearBtn) dropoffClearBtn.classList.remove('is-hidden');
-          updateBookingMap();
+          setDropoffLocation(addr, lat, lng);
         }
       });
     }
   };
 
   /** ============================================================
-   * BOOKING FORM & GEOFENCING IMPLEMENTATION
+   * MODULAR MULTI-STEP BOOKING FORM IMPLEMENTATION
    * ============================================================ */
+
+  let currentBookingStep = 1;
+
+  function setBookingStep(step) {
+    currentBookingStep = step;
+
+    // 1. Update Header Title & Subtitle & Back Button
+    if (bookingModalBack) {
+      bookingModalBack.classList.toggle('is-hidden', step === 1);
+    }
+
+    if (bookingStepTitle && bookingStepSubtitle) {
+      if (step === 1) {
+        bookingStepTitle.textContent = 'Where are you?';
+        bookingStepSubtitle.textContent = 'Enter pickup address or use GPS inside Poortjie';
+      } else if (step === 2) {
+        bookingStepTitle.textContent = 'Where are you going?';
+        bookingStepSubtitle.textContent = 'Search any destination address';
+      } else if (step === 3) {
+        bookingStepTitle.textContent = 'Review Your Ride';
+        bookingStepSubtitle.textContent = 'Confirm ride details and fare';
+      }
+    }
+
+    // 2. Update Stepper Progress Dots
+    const stepIndicators = [bookingStepIndicator1, bookingStepIndicator2, bookingStepIndicator3];
+    stepIndicators.forEach((el, idx) => {
+      if (!el) return;
+      const s = idx + 1;
+      el.classList.toggle('is-active', s === step);
+      el.classList.toggle('is-completed', s < step);
+    });
+
+    // 3. Update Panes Visibility
+    if (bookingStepPickup) bookingStepPickup.classList.toggle('is-hidden', step !== 1);
+    if (bookingStepDropoff) bookingStepDropoff.classList.toggle('is-hidden', step !== 2);
+    if (bookingStepOptions) bookingStepOptions.classList.toggle('is-hidden', step !== 3);
+
+    // 4. Move Map to the active step's map slot
+    if (bookingMapCard) {
+      if (step === 1 && bookingMapContainerStep1) {
+        bookingMapContainerStep1.appendChild(bookingMapCard);
+      } else if (step === 2 && bookingMapContainerStep2) {
+        bookingMapContainerStep2.appendChild(bookingMapCard);
+      } else if (step === 3 && bookingMapContainerStep3) {
+        bookingMapContainerStep3.appendChild(bookingMapCard);
+      }
+    }
+
+    // 5. Update Step-specific data
+    if (step === 2) {
+      if (step2PickupSummaryText) {
+        step2PickupSummaryText.textContent = (bookingState.pickup && bookingState.pickup.address) || 'Current Location (Poortjie)';
+      }
+      const hasDropoff = Boolean(bookingState.dropoff && bookingState.dropoff.address && bookingState.dropoff.address.trim());
+      if (step2TripTypeSection) {
+        step2TripTypeSection.classList.toggle('is-hidden', !hasDropoff);
+      }
+      updateTripTypeButtons();
+    } else if (step === 3) {
+      updateReviewSummary();
+    }
+
+    // 6. Refresh Google Maps view
+    setTimeout(() => {
+      if (bookingGoogleMap) {
+        google.maps.event.trigger(bookingGoogleMap, 'resize');
+        updateBookingMap();
+      }
+    }, 80);
+  }
+
+  function updateTripTypeButtons() {
+    const isReturn = bookingState.isReturnTrip !== false;
+    if (step2TripSingleBtn) step2TripSingleBtn.classList.toggle('is-selected', !isReturn);
+    if (step2TripReturnBtn) step2TripReturnBtn.classList.toggle('is-selected', isReturn);
+    if (step2ReturnDurationSection) step2ReturnDurationSection.classList.toggle('is-hidden', !isReturn);
+
+    // Sync legacy toggles if present
+    if (toggleTripReturn) toggleTripReturn.classList.toggle('is-active', isReturn);
+    if (toggleTripSingle) toggleTripSingle.classList.toggle('is-active', !isReturn);
+  }
+
+  function updateReviewSummary() {
+    const isReturn = bookingState.isReturnTrip !== false;
+    const waitMins = typeof bookingState.returnWaitMinutes === 'number' ? bookingState.returnWaitMinutes : 15;
+
+    if (reviewPickupAddress) {
+      reviewPickupAddress.textContent = (bookingState.pickup && bookingState.pickup.address) || '—';
+    }
+    if (reviewDropoffAddress) {
+      reviewDropoffAddress.textContent = (bookingState.dropoff && bookingState.dropoff.address) || '—';
+    }
+    if (reviewTripTypeVal) {
+      reviewTripTypeVal.textContent = isReturn
+        ? `Return trip (${waitMins} min stop)`
+        : 'Single trip (One way)';
+    }
+    if (reviewTripTypeIcon) {
+      reviewTripTypeIcon.textContent = isReturn ? '🔄' : '➡️';
+    }
+
+    if (reviewRouteDistanceBadge) {
+      const dist = bookingState.estimatedDistanceKm || (bookingState.actualOneWayDistanceKm ? (isReturn ? (bookingState.actualOneWayDistanceKm * 2).toFixed(1) : bookingState.actualOneWayDistanceKm.toFixed(1)) : '0');
+      reviewRouteDistanceBadge.textContent = `📏 ~${dist} km`;
+    }
+
+    if (reviewRouteDurationBadge) {
+      const durText = (bookingMapDuration && bookingMapDuration.textContent) || '0 min';
+      reviewRouteDurationBadge.textContent = `⏱️ ~${durText}`;
+    }
+
+    updateUpfrontFarePreview(bookingState.actualOneWayDistanceKm);
+  }
 
   /** Open Booking Form */
   function openBookingForm() {
@@ -1385,10 +1527,15 @@
 
     if (dropoffAddressInput) dropoffAddressInput.value = '';
     if (dropoffClearBtn) dropoffClearBtn.classList.add('is-hidden');
+    if (dropoffErrorEl) dropoffErrorEl.classList.add('is-hidden');
+    if (step2TripTypeSection) step2TripTypeSection.classList.add('is-hidden');
 
     if (bookingNoteInput) bookingNoteInput.value = '';
     if (bookingNoteCount) bookingNoteCount.textContent = '0/64';
     if (bookingFormError) bookingFormError.classList.add('is-hidden');
+
+    // Reset to step 1
+    setBookingStep(1);
 
     if (bookingModal) {
       bookingModal.classList.remove('is-hidden');
@@ -1412,13 +1559,17 @@
   }
 
   /** Set Trip Type (Return or Single) */
-  function setReturnTrip(isReturn) {
+  function setReturnTrip(isReturn, autoAdvance = false) {
     bookingState.isReturnTrip = isReturn;
-    if (toggleTripReturn) toggleTripReturn.classList.toggle('is-active', isReturn);
-    if (toggleTripSingle) toggleTripSingle.classList.toggle('is-active', !isReturn);
-    const returnWaitSec = document.getElementById('return-wait-section');
-    if (returnWaitSec) returnWaitSec.classList.toggle('is-hidden', !isReturn);
+    updateTripTypeButtons();
     updateUpfrontFarePreview();
+
+    // If single trip is chosen on Step 2 and autoAdvance is true, automatically advance to Step 3
+    if (!isReturn && autoAdvance && currentBookingStep === 2) {
+      setTimeout(() => {
+        setBookingStep(3);
+      }, 200);
+    }
   }
 
   /** Set Return Expected Stop Duration in Minutes */
@@ -1445,7 +1596,7 @@
   }
 
   /** Update pickup coordinates and validate geofence */
-  function setPickupLocation(address, lat, lng) {
+  function setPickupLocation(address, lat, lng, autoAdvance = true) {
     const trimmed = (address || '').trim();
     bookingState.actualOneWayDistanceKm = null;
     bookingState.upfrontPrice = null;
@@ -1453,7 +1604,31 @@
     bookingState.pickup = { address: trimmed, lat, lng };
     if (pickupAddressInput) pickupAddressInput.value = trimmed;
     if (pickupClearBtn) pickupClearBtn.classList.toggle('is-hidden', !trimmed);
-    validatePickupGeofence();
+    const allowed = validatePickupGeofence();
+    updateBookingMap();
+
+    // Auto advance to Step 2 if pickup is valid and autoAdvance is true
+    if (allowed && trimmed && autoAdvance) {
+      setTimeout(() => {
+        setBookingStep(2);
+        if (dropoffAddressInput) {
+          dropoffAddressInput.focus();
+        }
+      }, 250);
+    }
+  }
+
+  /** Update dropoff coordinates and show trip type prompt */
+  function setDropoffLocation(address, lat, lng) {
+    const trimmed = (address || '').trim();
+    bookingState.actualOneWayDistanceKm = null;
+    bookingState.upfrontPrice = null;
+    bookingState.estimatedDistanceKm = null;
+    bookingState.dropoff = { address: trimmed, lat, lng };
+    if (dropoffAddressInput) dropoffAddressInput.value = trimmed;
+    if (dropoffClearBtn) dropoffClearBtn.classList.toggle('is-hidden', !trimmed);
+    if (dropoffErrorEl) dropoffErrorEl.classList.add('is-hidden');
+    if (step2TripTypeSection) step2TripTypeSection.classList.remove('is-hidden');
     updateBookingMap();
   }
 
@@ -1681,9 +1856,10 @@
 
     const pickupAddress = pickupAddressInput ? pickupAddressInput.value.trim() : '';
     if (!pickupAddress) {
-      if (bookingFormError) {
-        bookingFormError.textContent = 'Please specify a pickup location.';
-        bookingFormError.classList.remove('is-hidden');
+      setBookingStep(1);
+      if (pickupErrorEl) {
+        pickupErrorEl.textContent = 'Please specify a pickup location.';
+        pickupErrorEl.classList.remove('is-hidden');
       }
       return;
     }
@@ -1691,9 +1867,10 @@
 
     const dropoffAddress = dropoffAddressInput ? dropoffAddressInput.value.trim() : '';
     if (!dropoffAddress) {
-      if (bookingFormError) {
-        bookingFormError.textContent = 'Please enter a drop-off destination.';
-        bookingFormError.classList.remove('is-hidden');
+      setBookingStep(2);
+      if (dropoffErrorEl) {
+        dropoffErrorEl.textContent = 'Please enter a drop-off destination.';
+        dropoffErrorEl.classList.remove('is-hidden');
       }
       return;
     }
@@ -1819,8 +1996,8 @@
     }
     if (confirmBookingSubmitBtn) {
       confirmBookingSubmitBtn.innerHTML = typeof bookingState.upfrontPrice === 'number'
-        ? `<span>⚡</span> Confirm & Request · R ${bookingState.upfrontPrice}`
-        : '<span>⚡</span> Confirm & Request Ride';
+        ? `<span>⚡</span> Confirm · R ${bookingState.upfrontPrice}`
+        : '<span>⚡</span> Confirm';
     }
 
     const note = (bookingNoteInput ? bookingNoteInput.value.trim() : '');
@@ -1940,7 +2117,7 @@
     } finally {
       if (confirmBookingSubmitBtn) {
         confirmBookingSubmitBtn.disabled = false;
-        confirmBookingSubmitBtn.innerHTML = '<span>⚡</span> Confirm & Request Ride';
+        confirmBookingSubmitBtn.innerHTML = '<span>⚡</span> Confirm';
       }
     }
   }
@@ -2020,11 +2197,12 @@
       .replace(/^Cancelled by driver:\s*/i, '')
       .replace(/^Cancelled by rider:\s*/i, '')
       .replace(/^Cancelled:\s*/i, '')
+      .replace(/^Other:\s*/i, '')
       .trim();
 
     switch (clean.toUpperCase()) {
       case 'TOO_FAR':
-        return 'Driver was too far from pickup';
+        return 'Too far from pickup';
       case 'UNKNOWN_RIDER':
         return 'Unrecognized rider / safety concern';
       case 'VEHICLE_FULL':
@@ -2035,7 +2213,9 @@
         return 'Driver is currently unavailable';
       case 'NO DRIVERS AVAILABLE':
       case 'NO_DRIVERS_AVAILABLE':
+      case 'NO_DRIVERS':
       case 'NO_DRIVER':
+      case 'NO DRIVER AVAILABLE':
         return 'No drivers available right now';
       case 'QUOTE APPROVAL TIMED OUT':
       case 'QUOTE_TIMEOUT':
@@ -2076,7 +2256,18 @@
     const declineEvent = [...events].reverse().find(e => e && e.event === 'DRIVER_DECLINED');
     const noDriverEvent = [...events].reverse().find(e => e && e.event === 'NO_DRIVER_AVAILABLE');
 
-    // 1. Driver cancelled after accepting (Post-Acceptance / En Route / Arrived / In Trip)
+    // 1. Driver Declined during review (PRIORITIZED over generic fallback status)
+    if (declineEvent || rawReason.toLowerCase().startsWith('declined:') || rawReason.toLowerCase().includes('declined') || (rawReason && ['TOO_FAR', 'VEHICLE_FULL', 'SCHEDULED_CONFLICT', 'UNKNOWN_RIDER'].includes(rawReason.toUpperCase()))) {
+      const rawDetail = declineEvent?.detail ? declineEvent.detail.replace(/^Declined:\s*/i, '') : rawReason.replace(/^Declined:\s*/i, '');
+      const declineDetail = formatDeclineReason(rawDetail);
+      return {
+        title: 'Request Declined',
+        reason: declineDetail ? `Reason: ${declineDetail}` : 'The driver was unable to accept your request at this time.',
+        icon: '🚫'
+      };
+    }
+
+    // 2. Driver cancelled after accepting (Post-Acceptance / En Route / Arrived / In Trip)
     if (byDriver) {
       const readable = formatDeclineReason(rawReason);
       return {
@@ -2086,23 +2277,12 @@
       };
     }
 
-    // 2. Specific Driver or All Drivers Timed Out (didn't respond in 60s)
+    // 3. Specific Driver or All Drivers Timed Out (didn't respond in 60s)
     if (status === 'DRIVER_UNAVAILABLE' && (timeoutEvent || rawReason.toLowerCase().includes('timed out') || rawReason.toLowerCase().includes('respond'))) {
       return {
         title: 'Driver Did Not Respond in Time',
         reason: 'The driver did not accept or respond within the 60-second window.',
         icon: '⏱️'
-      };
-    }
-
-    // 3. Driver Declined during review
-    if (declineEvent || rawReason.toLowerCase().startsWith('declined:') || rawReason.toLowerCase().includes('declined')) {
-      const rawDetail = declineEvent?.detail ? declineEvent.detail.replace(/^Declined:\s*/i, '') : rawReason.replace(/^Declined:\s*/i, '');
-      const declineDetail = formatDeclineReason(rawDetail);
-      return {
-        title: 'Driver Declined Request',
-        reason: declineDetail ? `The driver was unable to take your trip: "${declineDetail}".` : 'The driver declined this trip request.',
-        icon: '🚫'
       };
     }
 
@@ -2838,9 +3018,62 @@
     if (bookingModalCancel) bookingModalCancel.addEventListener('click', closeBookingModal);
     if (bookingForm) bookingForm.addEventListener('submit', handleBookingSubmit);
 
-    // Trip Type Toggles
+    // Modal Back Button Navigation
+    if (bookingModalBack) {
+      bookingModalBack.addEventListener('click', () => {
+        if (currentBookingStep === 3) {
+          setBookingStep(2);
+        } else if (currentBookingStep === 2) {
+          setBookingStep(1);
+        } else {
+          closeBookingModal();
+        }
+      });
+    }
+
+    // Stepper Indicators
+    if (bookingStepIndicator1) {
+      bookingStepIndicator1.addEventListener('click', () => setBookingStep(1));
+    }
+    if (bookingStepIndicator2) {
+      bookingStepIndicator2.addEventListener('click', () => {
+        if (bookingState.pickup && bookingState.pickup.address) setBookingStep(2);
+      });
+    }
+    if (bookingStepIndicator3) {
+      bookingStepIndicator3.addEventListener('click', () => {
+        if (bookingState.pickup && bookingState.pickup.address && bookingState.dropoff && bookingState.dropoff.address) {
+          setBookingStep(3);
+        }
+      });
+    }
+
+    // Step 2 & 3 Edit Navigation Buttons
+    if (step2ChangePickupBtn) step2ChangePickupBtn.addEventListener('click', () => setBookingStep(1));
+    if (reviewEditPickupBtn) reviewEditPickupBtn.addEventListener('click', () => setBookingStep(1));
+    if (reviewEditDropoffBtn) reviewEditDropoffBtn.addEventListener('click', () => setBookingStep(2));
+    if (reviewEditTypeBtn) reviewEditTypeBtn.addEventListener('click', () => setBookingStep(2));
+
+    // Step 2 Trip Choice Cards (Single vs Return)
+    if (step2TripSingleBtn) {
+      step2TripSingleBtn.addEventListener('click', () => {
+        setReturnTrip(false, true);
+      });
+    }
+    if (step2TripReturnBtn) {
+      step2TripReturnBtn.addEventListener('click', () => {
+        setReturnTrip(true, false);
+      });
+    }
+    if (step2ReturnContinueBtn) {
+      step2ReturnContinueBtn.addEventListener('click', () => {
+        setBookingStep(3);
+      });
+    }
+
+    // Trip Type Toggles (Legacy sync)
     if (toggleTripReturn) toggleTripReturn.addEventListener('click', () => setReturnTrip(true));
-    if (toggleTripSingle) toggleTripSingle.addEventListener('click', () => setReturnTrip(false));
+    if (toggleTripSingle) toggleTripSingle.addEventListener('click', () => setReturnTrip(false, true));
 
     // Return Wait Chips
     const waitChips = document.querySelectorAll('.wait-chip');

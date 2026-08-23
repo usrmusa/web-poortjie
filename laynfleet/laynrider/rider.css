@@ -946,21 +946,352 @@ img, svg, video, canvas, audio, iframe, embed, object {
   color: var(--text);
 }
 
-.booking-hero-header {
+.modal-back-btn {
   background: var(--panel-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
+  color: var(--text-dim);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.modal-back-btn:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+  border-color: var(--brand);
+}
+
+/* Step Progress Indicator Bar */
+.booking-progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.booking-progress-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  opacity: 0.45;
+  transition: all 0.2s ease;
+}
+
+.booking-progress-step.is-active,
+.booking-progress-step.is-completed {
+  opacity: 1;
+}
+
+.progress-step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  border: 1.5px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.booking-progress-step.is-active .progress-step-dot {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.booking-progress-step.is-completed .progress-step-dot {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #ffffff;
+}
+
+.progress-step-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.booking-progress-step.is-active .progress-step-label {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.booking-progress-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+}
+
+.booking-step-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fade-in 0.2s ease;
+}
+
+.step-map-slot {
+  width: 100%;
+}
+
+/* Step 2 Selected Summary Card */
+.step-summary-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.booking-hero-left {
+.step-summary-left {
   display: flex;
   align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.summary-pin-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.step-summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.step-summary-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim);
+}
+
+.step-summary-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-edit-step {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--brand);
+  background: transparent;
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-edit-step:hover {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+/* Step 2 Trip Type Section */
+.step2-trip-type-box {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  animation: fade-in 0.25s ease;
+}
+
+.trip-type-header {
+  text-align: left;
+}
+
+.trip-type-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trip-type-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+.trip-type-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.trip-choice-card {
+  font: inherit;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trip-choice-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.trip-choice-card.is-selected {
+  border-color: var(--brand);
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: 0 0 0 1px var(--brand);
+}
+
+.trip-choice-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.trip-choice-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trip-choice-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trip-choice-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Step 3 Review Route Card */
+.review-route-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.review-route-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-route-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.review-route-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim);
+  display: block;
+}
+
+.review-route-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 1px;
+  word-break: break-word;
+}
+
+.review-route-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}
+
+.review-route-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.route-stat-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px 8px;
+}
+
+/* Step 3 Action Buttons */
+.booking-options-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-submit-primary {
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.btn-schedule-secondary {
+  min-height: 42px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-schedule-secondary:hover {
+  color: var(--text);
+  background: var(--panel-hover);
 }
 
 .booking-form-flow {

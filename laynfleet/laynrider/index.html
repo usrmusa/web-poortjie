@@ -110,18 +110,13 @@
         <!-- How It Works / Guarantees & Android App Card -->
         <div class="hero-info-card">
           <div class="info-card-header">
-            <span class="info-card-badge">✨ Kasi Transport</span>
+            <span class="info-card-badge">Kasi Transport</span>
             <h3 class="info-card-title">Direct & Transparent</h3>
           </div>
-          <ul class="info-card-list">
-            <li><span>🛡️</span> Verified local township drivers</li>
-            <li><span>💵</span> Settle cash or direct EFT on arrival</li>
-            <li><span>📍</span> Fast pickup across all Poortjie zones</li>
-          </ul>
           <div class="nudge-compact">
             <div class="nudge-left">
               <span class="nudge-icon">📱</span>
-              <span class="nudge-text">Get LaynRider Android App</span>
+              <span class="nudge-text">Download Android App</span>
             </div>
             <a href="download.html" class="btn btn-sm btn-ghost nudge-btn">
               Get App
@@ -162,168 +157,248 @@
         <button id="view-active-booking-btn" class="btn btn-sm btn-primary">Track Trip</button>
       </div>
 
-      <!-- APP PROMO CARD FOR SPECIFIC DRIVER & VEHICLE SELECTION -->
-      <section class="app-promo-card">
-        <div class="app-promo-content">
-          <div class="app-promo-icon-wrap">
-            <span class="app-promo-icon">🚗</span>
-          </div>
-          <div class="app-promo-text">
-            <h3 class="app-promo-title">Want to pick your driver or preferred vehicle?</h3>
-            <p class="app-promo-desc">Use the LaynRider app to pick drivers you know and choose preferred vehicle types like a Bakkie, Mini Bus, Private Car, or TukTuk with real-time tracking.</p>
-          </div>
-          <div class="app-promo-action">
-            <a href="download.html" class="btn btn-primary btn-sm">
-              <span>📱</span> Get the App
-            </a>
-          </div>
-        </div>
-      </section>
-
     </div>
 
   </main>
 
-  <!-- ===================== BOOKING FORM MODAL ===================== -->
+  <!-- ===================== MODULAR MULTI-STEP BOOKING MODAL ===================== -->
   <div id="booking-modal" class="modal-overlay is-hidden">
     <div class="modal-card booking-modal-card">
       <div class="modal-drag-handle"></div>
+
+      <!-- Step Navigation Header -->
       <div class="modal-header">
-        <div>
-          <h3 class="modal-title">Book a Ride</h3>
-          <p id="booking-target-subtitle" class="modal-subtitle">Quick Ride Auto-Dispatch</p>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" id="booking-modal-back" class="modal-back-btn is-hidden" aria-label="Go Back" title="Previous Step">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div>
+            <h3 id="booking-step-title" class="modal-title">Where are you?</h3>
+            <p id="booking-step-subtitle" class="modal-subtitle">Enter pickup address or use GPS inside Poortjie</p>
+          </div>
         </div>
         <button id="booking-modal-close" class="modal-close" aria-label="Close">&times;</button>
       </div>
 
-      <div class="booking-hero-header">
-        <div class="booking-hero-left">
-          <span id="booking-target-icon" style="font-size: 26px;">🚖</span>
-          <div>
-            <div id="booking-target-title" style="font-size: 15px; font-weight: 800;">Quick Ride Auto-Dispatch</div>
-            <div style="font-size: 12px; color: var(--text-dim);">Nearest verified driver inside Poortjie</div>
-          </div>
+      <!-- Step Progress Bar Indicator -->
+      <div class="booking-progress-bar">
+        <div id="booking-step-indicator-1" class="booking-progress-step is-active" data-step="1">
+          <span class="progress-step-dot">1</span>
+          <span class="progress-step-label">Pickup</span>
         </div>
-        <span id="booking-target-type-badge" class="vehicle-type-tag">Private Car</span>
+        <div class="booking-progress-line"></div>
+        <div id="booking-step-indicator-2" class="booking-progress-step" data-step="2">
+          <span class="progress-step-dot">2</span>
+          <span class="progress-step-label">Destination</span>
+        </div>
+        <div class="booking-progress-line"></div>
+        <div id="booking-step-indicator-3" class="booking-progress-step" data-step="3">
+          <span class="progress-step-dot">3</span>
+          <span class="progress-step-label">Review</span>
+        </div>
       </div>
 
       <form id="booking-form" class="booking-form-flow">
 
-        <!-- TRIP TYPE TOGGLE (RETURN vs SINGLE) -->
-        <div class="field">
-          <span class="field-label">Trip Type</span>
-          <div class="booking-type-toggle">
-            <button type="button" id="toggle-trip-return" class="booking-type-btn is-active">
-              <span>🔄</span> Return trip
-            </button>
-            <button type="button" id="toggle-trip-single" class="booking-type-btn">
-              <span>➡️</span> Single trip
-            </button>
-          </div>
-        </div>
-
-        <!-- EXPECTED STOP DURATION (RETURN TRIPS ONLY) -->
-        <div id="return-wait-section" class="field">
-          <div class="field-label-row">
-            <span class="field-label">⏱️ Expected Stop Duration</span>
-            <span class="field-sublabel">At destination</span>
-          </div>
-          <div class="wait-chips-container">
-            <button type="button" class="wait-chip is-active" data-minutes="15">15 min</button>
-            <button type="button" class="wait-chip" data-minutes="30">30 min</button>
-            <button type="button" class="wait-chip" data-minutes="45">45 min</button>
-            <button type="button" class="wait-chip" data-minutes="60">1 hr</button>
-            <button type="button" class="wait-chip" data-minutes="120">2 hrs</button>
-          </div>
-          <p class="wait-helper-text">First 10 min free · R1.50/min thereafter</p>
-        </div>
-
-        <!-- RIDE TYPE / SCHEDULE ENTRY POINT -->
-        <div class="field">
-          <span class="field-label">When do you need the ride?</span>
-          <div class="booking-type-toggle">
-            <button type="button" id="toggle-type-asap" class="booking-type-btn is-active">
-              <span>⚡</span> Ride Now (ASAP)
-            </button>
-            <button type="button" id="toggle-type-scheduled" class="booking-type-btn" title="Schedule ahead on the LaynRider Android App">
-              <span>📅</span> Schedule Ride <span class="badge-app-pill">App</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- PICKUP LOCATION FIELD -->
-        <div class="field">
-          <div class="field-label-row">
-            <span class="field-label">📍 Pickup Location</span>
-            <span id="pickup-geofence-badge" class="geofence-badge">📍 Enter Pickup Location</span>
-          </div>
-
-          <div class="input-with-tools">
-            <input id="booking-pickup-address" type="text" class="field-input address-field" placeholder="Search address or tap GPS..." required autocomplete="off" />
-            <button type="button" id="pickup-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear pickup address" title="Clear address">✕</button>
-            <button type="button" id="pickup-gps-btn" class="btn-input-action" title="Use Current GPS Location">
-              <span>📍</span> GPS
-            </button>
-          </div>
-          <div id="pickup-error" class="form-error is-hidden"></div>
-        </div>
-
-        <!-- DROP-OFF LOCATION FIELD -->
-        <div class="field">
-          <div class="field-label-row">
-            <span class="field-label">🏁 Drop-off Destination</span>
-            <span class="field-sublabel">Any destination</span>
-          </div>
-
-          <div class="input-with-tools">
-            <input id="booking-dropoff-address" type="text" class="field-input address-field" placeholder="Search destination address anywhere..." required autocomplete="off" />
-            <button type="button" id="dropoff-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear drop-off address" title="Clear address">✕</button>
-          </div>
-        </div>
-
-        <!-- NOTE FOR DRIVER -->
-        <div class="field">
-          <div class="field-label-row">
-            <span class="field-label">📝 Note for Driver (Optional)</span>
-            <span id="booking-note-count" class="field-hint">0/64</span>
-          </div>
-          <input id="booking-note" type="text" maxlength="64" class="field-input" placeholder="e.g. Near blue gate, 2 bags / 2 passengers" />
-        </div>
-
-        <!-- INTERACTIVE BOOKING ROUTE MAP -->
-        <div id="booking-map-card" class="map-preview-card">
-          <div id="booking-map" class="map-container"></div>
-          <div id="booking-map-route-info" class="map-route-badge is-hidden">
-            <span id="booking-map-distance">0 km</span> · <span id="booking-map-duration">0 min</span>
-          </div>
-        </div>
-
-        <!-- UPFRONT FARE PREVIEW CARD -->
-        <div id="booking-fare-card" class="fare-preview-card">
-          <div class="fare-preview-main">
-            <div class="fare-preview-info">
-              <span class="fare-preview-title">Upfront Fare</span>
-              <span id="booking-fare-breakdown" class="fare-preview-breakdown">Enter pickup & destination to calculate fare</span>
+        <!-- ================= STEP 1: PICKUP ================= -->
+        <div id="booking-step-pickup" class="booking-step-pane">
+          <div class="field">
+            <div class="field-label-row">
+              <span class="field-label">📍 Pickup Location</span>
+              <span id="pickup-geofence-badge" class="geofence-badge">📍 Enter Pickup Location</span>
             </div>
-            <div id="booking-fare-amount" class="fare-preview-amount">R --</div>
+
+            <div class="input-with-tools">
+              <input id="booking-pickup-address" type="text" class="field-input address-field" placeholder="Search address or tap GPS..." autocomplete="off" />
+              <button type="button" id="pickup-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear pickup address" title="Clear address">✕</button>
+              <button type="button" id="pickup-gps-btn" class="btn-input-action" title="Use Current GPS Location">
+                <span>📍</span> GPS
+              </button>
+            </div>
+            <div id="pickup-error" class="form-error is-hidden"></div>
+          </div>
+
+          <!-- Step 1 Map Container -->
+          <div id="booking-map-container-step1" class="step-map-slot">
+            <!-- Interactive Booking Route Map (initially located in Step 1) -->
+            <div id="booking-map-card" class="map-preview-card">
+              <div id="booking-map" class="map-container"></div>
+              <div id="booking-map-route-info" class="map-route-badge is-hidden">
+                <span id="booking-map-distance">0 km</span> · <span id="booking-map-duration">0 min</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- OFFLINE PAYMENT NOTICE -->
-        <div class="payment-notice">
-          <div class="payment-notice-icon">💵</div>
-          <div class="payment-notice-text">
-            <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival.
+        <!-- ================= STEP 2: DROPOFF & TRIP TYPE ================= -->
+        <div id="booking-step-dropoff" class="booking-step-pane is-hidden">
+          <!-- Selected Pickup Summary with Edit Button -->
+          <div class="step-summary-card">
+            <div class="step-summary-left">
+              <span class="summary-pin-icon" style="color: var(--success);">🟢</span>
+              <div class="step-summary-content">
+                <span class="step-summary-label">Pickup Location</span>
+                <span id="step2-pickup-summary-text" class="step-summary-text">—</span>
+              </div>
+            </div>
+            <button type="button" id="step2-change-pickup-btn" class="btn-edit-step" title="Change pickup location">
+              Edit
+            </button>
+          </div>
+
+          <div class="field">
+            <div class="field-label-row">
+              <span class="field-label">🏁 Drop-off Destination</span>
+              <span class="field-sublabel">Any destination</span>
+            </div>
+
+            <div class="input-with-tools">
+              <input id="booking-dropoff-address" type="text" class="field-input address-field" placeholder="Search destination address anywhere..." autocomplete="off" />
+              <button type="button" id="dropoff-clear-btn" class="input-clear-btn is-hidden" aria-label="Clear drop-off address" title="Clear address">✕</button>
+            </div>
+            <div id="dropoff-error" class="form-error is-hidden"></div>
+          </div>
+
+          <!-- Step 2 Map Container -->
+          <div id="booking-map-container-step2" class="step-map-slot"></div>
+
+          <!-- Trip Type Prompt (Shown when destination is selected) -->
+          <div id="step2-trip-type-section" class="step2-trip-type-box is-hidden">
+            <div class="trip-type-header">
+              <h4 class="trip-type-title">Trip Type</h4>
+              <p class="trip-type-sub">Will you need a ride back?</p>
+            </div>
+            <div class="trip-type-choice-grid">
+              <button type="button" id="step2-trip-single-btn" class="trip-choice-card">
+                <span class="trip-choice-icon">➡️</span>
+                <div class="trip-choice-info">
+                  <strong class="trip-choice-name">Single trip</strong>
+                  <span class="trip-choice-desc">One-way drop-off</span>
+                </div>
+              </button>
+
+              <button type="button" id="step2-trip-return-btn" class="trip-choice-card is-selected">
+                <span class="trip-choice-icon">🔄</span>
+                <div class="trip-choice-info">
+                  <strong class="trip-choice-name">Return trip</strong>
+                  <span class="trip-choice-desc">Includes ride back to pickup</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Expected Stop Duration (for Return Trip) -->
+            <div id="step2-return-duration-section" class="field" style="margin-top: 14px;">
+              <div class="field-label-row">
+                <span class="field-label">⏱️ Expected Stop Duration</span>
+                <span class="field-sublabel">At destination</span>
+              </div>
+              <div class="wait-chips-container">
+                <button type="button" class="wait-chip is-active" data-minutes="15">15 min</button>
+                <button type="button" class="wait-chip" data-minutes="30">30 min</button>
+                <button type="button" class="wait-chip" data-minutes="45">45 min</button>
+                <button type="button" class="wait-chip" data-minutes="60">1 hr</button>
+                <button type="button" class="wait-chip" data-minutes="120">2 hrs</button>
+              </div>
+              <p class="wait-helper-text">First 10 min free · R1.50/min thereafter</p>
+
+              <button type="button" id="step2-return-continue-btn" class="btn btn-primary btn-block" style="margin-top: 14px; min-height: 46px; font-weight: 800;">
+                Continue to Review ➔
+              </button>
+            </div>
           </div>
         </div>
 
-        <div id="booking-form-error" class="form-error is-hidden"></div>
+        <!-- ================= STEP 3: REVIEW & DISPATCH ================= -->
+        <div id="booking-step-options" class="booking-step-pane is-hidden">
+          <!-- Comprehensive Route & Trip Summary Card -->
+          <div class="review-route-card">
+            <div class="review-route-item">
+              <div class="review-route-left">
+                <span class="summary-pin-icon" style="color: var(--success);">🟢</span>
+                <div>
+                  <span class="review-route-label">Pickup</span>
+                  <div id="review-pickup-address" class="review-route-val">—</div>
+                </div>
+              </div>
+              <button type="button" id="review-edit-pickup-btn" class="btn-edit-step">Edit</button>
+            </div>
 
-        <div class="modal-actions">
-          <button type="button" id="booking-modal-cancel" class="btn btn-ghost">Cancel</button>
-          <button type="submit" id="booking-submit-btn" class="btn btn-primary btn-submit">
-            <span>⚡</span> Request Ride
-          </button>
+            <div class="review-route-divider"></div>
+
+            <div class="review-route-item">
+              <div class="review-route-left">
+                <span class="summary-pin-icon" style="color: var(--danger);">🏁</span>
+                <div>
+                  <span class="review-route-label">Destination</span>
+                  <div id="review-dropoff-address" class="review-route-val">—</div>
+                </div>
+              </div>
+              <button type="button" id="review-edit-dropoff-btn" class="btn-edit-step">Edit</button>
+            </div>
+
+            <div class="review-route-divider"></div>
+
+            <div class="review-route-item">
+              <div class="review-route-left">
+                <span id="review-trip-type-icon" class="summary-pin-icon">🔄</span>
+                <div>
+                  <span class="review-route-label">Trip Type</span>
+                  <div id="review-trip-type-val" class="review-route-val">Return trip (15 min stop)</div>
+                </div>
+              </div>
+              <button type="button" id="review-edit-type-btn" class="btn-edit-step">Edit</button>
+            </div>
+
+            <div class="review-route-footer">
+              <span id="review-route-distance-badge" class="route-stat-badge">📏 ~0 km</span>
+              <span id="review-route-duration-badge" class="route-stat-badge">⏱️ ~0 min</span>
+            </div>
+          </div>
+
+          <!-- Note for Driver -->
+          <div class="field">
+            <div class="field-label-row">
+              <span class="field-label">📝 Note for Driver (Optional)</span>
+              <span id="booking-note-count" class="field-hint">0/64</span>
+            </div>
+            <input id="booking-note" type="text" maxlength="64" class="field-input" placeholder="e.g. Near blue gate, 2 bags / 2 passengers" />
+          </div>
+
+          <!-- Step 3 Map Container -->
+          <div id="booking-map-container-step3" class="step-map-slot"></div>
+
+          <!-- UPFRONT FARE PREVIEW CARD -->
+          <div id="booking-fare-card" class="fare-preview-card">
+            <div class="fare-preview-main">
+              <div class="fare-preview-info">
+                <span class="fare-preview-title">Upfront Fare</span>
+                <span id="booking-fare-breakdown" class="fare-preview-breakdown">Enter pickup & destination to calculate fare</span>
+              </div>
+              <div id="booking-fare-amount" class="fare-preview-amount">R --</div>
+            </div>
+          </div>
+
+          <!-- OFFLINE PAYMENT NOTICE -->
+          <div class="payment-notice">
+            <div class="payment-notice-icon">💵</div>
+            <div class="payment-notice-text">
+              <strong>Offline Direct Payment:</strong> Settle fare directly with your driver with cash or EFT upon arrival.
+            </div>
+          </div>
+
+          <div id="booking-form-error" class="form-error is-hidden"></div>
+
+          <!-- Two Action Buttons: Request Ride Now vs Schedule for Later -->
+          <div class="booking-options-actions">
+            <button type="submit" id="booking-submit-btn" class="btn btn-primary btn-submit-primary">
+              <span>⚡</span> Request Ride Now
+            </button>
+            <a href="download.html?feature=scheduled" id="booking-schedule-btn" class="btn btn-ghost btn-schedule-secondary" title="Schedule ahead on the LaynRider Android App">
+              <span>📅</span> Schedule for Later <span class="badge-app-pill">App</span>
+            </a>
+          </div>
         </div>
 
       </form>
@@ -493,15 +568,6 @@
         <button id="confirm-booking-modal-close" class="modal-close" aria-label="Close">&times;</button>
       </div>
 
-      <!-- Testing 50% Off Friendly Callout -->
-      <div class="confirm-promo-badge">
-        <span class="confirm-promo-icon">🎉</span>
-        <div class="confirm-promo-text">
-          <strong>Testing Promo: 50% OFF!</strong>
-          <p>App gives you 50% off since we are testing LaynRider.</p>
-        </div>
-      </div>
-
       <!-- Ride Details Card -->
       <div class="confirm-details-card">
         <div class="confirm-detail-row">
@@ -573,7 +639,7 @@
       <div class="modal-actions">
         <button type="button" id="confirm-booking-back-btn" class="btn btn-ghost">Edit</button>
         <button type="button" id="confirm-booking-submit-btn" class="btn btn-primary btn-submit">
-          <span>⚡</span> Confirm & Request Ride
+          <span>⚡</span> Confirm
         </button>
       </div>
     </div>
