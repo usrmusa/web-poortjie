@@ -506,6 +506,15 @@ img, svg, video, canvas, audio, iframe, embed, object {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--trans), border-color var(--trans), transform var(--trans);
+}
+
+.nudge-compact:hover {
+  background: var(--panel-hover, var(--surface));
+  border-color: var(--brand);
+  transform: translateY(-1px);
 }
 
 .nudge-left {
