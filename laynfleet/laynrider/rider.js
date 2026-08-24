@@ -33,6 +33,10 @@
     center: { lat: -26.57537, lng: 27.68133 },
     radiusMeters: 175933
   };
+  const POORTJIE_LOCAL_AREA = global.POORTJIE_LOCAL_AREA || {
+    center: { lat: -26.45600, lng: 27.77087 },
+    radiusMeters: 1637
+  };
   const POORTJIE_MAP_CENTER = { lat: -26.4568052, lng: 27.7678277 }; // Poortjie Taxi Rank
 
   /**
@@ -437,6 +441,13 @@
     if (lat == null || lng == null) return false;
     const dist = distanceMeters(SERVICE_AREA.center.lat, SERVICE_AREA.center.lng, lat, lng);
     return dist <= SERVICE_AREA.radiusMeters;
+  }
+
+  /** Local area validation: Must be within 1637m of Poortjie local center to view driver fleet */
+  function isWithinPoortjieLocalArea(lat, lng) {
+    if (lat == null || lng == null) return false;
+    const dist = distanceMeters(POORTJIE_LOCAL_AREA.center.lat, POORTJIE_LOCAL_AREA.center.lng, lat, lng);
+    return dist <= POORTJIE_LOCAL_AREA.radiusMeters;
   }
 
   /** Calculate and update upfront fare preview card and submit button ONLY with actual driving road distance */
