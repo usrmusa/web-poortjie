@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poortjie Marketplace | Buy & Sell Local</title>
@@ -13,14 +14,14 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://poortjie.services/market.html">
+    <meta property="og:url" content="https://poortjie.info/market">
     <meta property="og:title" content="Poortjie Marketplace | Buy & Sell Local">
     <meta property="og:description" content="Find the best deals in Poortjie. Post your items for free and reach your local community.">
     <meta property="og:image" content="https://poortjie.services/favicon/web-app-manifest-512x512.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://poortjie.services/market.html">
+    <meta property="twitter:url" content="https://poortjie.info/market">
     <meta property="twitter:title" content="Poortjie Marketplace | Buy & Sell Local">
     <meta property="twitter:description" content="Find the best deals in Poortjie. Post your items for free and reach your local community.">
     <meta property="twitter:image" content="https://poortjie.services/favicon/web-app-manifest-512x512.png">
@@ -71,7 +72,7 @@
 <body class="font-sans antialiased bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
 <div class="fixed top-5 left-5 z-50">
-    <a href="services/market-form.html" id="sell-item-btn"
+    <a href="services/market-form" id="sell-item-btn"
        class="p-3 pr-5 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition flex items-center gap-2"
        title="Sell Something">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -93,14 +94,14 @@
         </button>
         <div id="menu-items"
              class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-            <a href="home.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Services Home</a>
+            <a href="home" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Services Home</a>
             <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
             <button id="menu-theme-toggle"
                     class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
                 <span id="menu-theme-icon">🌓</span> Mode
             </button>
-            <a href="authentication/profile.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Profile</a>
-            <a href="support.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Support</a>
+            <a href="authentication/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Profile</a>
+            <a href="support" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Support</a>
         </div>
     </div>
 </div>
@@ -232,14 +233,13 @@
         <p class="opacity-70 mb-6">You need to be logged in to contact sellers or post items.</p>
         <div class="flex gap-3">
             <button onclick="document.getElementById('login-alert-modal').classList.add('hidden')" class="flex-1 py-3 border border-gray-200 dark:border-slate-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-slate-700 transition">Cancel</button>
-            <button onclick="window.location.href='authentication/login.html'" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition shadow-lg">Login Now</button>
+            <button onclick="window.location.href='authentication/login'" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition shadow-lg">Login Now</button>
         </div>
     </div>
 </div>
 
 <script src="scripts/theme.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -527,7 +527,7 @@
             stockBtn.onclick = () => updateItemStatus(id, item.status === 'out of stock' ? 'active' : 'out of stock');
 
             editBtn.onclick = () => {
-                window.location.href = `services/market-form.html?id=${id}`;
+                window.location.href = `services/market-form?id=${id}`;
             };
 
             deleteBtn.onclick = () => deleteItem(id, item.images);

@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!currentUser) {
             sessionStorage.setItem('redirectUrl', window.top.location.href);
-            window.top.location.replace(window.location.pathname.includes('/services/') ? '../authentication/login.html' : 'authentication/login.html');
+            window.top.location.replace(window.location.pathname.includes('/services/') ? '../authentication/login' : 'authentication/login');
             return;
         }
 
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!currentUser) {
             sessionStorage.setItem('redirectUrl', window.top.location.href);
-            window.top.location.replace(window.location.pathname.includes('/services/') ? '../authentication/login.html' : 'authentication/login.html');
+            window.top.location.replace(window.location.pathname.includes('/services/') ? '../authentication/login' : 'authentication/login');
             return;
         }
         serviceId = sId;

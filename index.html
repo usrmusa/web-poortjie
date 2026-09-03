@@ -19,42 +19,13 @@
     <link rel="shortcut icon" type="image/png" sizes="48x48" href="favicon/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="manifest" href="favicon/site.webmanifest">
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-        }
-
-        iframe {
-            border: none;
-            width: 100%;
-            height: 100%;
-        }
-    </style>
+    <meta http-equiv="refresh" content="0; url=/home">
+    <link rel="canonical" href="https://poortjie.info/home">
 </head>
 <body>
-<iframe src="home.html" id="main-frame" title="Poortjie Services Main Content"></iframe>
+<p><a href="/home">Open Poortjie Services</a></p>
 <script>
-    const iframe = document.getElementById('main-frame');
-    iframe.onload = function () {
-        try {
-            const iframeWindow = iframe.contentWindow;
-            if (!iframeWindow) return;
-
-            const isSameOrigin = (iframeWindow.location.origin === window.location.origin) ||
-                               (iframeWindow.location.origin === 'null');
-
-            if (isSameOrigin) {
-                const iframeDoc = iframe.contentDocument || iframeWindow.document;
-                if (iframeDoc && iframeDoc.title) {
-                    document.title = iframeDoc.title;
-                }
-            }
-        } catch (e) {
-        }
-    };
+    window.location.replace('/home' + window.location.search + window.location.hash);
 </script>
 </body>
 </html>

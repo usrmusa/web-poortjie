@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marketplace Listing | Poortjie</title>
@@ -35,7 +36,7 @@
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
 <header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center text-gray-900 dark:text-gray-100">
-    <a href="../market.html" class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
+    <a href="../market" class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
 </header>
 
 <main class="max-w-2xl mx-auto px-6 pb-24">
@@ -180,7 +181,6 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -512,7 +512,7 @@
 
                 if (user && data.userId !== user.uid) {
                     alert("Unauthorized access.");
-                    window.location.href = '../market.html';
+                    window.location.href = '../market';
                     return;
                 }
 
@@ -616,7 +616,7 @@
             form.classList.add('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
 
-            setTimeout(() => window.location.href = '../market.html', 2000);
+            setTimeout(() => window.location.href = '../market', 2000);
         } catch (error) {
             console.error(error);
             submitBtn.disabled = false;
@@ -634,7 +634,7 @@
     firebase.auth().onAuthStateChanged(user => {
         if (!user) {
             sessionStorage.setItem('redirectUrl', window.location.href);
-            window.location.href = '../authentication/login.html';
+            window.location.href = '../authentication/login';
         } else {
             safeHideLoader();
             loadItemData();

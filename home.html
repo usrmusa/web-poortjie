@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poortjie Services</title>
@@ -56,7 +57,7 @@
 </head>
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 <div class="fixed top-5 left-5 z-50" id="business-form-control">
-    <a href="services/business-form.html" id="add-business-btn"
+    <a href="services/business-form" id="add-business-btn"
        class="p-3 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 transition flex items-center justify-center"
        title="Add Your Business">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -76,30 +77,30 @@
         </button>
         <div id="menu-items"
              class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-            <a href="market.html"
+            <a href="market"
                class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Marketplace</a>
             <button id="menu-theme-toggle"
                     class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-3">
                 <span id="menu-theme-icon">🌓</span> Mode
             </button>
-            <a id="admin-link" href="manage/business.html"
+            <a id="admin-link" href="manage/business"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Business
                 Admin</a>
-            <a id="home-admin-link" href="manage/home-manager.html"
+            <a id="home-admin-link" href="manage/home-manager"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Home
                 Manager</a>
-            <a id="news-admin-link" href="manage/news-writer.html"
+            <a id="news-admin-link" href="manage/news-writer"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Post
                 News/Alert</a>
-            <a id="taxi-admin-link" href="manage/public transport.html"
+            <a id="taxi-admin-link" href="manage/public transport"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Public Transport Admin</a>
-            <a href="support.html"
+            <a href="support"
                class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Support</a>
-            <a id="profile-link" href="authentication/profile.html"
+            <a id="profile-link" href="authentication/profile"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Profile</a>
             <div id="auth-divider" class="hidden border-t border-gray-100 dark:border-slate-700 my-1"></div>
-            <a id="login-link" href="authentication/login.html"
-               onclick="sessionStorage.setItem('redirectUrl', window.location.href); window.location.href = 'authentication/login.html'; return false;"
+            <a id="login-link" href="authentication/login"
+               onclick="sessionStorage.setItem('redirectUrl', window.location.href); window.location.href = 'authentication/login'; return false;"
                class="hidden block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Login</a>
             <button id="logout-btn"
                     class="hidden w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">
@@ -149,9 +150,9 @@
         <a href="#services"
            class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-md">Explore
             Services</a>
-        <a href="market.html"
+        <a href="market"
            class="px-8 py-3 bg-white dark:bg-slate-800 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition shadow-md border border-green-100 dark:border-slate-700">Marketplace</a>
-        <a href="services/public%20transport.html"
+        <a href="services/public%20transport"
            class="px-8 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition">Public Transport Info</a>
     </div>
 </header>
@@ -182,15 +183,14 @@
     <div id="rating-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"></div>
 </main>
 <footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
-    &copy; 2026 <a href="index.html" onclick="window.top.location.replace('index.html'); return false;"
+    &copy; 2026 <a href="./" onclick="window.top.location.replace('./'); return false;"
                    class="hover:underline">Poortjie Services</a>. Empowering poortjie economies.
     <div class="mt-2 flex justify-center gap-4">
-        <a href="support.html" class="hover:underline">Support</a>
-        <a href="support.html" class="hover:underline">Data Policy</a>
+        <a href="support" class="hover:underline">Support</a>
+        <a href="support" class="hover:underline">Data Policy</a>
     </div>
 </footer>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -215,7 +215,7 @@
             'Live ride tracking & fast pickup'
         ],
         isTransport: true,
-        url: 'laynfleet/laynrider/index.html',
+        url: 'laynfleet/laynrider/',
         btnText: 'Book a Ride'
     };
 
@@ -226,7 +226,7 @@
             title: 'Design & Digital Media',
             description: 'Graphic design, branding, videography, photography, and creative content creation for businesses and events.',
             list: ['Logo & Branding Design', 'Flyers, Posters & Menus', 'Event Photography & Video', 'Social Media Management'],
-            url: 'services/creative.html',
+            url: 'services/creative',
             btnText: 'Explore Creative'
         },
         {
@@ -234,7 +234,7 @@
             title: 'Tech & Digital Solutions',
             description: 'Web development, computer repairs, network setup, and software solutions to keep your business running.',
             list: ['Website Design & Hosting', 'Computer & Laptop Repairs', 'Software & WiFi Installation', 'POS & Business Systems'],
-            url: 'services/information%20technology.html',
+            url: 'services/information%20technology',
             btnText: 'Explore Information Technology'
         },
         {
@@ -242,7 +242,7 @@
             title: 'Kasi Flavors & Events',
             description: 'Delicious local food, catering for functions, fast food takeaways, and baking for celebrations in Poortjie.',
             list: ['Event & Wedding Catering', 'Township Street Food', 'Custom Cakes & Pastries', 'Platters & Family Meals'],
-            url: 'services/food%20&%20catering.html',
+            url: 'services/food%20&%20catering',
             btnText: 'Explore Food & Catering'
         },
         {
@@ -250,7 +250,7 @@
             title: 'Personal Care & Salons',
             description: 'Hair salons, barbershops, nail studios, skincare, and beauty treatments right in your neighborhood.',
             list: ['Hair Styling & Braiding', 'Barbershops & Cuts', 'Nails & Lashes', 'Skincare & Makeup'],
-            url: 'services/beauty%20&%20freshness.html',
+            url: 'services/beauty%20&%20freshness',
             btnText: 'Explore Beauty & Freshness'
         },
         {
@@ -258,7 +258,7 @@
             title: 'Home & Appliance Repairs',
             description: 'Qualified technicians for electrical, plumbing, appliance repair, welding, and maintenance services.',
             list: ['Electrical & Wiring', 'Plumbing & Geysers', 'Fridge & Washing Machine Fix', 'Welding & Gate Repairs'],
-            url: 'services/repairs%20&%20technical.html',
+            url: 'services/repairs%20&%20technical',
             btnText: 'Explore Repairs & Technical'
         }
     ];
@@ -271,7 +271,7 @@
 
     function handleBookRideClick(event) {
         if (event) event.preventDefault();
-        const targetUrl = 'laynfleet/laynrider/index.html';
+        const targetUrl = 'laynfleet/laynrider/';
         window.top.location.href = targetUrl;
     }
     window.handleBookRideClick = handleBookRideClick;
@@ -309,7 +309,7 @@
                             </ul>
                         </div>
                         <div class="mt-6 flex flex-col gap-2">
-                            <a href="laynfleet/laynrider/index.html" onclick="handleBookRideClick(event); return false;" class="block text-center py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition cursor-pointer shadow">Book a Ride</a>
+                            <a href="laynfleet/laynrider/" onclick="handleBookRideClick(event); return false;" class="block text-center py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition cursor-pointer shadow">Book a Ride</a>
                         </div>
                     </div>
                 </section>`;
@@ -373,7 +373,7 @@
                                 title: service.subtitle || key,
                                 description: service.description || '',
                                 list: service.listing || [],
-                                url: `services/${key.toLowerCase()}.html`,
+                                url: `services/${key.toLowerCase()}`,
                                 target: '_top',
                                 btnText: `Explore ${key}`
                             };

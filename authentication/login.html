@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Poortjie Services</title>
@@ -34,8 +35,8 @@
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
 <header class="max-w-6xl mx-auto pt-24 pb-16 px-6 text-center text-gray-900 dark:text-gray-100">
-    <a href="../index.html"
-       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+    <a href="../"
+       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../'); return false; }"
        class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
 </header>
 
@@ -100,22 +101,21 @@
             </div>
         </form>
         <p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
-            Don't have an account? <a href="register.html"
-                                      onclick="window.location.replace('register.html'); return false;"
+            Don't have an account? <a href="register"
+                                      onclick="window.location.replace('register'); return false;"
                                       class="text-green-500 hover:text-green-700 font-bold">Register</a>.
         </p>
     </div>
 </main>
 
 <footer class="text-center py-12 border-t border-gray-100 dark:border-slate-800 opacity-50 text-xs">
-    &copy; 2026 Poortjie Services. Empowering poortjie economies.<br><a href="../support.html" class="hover:underline">Data Policy</a>
+    &copy; 2026 Poortjie Services. Empowering poortjie economies.<br><a href="../support" class="hover:underline">Data Policy</a>
 </footer>
 
 <script src="../scripts/theme.js"></script>
 
 <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="../scripts/firebase.js"></script>
@@ -265,7 +265,7 @@
         if (!targetUrl && document.referrer) {
             try {
                 const refUrl = new URL(document.referrer);
-                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login.html') && !refUrl.pathname.includes('register.html')) {
+                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login') && !refUrl.pathname.includes('register')) {
                     targetUrl = document.referrer;
                 }
             } catch (e) {}
@@ -273,12 +273,12 @@
 
         sessionStorage.removeItem('redirectUrl');
 
-        if (targetUrl && !targetUrl.includes('login.html') && !targetUrl.includes('register.html')) {
+        if (targetUrl && !targetUrl.includes('login') && !targetUrl.includes('register')) {
             window.top.location.replace(targetUrl);
-        } else if (window.history.length > 1 && document.referrer && !document.referrer.includes('login.html') && !document.referrer.includes('register.html')) {
+        } else if (window.history.length > 1 && document.referrer && !document.referrer.includes('login') && !document.referrer.includes('register')) {
             window.history.back();
         } else {
-            window.top.location.replace('../index.html');
+            window.top.location.replace('../');
         }
     };
 
@@ -417,7 +417,7 @@
                         await AuthStore.ensureUserDoc(result.user);
                     }
                     sessionStorage.setItem('openPasswordModal', 'true');
-                    window.location.replace('profile.html?action=set-password');
+                    window.location.replace('profile?action=set-password');
                 }
             } catch (error) {
                 forgotPasswordBtn.disabled = false;
@@ -440,7 +440,7 @@
                     }
                     if (sessionStorage.getItem('openPasswordModal') === 'true') {
                         sessionStorage.removeItem('openPasswordModal');
-                        window.location.replace('profile.html?action=set-password');
+                        window.location.replace('profile?action=set-password');
                         return;
                     }
                     navigateAfterAuth();
@@ -458,12 +458,12 @@
     (function() {
         const urlParams = new URLSearchParams(window.location.search);
         const queryRedirect = urlParams.get('redirect') || urlParams.get('returnUrl');
-        if (queryRedirect && !queryRedirect.includes('login.html') && !queryRedirect.includes('register.html')) {
+        if (queryRedirect && !queryRedirect.includes('login') && !queryRedirect.includes('register')) {
             sessionStorage.setItem('redirectUrl', queryRedirect);
         } else if (!sessionStorage.getItem('redirectUrl') && document.referrer) {
             try {
                 const refUrl = new URL(document.referrer);
-                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login.html') && !refUrl.pathname.includes('register.html')) {
+                if (refUrl.origin === window.location.origin && !refUrl.pathname.includes('login') && !refUrl.pathname.includes('register')) {
                     sessionStorage.setItem('redirectUrl', document.referrer);
                 }
             } catch (e) {}

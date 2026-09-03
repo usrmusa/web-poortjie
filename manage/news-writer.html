@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post News & Alerts | Poortjie Services</title>
@@ -37,8 +38,8 @@
     <header class="max-w-4xl mx-auto pt-16 pb-8 px-6">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-3xl font-extrabold tracking-tight">Post News & Alerts</h1>
-            <a href="../index.html"
-               onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../index.html'); return false; }"
+            <a href="../"
+               onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('../'); return false; }"
                class="w-full md:w-auto text-center px-6 py-3 border-2 border-green-600 text-green-600 dark:text-green-400 font-bold rounded-lg hover:bg-green-600 hover:text-white transition whitespace-nowrap">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Home
             </a>
@@ -185,7 +186,6 @@
 
 <script src="../scripts/theme.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="../scripts/firebase.js"></script>
@@ -348,15 +348,15 @@
                         setExpiryDefault();
                         loadRecentNews();
                     } else {
-                        window.top.location.replace('../index.html');
+                        window.top.location.replace('../');
                     }
                 } else {
-                    window.top.location.replace('../index.html');
+                    window.top.location.replace('../');
                 }
             });
         } else {
             sessionStorage.setItem('redirectUrl', window.location.href);
-            window.top.location.replace('../authentication/login.html');
+            window.top.location.replace('../authentication/login');
         }
     });
 

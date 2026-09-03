@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support | Poortjie Services</title>
@@ -30,8 +31,8 @@
 <body class="font-sans antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen">
 
 <header class="max-w-6xl mx-auto pt-24 pb-12 px-6 text-center">
-    <a href="index.html"
-       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('index.html'); return false; }"
+    <a href="./"
+       onclick="if(history.length > 1) { history.back(); return false; } else { window.top.location.replace('./'); return false; }"
        class="text-6xl font-extrabold mb-4 tracking-tight">Poortjie</a>
     <h2 class="text-2xl font-bold mt-4">Support & Suggestions</h2>
 </header>
@@ -45,8 +46,8 @@
         
         <div id="auth-warning" class="hidden mb-6 p-4 rounded-lg bg-amber-100 text-amber-800 border border-amber-200">
             <p class="font-medium">Please login to leave a suggestion.</p>
-            <a href="authentication/login.html" 
-               onclick="sessionStorage.setItem('redirectUrl', window.location.href); window.location.href = 'authentication/login.html'; return false;"
+            <a href="authentication/login"
+               onclick="sessionStorage.setItem('redirectUrl', window.location.href); window.location.href = 'authentication/login'; return false;"
                class="text-amber-900 font-bold underline">Login here</a>
         </div>
 
@@ -117,12 +118,11 @@
 </footer>
 
 <div class="mt-2 text-center opacity-50 text-[10px]">
-    <a href="support.html" class="hover:underline">Data Policy</a>
+    <a href="support" class="hover:underline">Data Policy</a>
 </div>
 
 <script src="scripts/theme.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="scripts/firebase.js"></script>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
@@ -21,12 +22,12 @@
   <header class="header-nav">
     <div class="header-content">
       <div class="header-left">
-        <a href="../../home.html" class="back-link" title="Back to Poortjie Home">
+        <a href="../../home" class="back-link" title="Back to Poortjie Home">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
         </a>
-        <a href="../../home.html" class="brand-wrap" title="Poortjie Services">
+        <a href="../../home" class="brand-wrap" title="Poortjie Services">
           <div class="brand-text">
             <h1 class="brand-title">Poortjie <span class="brand-accent">Rides</span></h1>
           </div>
@@ -34,7 +35,7 @@
       </div>
 
       <div class="nav-actions">
-        <a href="download.html" class="btn btn-sm btn-ghost nav-app-link" title="Download LaynRider & LaynDriver Android Apps" style="gap: 4px;">
+        <a href="download" class="btn btn-sm btn-ghost nav-app-link" title="Download LaynRider & LaynDriver Android Apps" style="gap: 4px;">
           <span>📱</span> <span class="nav-btn-text">Apps</span>
         </a>
 
@@ -43,7 +44,7 @@
           <span id="header-user-name">Profile</span>
         </button>
 
-        <a id="header-signin-btn" href="../../authentication/login.html" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" class="btn btn-sm btn-ghost is-hidden">
+        <a id="header-signin-btn" href="../../authentication/login" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" class="btn btn-sm btn-ghost is-hidden">
           Sign In
         </a>
       </div>
@@ -79,12 +80,12 @@
         <p class="auth-gate-desc">Please sign in with your Poortjie account to book local rides in Poortjie.</p>
       </div>
 
-      <a href="../../authentication/login.html" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" class="btn btn-primary btn-block">
+      <a href="../../authentication/login" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" class="btn btn-primary btn-block">
         Sign in to Continue
       </a>
 
       <p style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">
-        Don't have an account? <a href="../../authentication/register.html" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" style="color: var(--brand); font-weight: 700; text-decoration: none;">Register here</a>
+        Don't have an account? <a href="../../authentication/register" onclick="sessionStorage.setItem('redirectUrl', window.location.href);" style="color: var(--brand); font-weight: 700; text-decoration: none;">Register here</a>
       </p>
     </div>
 
@@ -113,7 +114,7 @@
             <span class="info-card-badge">Kasi Transport</span>
             <h3 class="info-card-title">Direct & Transparent</h3>
           </div>
-          <a href="download.html" class="nudge-compact" title="Download LaynRider & LaynDriver Android Apps">
+          <a href="download" class="nudge-compact" title="Download LaynRider & LaynDriver Android Apps">
             <div class="nudge-left">
               <span class="nudge-icon">📱</span>
               <span class="nudge-text">Download Android App</span>
@@ -395,7 +396,7 @@
             <button type="submit" id="booking-submit-btn" class="btn btn-primary btn-submit-primary">
               <span>⚡</span> Request Ride Now
             </button>
-            <a href="download.html?feature=scheduled" id="booking-schedule-btn" class="btn btn-ghost btn-schedule-secondary" title="Schedule ahead on the LaynRider Android App">
+            <a href="download?feature=scheduled" id="booking-schedule-btn" class="btn btn-ghost btn-schedule-secondary" title="Schedule ahead on the LaynRider Android App">
               <span>📅</span> Schedule for Later <span class="badge-app-pill">App</span>
             </a>
           </div>
@@ -490,7 +491,7 @@
           </div>
 
           <!-- App Driver Tracking Link -->
-          <a href="download.html" target="_blank" rel="noopener" class="btn-track-app-link" title="Track Driver Live in LaynRider Android App">
+          <a href="download" target="_blank" rel="noopener" class="btn-track-app-link" title="Track Driver Live in LaynRider Android App">
             <span>📱</span> <span>Track driver live on LaynRider App</span> <span style="font-size: 11px; opacity: 0.7;">↗</span>
           </a>
         </div>
@@ -624,7 +625,7 @@
             <p>Real-time background GPS tracking & push alerts on Android</p>
           </div>
         </div>
-        <a href="download.html" target="_blank" rel="noopener" class="btn btn-sm btn-ghost confirm-app-track-btn" title="Open or Download LaynRider Android App">
+        <a href="download" target="_blank" rel="noopener" class="btn btn-sm btn-ghost confirm-app-track-btn" title="Open or Download LaynRider Android App">
           <span>Get App</span> ↗
         </a>
       </div>
@@ -744,7 +745,7 @@
       </div>
 
       <div class="modal-actions app-test-actions">
-        <a id="app-test-download-btn" href="download.html" class="btn btn-primary btn-block app-test-cta-btn">
+        <a id="app-test-download-btn" href="download" class="btn btn-primary btn-block app-test-cta-btn">
           <span>🚀</span> Test the App & Get 50% Off
         </a>
         <button type="button" id="app-test-modal-cancel" class="btn btn-ghost btn-block">

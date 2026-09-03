@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="/scripts/site.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Services</title>
@@ -53,7 +54,7 @@
 
 <header class="w-full max-w-4xl mx-auto pt-6 pb-4 px-6 flex flex-col items-center shrink-0">
     <div class="w-full flex justify-between items-center">
-        <a href="index.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" aria-label="Go back">
+        <a href="./" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" aria-label="Go back">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
@@ -104,7 +105,6 @@
 
 <script src="scripts/theme.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="scripts/firebase.js"></script>
@@ -140,7 +140,7 @@
     firebase.auth().onAuthStateChanged(async (user) => {
         if (!user) {
             sessionStorage.setItem('redirectUrl', window.location.href);
-            window.location.replace('authentication/login.html');
+            window.location.replace('authentication/login');
             return;
         }
         currentUser = user;

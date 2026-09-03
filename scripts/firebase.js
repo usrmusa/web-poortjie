@@ -71,14 +71,12 @@ if (typeof window !== 'undefined') {
   window.APP_PACKAGE = 'com.digilayn.laynrider';
 }
 
-let analytics = null;
-try {
-  if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function' && location.protocol !== 'file:') {
-    analytics = firebase.analytics();
+// Preserve existing business events; site.js owns the single page-view stream.
+const analytics = {
+  logEvent(eventName, params) {
+    if (typeof window.gtag === 'function') window.gtag('event', eventName, params);
   }
-} catch (e) {
-  console.warn("Firebase Analytics could not be initialized:", e);
-}
+};
 
 // Enable offline persistence with multi-tab support
 if (typeof window !== 'undefined' && location.protocol !== 'file:' && db && typeof db.enablePersistence === 'function') {
@@ -91,5 +89,4 @@ if (typeof window !== 'undefined' && location.protocol !== 'file:' && db && type
       }
     });
 }
-
 

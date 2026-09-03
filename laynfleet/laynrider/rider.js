@@ -405,7 +405,7 @@
   /** Navigate user to global profile page */
   function navigateToProfile() {
     sessionStorage.setItem('redirectUrl', window.location.href);
-    window.location.href = '../../authentication/profile.html';
+    window.location.href = '../../authentication/profile';
   }
 
   /** Validate phone number: exactly 10 digits */
@@ -1603,7 +1603,7 @@
   /** Set Booking Type (ASAP on Web, or Route to Download App for SCHEDULED) */
   function setBookingType(type) {
     if (type === 'SCHEDULED') {
-      window.location.href = 'download.html?feature=scheduled';
+      window.location.href = 'download?feature=scheduled';
       return;
     }
     bookingState.type = 'ASAP';
@@ -1959,7 +1959,7 @@
     if (!currentUser) {
       savePendingBookingState();
       sessionStorage.setItem('redirectUrl', window.location.href);
-      window.location.href = '../../authentication/login.html?redirect=' + encodeURIComponent(window.location.href);
+      window.location.href = '../../authentication/login?redirect=' + encodeURIComponent(window.location.href);
       return;
     }
 
@@ -2040,7 +2040,7 @@
     if (!currentUser) {
       savePendingBookingState();
       sessionStorage.setItem('redirectUrl', window.location.href);
-      window.location.href = '../../authentication/login.html?redirect=' + encodeURIComponent(window.location.href);
+      window.location.href = '../../authentication/login?redirect=' + encodeURIComponent(window.location.href);
       return;
     }
 
@@ -2991,7 +2991,7 @@
         await auth.signOut();
       }
       showToast('Signed out');
-      window.top.location.replace('../../authentication/login.html');
+      window.top.location.replace('../../authentication/login');
     } catch (err) {
       console.error('Sign out error:', err);
     }
